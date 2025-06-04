@@ -1,2 +1,2 @@
 # Space-BattleShip
-Repo with code related to Space BattleShip game.
+Repo to code related to Space BattleShip game.
