@@ -1,58 +1,53 @@
-from fastapi import FastAPI, HTTPException, Depends
+# app/routes/ships.py
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from app import models, database
-from app.schemas import ShipCreate, ShipResponse
+# models and database_config imports remain the same
+from app.database import create_schemas as models
+from app.database import create_database as database_config
+from app import schemas # schemas import remains
+from app import crud # Import the crud module
 
-app = FastAPI()
+router = APIRouter(
+    prefix="/ships",
+    tags=["ships"],
+)
 
-# Dependência para obter a sessão do banco
 def get_db():
-    db = database.SessionLocal()
+    db = database_config.SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-# Rota: listar todas as naves
-@app.get("/ships", response_model=list[ShipResponse])
-def list_ships(db: Session = Depends(get_db)):
-    return db.query(models.Ship).all()
+@router.post("/", response_model=schemas.ShipResponse)
+def create_ship_route(ship: schemas.ShipCreate, db: Session = Depends(get_db)):
+    # Check if ship already exists (optional, based on unique constraints like ship_name)
+    # db_ship_by_name = db.query(models.Ship).filter(models.Ship.ship_name == ship.ship_name).first()
+    # if db_ship_by_name:
+    #     raise HTTPException(status_code=400, detail="Ship with this name already exists")
+    return crud.create_ship(db=db, ship=ship)
 
-# Rota: criar uma nova nave
-@app.post("/ships", response_model=ShipResponse)
-def create_ship(ship: ShipCreate, db: Session = Depends(get_db)):
-    db_ship = models.Ship(**ship.dict())
-    db.add(db_ship)
-    db.commit()
-    db.refresh(db_ship)
+@router.get("/", response_model=list[schemas.ShipResponse])
+def list_ships_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    ships = crud.get_ships(db=db, skip=skip, limit=limit)
+    return ships
+
+@router.get("/{ship_id}", response_model=schemas.ShipResponse)
+def get_ship_route(ship_id: int, db: Session = Depends(get_db)):
+    db_ship = crud.get_ship(db=db, ship_id=ship_id)
+    if db_ship is None:
+        raise HTTPException(status_code=404, detail="Ship not found")
     return db_ship
 
-# Rota: obter nave por ID
-@app.get("/ships/{ship_id}", response_model=ShipResponse)
-def get_ship(ship_id: int, db: Session = Depends(get_db)):
-    ship = db.query(models.Ship).filter(models.Ship.id == ship_id).first()
-    if not ship:
-        raise HTTPException(status_code=404, detail="Ship not found")
-    return ship
+@router.put("/{ship_id}", response_model=schemas.ShipResponse)
+def update_ship_route(ship_id: int, ship_data: schemas.ShipCreate, db: Session = Depends(get_db)):
+    db_ship = crud.update_ship(db=db, ship_id=ship_id, ship_data=ship_data)
+    if db_ship is None:
+        raise HTTPException(status_code=404, detail="Ship not found or update failed")
+    return db_ship
 
-# Rota: atualizar nave
-@app.put("/ships/{ship_id}", response_model=ShipResponse)
-def update_ship(ship_id: int, ship_data: ShipCreate, db: Session = Depends(get_db)):
-    ship = db.query(models.Ship).filter(models.Ship.id == ship_id).first()
-    if not ship:
+@router.delete("/{ship_id}")
+def delete_ship_route(ship_id: int, db: Session = Depends(get_db)):
+    if not crud.delete_ship(db=db, ship_id=ship_id):
         raise HTTPException(status_code=404, detail="Ship not found")
-    for key, value in ship_data.dict().items():
-        setattr(ship, key, value)
-    db.commit()
-    db.refresh(ship)
-    return ship
-
-# Rota: deletar nave
-@app.delete("/ships/{ship_id}")
-def delete_ship(ship_id: int, db: Session = Depends(get_db)):
-    ship = db.query(models.Ship).filter(models.Ship.id == ship_id).first()
-    if not ship:
-        raise HTTPException(status_code=404, detail="Ship not found")
-    db.delete(ship)
-    db.commit()
     return {"detail": "Ship deleted"}

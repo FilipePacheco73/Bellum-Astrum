@@ -3,7 +3,7 @@ SQL Alchemy Models: Ship, Fleets tables
 '''
 
 from sqlalchemy import Column, Integer, Float, String
-from create_database import Base # Import database from database.py
+from app.database.create_database import Base # Import database from database.py
 
 class Ship(Base):
     """
