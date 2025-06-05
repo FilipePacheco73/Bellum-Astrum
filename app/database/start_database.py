@@ -2,57 +2,20 @@
 Code to create the Database
 '''
 
-from create_database import engine, Base
-from database.add_initial_data import add_ships, add_users
+# Ensure create_database is correctly imported.
+# If it's in the same directory, it might be:
+# from .create_database import engine, Base
+# If create_database.py is directly in app/database/ then:
+from app.database.create_database import engine, Base
+
+# The add_initial_data.py file might become unused after this,
+# consider if it should be deleted or kept if it has other utilities.
+# For now, just remove the import of its functions here.
 
 def create_db():
     Base.metadata.create_all(bind=engine)
-    print("Database created")
-
-def start_ships():
-    ships_to_add = [
-        {
-            'ship_name': 'USS Enterprise',
-            'attack': 20,
-            'shield': 5,
-            'evasion': 0,
-            'fire_rate': 1,
-            'hp': 120,
-            'value': 1000
-        },
-        {
-            'ship_name': 'Millennium Falcon',
-            'attack': 25,
-            'shield': 10,
-            'evasion': .05,
-            'fire_rate': 1,
-            'hp': 100,
-            'value': 2000
-        }
-    ]
-
-    add_ships(ships_to_add)
-
-def start_users():
-    users_to_add = [
-        {
-            'nickname': 'Luke',
-            'rank_elo': 1000,
-            'currency_value': 1500,
-        },
-        {
-            'nickname': 'Anakyn',
-            'rank_elo': 1000,
-            'currency_value': 1500
-        }
-    ]
-
-    add_users(users_to_add)
+    print("Database schema created (if not already existing).")
 
 if __name__ == "__main__":
-
     create_db()
-
-    start_ships()
-
-    start_users()
+    print("Database setup script finished. Data should be added via API endpoints.")
