@@ -6,6 +6,7 @@ from app.database import create_schemas as models
 from app.database import create_database as database_config
 from app import schemas # schemas import remains
 from app import crud # Import the crud module
+from app.seed import seed_ships
 
 router = APIRouter(
     prefix="/ships",
@@ -19,12 +20,12 @@ def get_db():
     finally:
         db.close()
 
+@router.post("/seed")
+def seed_ships_route():
+    return seed_ships()
+
 @router.post("/", response_model=schemas.ShipResponse)
 def create_ship_route(ship: schemas.ShipCreate, db: Session = Depends(get_db)):
-    # Check if ship already exists (optional, based on unique constraints like ship_name)
-    # db_ship_by_name = db.query(models.Ship).filter(models.Ship.ship_name == ship.ship_name).first()
-    # if db_ship_by_name:
-    #     raise HTTPException(status_code=400, detail="Ship with this name already exists")
     return crud.create_ship(db=db, ship=ship)
 
 @router.get("/", response_model=list[schemas.ShipResponse])
