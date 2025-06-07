@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.routes import ships, users
-from app.database.create_database import engine, Base # To create tables
+from app.database.create_database import engine, Base 
 
 # Create all tables in the database
 # This is useful if you want the application to create tables on startup
@@ -14,7 +14,7 @@ app = FastAPI(
     version="0.1.0"
 )
 
-app.include_router(ships.router, prefix="/api/v1") # Using ships.router as defined in ships.py (assuming it's named 'router')
+app.include_router(ships.router, prefix="/api/v1") # Using ships.router as defined in ships.py
 app.include_router(users.router, prefix="/api/v1") # Using users.router as defined in users.py
 
 @app.get("/")
