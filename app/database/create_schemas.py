@@ -1,9 +1,5 @@
-'''
-SQL Alchemy Models: Ship, Fleets tables
-'''
-
 from sqlalchemy import Column, Integer, Float, String
-from app.database.create_database import Base # Import database from database.py
+from app.database.create_database import Base
 
 class Ship(Base):
     """
@@ -93,6 +89,7 @@ class OwnedShips(Base):
 
     ship_number = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String)
+    status = Column(String, default='owned')
     ship_id = Column(String)
     ship_name = Column(String)
     attack = Column(Float)
