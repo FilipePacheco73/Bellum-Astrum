@@ -11,3 +11,16 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+def get_db():
+    """
+    Dependency to get the database session.
+    This function is used in FastAPI routes to provide a database session.
+    Yields:
+        Session: A SQLAlchemy session object.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

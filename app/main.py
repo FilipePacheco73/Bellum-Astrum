@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import ships, users
+from app.routes import ships, users, market, seed
 from app.database.create_database import engine, Base 
 
 # Create all tables in the database
@@ -14,8 +14,10 @@ app = FastAPI(
     version="0.1.0"
 )
 
+app.include_router(seed.router, prefix="/api/v1") # Using seed.router as defined in seed.py
 app.include_router(ships.router, prefix="/api/v1") # Using ships.router as defined in ships.py
 app.include_router(users.router, prefix="/api/v1") # Using users.router as defined in users.py
+app.include_router(market.router, prefix="/api/v1") # Using market.router as defined in market.py
 
 @app.get("/")
 async def root():

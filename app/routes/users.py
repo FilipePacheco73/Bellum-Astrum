@@ -6,11 +6,10 @@ from app.database import create_schemas as models
 from app.database import create_database as database_config
 from app import schemas # schemas import remains
 from app import crud # Import the crud module
-from app.seed import seed_users # Import the seed function
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"],
+    tags=["Users"],
 )
 
 def get_db(): # This get_db can be DRYed up later by moving to a common utility
@@ -19,14 +18,6 @@ def get_db(): # This get_db can be DRYed up later by moving to a common utility
         yield db
     finally:
         db.close()
-
-@router.post("/seed")
-def seed_users_route():
-    """
-    Endpoint to seed the database with initial user data.
-    This is useful for development and testing purposes.
-    """
-    return seed_users()
 
 @router.post("/", response_model=schemas.UserResponse)
 def create_user_route(user: schemas.UserCreate, db: Session = Depends(get_db)):
