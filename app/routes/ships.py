@@ -6,23 +6,21 @@ from app.database import create_schemas as models
 from app.database import create_database as database_config
 from app import schemas # schemas import remains
 from app import crud # Import the crud module
-from app.seed import seed_ships
 
 router = APIRouter(
     prefix="/ships",
-    tags=["ships"],
+    tags=["Ships"],
 )
 
 def get_db():
+    """
+    Dependency to get the database session.
+    """
     db = database_config.SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-@router.post("/seed")
-def seed_ships_route():
-    return seed_ships()
 
 @router.post("/", response_model=schemas.ShipResponse)
 def create_ship_route(ship: schemas.ShipCreate, db: Session = Depends(get_db)):
