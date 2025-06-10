@@ -29,7 +29,7 @@ class ShipResponse(ShipBase):
     ship_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Pydantic models for User
 class UserBase(BaseModel):
@@ -51,4 +51,59 @@ class UserResponse(UserBase):
     user_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class MarketBuyRequest(BaseModel):
+    user_id: int
+    ship_id: int
+
+class MarketBuyResponse(BaseModel):
+    message: str
+
+class MarketSellRequest(BaseModel):
+    user_id: int
+    owned_ship_number: int
+
+class MarketSellResponse(BaseModel):
+    message: str
+    value_received: int
+
+class OwnedShipResponse(BaseModel):
+    ship_number: int
+    user_id: str
+    status: str
+    ship_id: str
+    ship_name: str
+    attack: float
+    shield: float
+    evasion: float
+    fire_rate: float
+    hp: float
+    value: int
+
+    class Config:
+        from_attributes = True
+
+class SeedShipsResponse(BaseModel):
+    message: str
+    ships_seeded: int
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "message": "Ships seeded successfully.",
+                "ships_seeded": 5
+            }
+        }
+
+class SeedUsersResponse(BaseModel):
+    message: str
+    users_seeded: int
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "message": "Users seeded successfully.",
+                "users_seeded": 3
+            }
+        }
