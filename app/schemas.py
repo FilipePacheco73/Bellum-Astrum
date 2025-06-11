@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 
 # Pydantic models for Ship
 class ShipBase(BaseModel):
@@ -39,10 +40,22 @@ class UserBase(BaseModel):
     nickname (str): Unique nickname of the user. Required.
     rank_elo (float): Elo rating of the user, representing their skill level. Default: 1000.
     currency_value (float): Amount of in-game currency the user has. Default: 1500.
+    victories (int): Number of victories. Default: 0.
+    defeats (int): Number of defeats. Default: 0.
+    damage_dealt (float): Total damage dealt by the user. Default: 0.
+    damage_taken (float): Total damage taken by the user. Default: 0.
+    ships_destroyed_by_user (int): Number of ships destroyed by the user. Default: 0.
+    ships_lost_by_user (int): Number of ships lost by the user. Default: 0.
     """
     nickname: str
     rank_elo: Optional[float] = 1000
     currency_value: Optional[float] = 1500
+    victories: Optional[int] = 0
+    defeats: Optional[int] = 0
+    damage_dealt: Optional[float] = 0
+    damage_taken: Optional[float] = 0
+    ships_destroyed_by_user: Optional[int] = 0
+    ships_lost_by_user: Optional[int] = 0
 
 class UserCreate(UserBase):
     pass
@@ -107,3 +120,38 @@ class SeedUsersResponse(BaseModel):
                 "users_seeded": 3
             }
         }
+
+class SeedNPCShipsResponse(BaseModel):
+    message: str
+    npc_ships_assigned: int
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "message": "NPC ships assigned successfully.",
+                "npc_ships_assigned": 10
+            }
+        }
+
+class BattleParticipant(BaseModel):
+    user_id: int
+    nickname: str
+    ship_number: int
+    ship_name: str
+    attack: float
+    shield: float
+    evasion: float
+    fire_rate: float
+    hp: float
+    value: int
+
+class BattleHistoryResponse(BaseModel):
+    battle_id: int
+    timestamp: datetime
+    participants: List[BattleParticipant]
+    winner_user_id: Optional[int]
+    battle_log: List[str]
+    extra: Optional[Dict[str, Any]]
+
+    class Config:
+        from_attributes = True

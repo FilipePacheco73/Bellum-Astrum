@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.routes import ships, users, market, seed
-from app.database.create_database import engine, Base 
+from app.routes import ships, users, market, seed, battle
+from app.database.create_database import engine, Base
 
 # Create all tables in the database
 # This is useful if you want the application to create tables on startup
@@ -18,6 +18,7 @@ app.include_router(seed.router, prefix="/api/v1") # Using seed.router as defined
 app.include_router(ships.router, prefix="/api/v1") # Using ships.router as defined in ships.py
 app.include_router(users.router, prefix="/api/v1") # Using users.router as defined in users.py
 app.include_router(market.router, prefix="/api/v1") # Using market.router as defined in market.py
+app.include_router(battle.router, prefix="/api/v1")  # Using battle.router as defined in battle.py
 
 @app.get("/")
 async def root():

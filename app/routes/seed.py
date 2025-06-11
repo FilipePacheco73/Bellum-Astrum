@@ -2,8 +2,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database import create_database as database_config
-from app.database.start_table_value import seed_ships, seed_users
-from app.schemas import SeedShipsResponse, SeedUsersResponse
+from app.database.start_table_value import seed_ships, seed_users, seed_assign_npc_ships
+from app.schemas import SeedShipsResponse, SeedUsersResponse, SeedNPCShipsResponse
 
 router = APIRouter(
     prefix="/seed",
@@ -33,3 +33,10 @@ def seed_users_route(db: Session = Depends(get_db)):
     Endpoint to seed the database with initial user data.
     """
     return seed_users(db)
+
+@router.post("/npc-ships", response_model=SeedNPCShipsResponse)
+def seed_npc_ships_route(db: Session = Depends(get_db)):
+    """
+    Assign compatible ships to all NPCs based on their ELO.
+    """
+    return seed_assign_npc_ships(db)
