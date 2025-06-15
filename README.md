@@ -1,32 +1,32 @@
 # 🚀 Space BattleShip
 
-Space BattleShip is a learning project designed to explore both frontend and backend development, as well as API integration. The final goal is to use this game as a platform to test and compare the abilities of different AI agents in a competitive environment. 🧠🤖
+Space BattleShip is a learning project focused on backend development with FastAPI, SQLite database, and game logic integration for spaceship battles. The goal is to provide a robust API for managing users, ships, battles, and the market, serving as a foundation for future AI integrations and possible frontends.
 
 ---
 
 ## 🎯 Project Goals
 
-- 🧩 **Fullstack Learning:** Strengthen skills in both frontend and backend technologies.
-- 🔗 **API Integration:** Practice API design and consumption.
-- 🤖 **AI Competition:** Build an arena for AI agents to play Battleship against each other.
+- 🧩 **Backend Learning:** Practice with FastAPI, SQLAlchemy, and Pydantic.
+- 🔗 **RESTful API:** Endpoints for managing game resources.
+- 🤖 **AI-Ready Base:** Structure ready for future integration of intelligent agents.
 
 ---
 
 ## ✨ Features
 
-- 🕹️ Classic Battleship gameplay
-- 🖥️ Frontend & Backend communication
-- 📡 RESTful API-driven logic
-- 🧱 Modular structure for easy extension and experimentation
+- 🕹️ CRUD for users and ships
+- ⚔️ Battle system between users
+- 🛒 Ship market (buy/sell)
+- 🌱 Data seeding endpoints
+- 📡 Modular and extensible REST API
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** (e.g. React, Vue, or Vanilla JS)
-- **Backend:** (e.g. FastAPI, Node.js, or Flask)
-- **API:** RESTful endpoints for game and agent integration
-- **AI/ML:** (Planned) Plug-in interfaces for AI agents
+- **Backend:** Python 3.12+, FastAPI, SQLAlchemy, Pydantic
+- **Database:** SQLite
+- **Testing:** Pytest, FastAPI TestClient
 
 ---
 
@@ -34,27 +34,30 @@ Space BattleShip is a learning project designed to explore both frontend and bac
 
 ### Prerequisites
 
-- Node.js and npm (or relevant stack dependencies)
-- (Optional) Python or backend-specific dependencies
+- Python 3.12+
+- (Recommended) Virtual environment: `python -m venv venv`
 
 ### Installation
 
 ```bash
+# Clone the repository
 git clone https://github.com/FilipePacheco73/Space-BattleShip.git
 cd Space-BattleShip
-# Install backend and frontend dependencies as required
+# Create and activate a virtual environment (optional)
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-### Running the Project
+### Running the API
 
-1. **Backend:**  
-   Run the backend server (e.g., `npm run start` or `uvicorn app.main:app --reload`).
+```bash
+uvicorn app.main:app --reload
+```
 
-2. **Frontend:**  
-   Start the frontend (e.g., `npm run dev`).
-
-3. **Access:**  
-   Open your browser at `http://localhost:3000` (or relevant port).
+Access the interactive documentation at: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
@@ -63,90 +66,120 @@ cd Space-BattleShip
 ```
 /Space-BattleShip
 │
-├── backend/         # Backend code
-├── frontend/        # Frontend code
-├── api/             # API routes and controllers
-├── ai_agents/       # (Planned) AI agents
+├── app/
+│   ├── main.py              # FastAPI app entry point
+│   ├── schemas.py           # Pydantic schemas
+│   ├── crud/                # CRUD operations
+│   ├── database/            # Database config and models
+│   ├── routes/              # API routes/endpoints
+│   └── test/                # Automated tests
+├── requirements.txt         # Python dependencies
 └── README.md
 ```
 
 ---
 
-## 🗺️ Flowcharts
-
-### 📉 Data Model Flowchart
+## 🗺️ Data Model Flowchart
 
 ```mermaid
 erDiagram
-    USER ||--o{ GAME : participates_in
-    GAME }|..|{ BOARD : contains
-    BOARD ||--|{ SHIP : has
+    USER ||--o{ OWNED_SHIP : owns
+    USER ||--o{ BATTLE_HISTORY : participates_in
+    SHIP ||--o{ OWNED_SHIP : is_type
+    OWNED_SHIP ||--o{ BATTLE_HISTORY : used_in
     USER {
-        int id
-        string username
-    }
-    GAME {
-        int id
-        int status
-    }
-    BOARD {
-        int id
-        int width
-        int height
+        int user_id
+        string nickname
+        int elo
     }
     SHIP {
-        int id
-        string type
-        int size
+        int ship_id
+        string ship_name
+        float attack
+        float shield
+        float evasion
+        float fire_rate
+        float hp
+        int value
+    }
+    OWNED_SHIP {
+        int owned_ship_number
+        int user_id
+        int ship_id
+        bool is_active
+    }
+    BATTLE_HISTORY {
+        int battle_id
+        int user1_id
+        int user2_id
+        int winner_id
+        int user1_ship_number
+        int user2_ship_number
+        datetime timestamp
     }
 ```
 
-### 🔄 Project Flow (Current Functionality)
+---
 
-```mermaid
-flowchart TD
-    User --> Frontend
-    Frontend --> Backend
-    Backend --> Database
-    Backend --> Frontend
-    Frontend --> User
-```
+## 🧩 Main Endpoints
+
+- `POST /api/v1/seed/users` – Seed the database with initial users
+- `POST /api/v1/seed/ships` – Seed the database with initial ships
+- `GET /api/v1/users/` – List all users
+- `GET /api/v1/ships/` – List all ships
+- `POST /api/v1/market/buy/{user_id}/{ship_id}` – User buys a ship
+- `POST /api/v1/market/sell/{user_id}/{owned_ship_number}` – User sells a ship
+- `POST /api/v1/battle/battle` – Battle between two users
+
+See the Swagger documentation for payload and response details.
 
 ---
 
 ## 🏆 Roadmap
 
-- [x] Core Battleship game logic
-- [x] Basic frontend & backend integration
-- [ ] Refined API endpoints
-- [ ] AI agent interface & integration
-- [ ] AI vs AI matches with analytics
-- [ ] User authentication & multiplayer
+- [x] CRUD for users and ships
+- [x] Data seeding endpoints
+- [x] Battle system
+- [x] Ship market (buy/sell)
+- [ ] AI agent interface
+- [ ] Authentication and multiplayer
 
 ---
 
-## 📈 Project Evolution
+## 📈 Project History
 
-### 🚩 Commits and Pull Requests Overview
+- Initial backend and database structure
+- Implementation of main endpoints (users, ships, battles, market)
+- Automated tests with pytest
+- Next steps: API refinement, AI integration, authentication
 
-- **Initial Commit:** Set up repo structure and created the base database. ([commit](https://github.com/FilipePacheco73/Space-BattleShip/commit/55086e328bb17ac6666355630cf48999b285560a), [commit](https://github.com/FilipePacheco73/Space-BattleShip/commit/046b85bd0c4a09abf6a9559da87670acd911d5cc))
-- **Data Initialization:** Refactored data loading, introducing FastAPI endpoints and Pydantic schemas. ([commit](https://github.com/FilipePacheco73/Space-BattleShip/commit/ef72eb7f17255a4d7c11dcf049aa7d58c5915cd6))
-- **API Data Management:** Added core API endpoints for dynamic data management (users/ships), enabled database CRUD. ([PR #1](https://github.com/FilipePacheco73/Space-BattleShip/pull/1), merged on 2025-06-05)
-- **Path Adjustments:** Improved import paths for libraries. ([commit](https://github.com/FilipePacheco73/Space-BattleShip/commit/56163deaaa30cda56801a7492ec4d2f5f41b6987))
-- **Database Schema Update:** Updated DB schema, added seeding for ships and users. ([commit](https://github.com/FilipePacheco73/Space-BattleShip/commit/bd1f7d068356c0f7e93e6c99931a570cb195dff7))
+---
 
-### 📝 Summary
+## 📊 Timeline (Commit History)
 
-- The project began with the foundational setup and quickly moved to implement backend APIs and data models.
-- Early commits focused on structuring data management and CRUD operations for users and ships.
-- The first PR formalized the connection between API and data, supporting dynamic scenarios for future AI agent integration.
-- Current focus is on refining APIs, improving the data flow, and preparing for AI agent battles.
+```mermaid
+gantt
+dateFormat  YYYY-MM-DD
+axisFormat  %d/%m
+section Project Timeline
+Initial commit & repo structure        :done,    des1, 2025-06-04, 1d
+Database schema & seeding             :done,    des2, 2025-06-04, 3d
+API endpoints for users/ships         :done,    des3, 2025-06-05, 2d
+Market & seeding endpoints            :done,    des4, 2025-06-07, 3d
+Battle system & statistics            :done,    des5, 2025-06-10, 2d
+Refactor & .gitignore improvements    :done,    des6, 2025-06-10, 1d
+Battle/activation routes & tests      :done,    des7, 2025-06-11, 4d
+Requirements & merges                 :done,    des8, 2025-06-15, 1d
+```
+
+- Each bar represents a key phase or feature, based on actual commit dates and messages.
+- For full commit details, see the [GitHub commit history](https://github.com/FilipePacheco73/Space-BattleShip/commits/main).
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Open issues or submit pull requests to help grow the project.
+Contributions are welcome! Open issues or submit pull requests to collaborate.
 
 ## 📜 License
 
@@ -158,4 +191,4 @@ MIT License
 
 ---
 
-*This project is a playground for exploring fullstack development and artificial intelligence in a fun, competitive setting!*
+*This project is a playground for exploring backend, APIs, and artificial intelligence in a fun, competitive setting!*
