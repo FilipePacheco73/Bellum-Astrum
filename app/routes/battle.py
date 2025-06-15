@@ -1,12 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database.create_database import get_db
-from app.crud import battle_between_users
-from app.schemas import BattleHistoryResponse
+from app.crud.battle_crud import battle_between_users, activate_owned_ship
+from app.schemas import BattleHistoryResponse, ActivateShipResponse
 
 router = APIRouter(prefix="/battle", tags=["Battle"])
 
-@router.post("/", response_model=BattleHistoryResponse)
+@router.post("/activate-ship/", response_model=ActivateShipResponse)
+def activate_ship_route(
+    user_id: int,
+    ship_number: int,
+    db: Session = Depends(get_db)
+):
+    ship, message = activate_owned_ship(db, user_id, ship_number)
+    if not ship:
+        raise HTTPException(status_code=404, detail=message)
+    return ship
+
+@router.post("/battle", response_model=BattleHistoryResponse)
 def battle_route(
     user1_id: int,
     user2_id: int,

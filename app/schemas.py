@@ -38,7 +38,7 @@ class UserBase(BaseModel):
     Base model for User, defining the common attributes.
     Attributes:
     nickname (str): Unique nickname of the user. Required.
-    rank_elo (float): Elo rating of the user, representing their skill level. Default: 1000.
+    elo_rank (float): Elo rating of the user, representing their skill level. Default: 1000.
     currency_value (float): Amount of in-game currency the user has. Default: 1500.
     victories (int): Number of victories. Default: 0.
     defeats (int): Number of defeats. Default: 0.
@@ -48,7 +48,7 @@ class UserBase(BaseModel):
     ships_lost_by_user (int): Number of ships lost by the user. Default: 0.
     """
     nickname: str
-    rank_elo: Optional[float] = 1000
+    elo_rank: Optional[float] = 1000
     currency_value: Optional[float] = 1500
     victories: Optional[int] = 0
     defeats: Optional[int] = 0
@@ -82,17 +82,45 @@ class MarketSellResponse(BaseModel):
     value_received: int
 
 class OwnedShipResponse(BaseModel):
+    """
+    Response model for owned ships, containing details about the ship owned by a user.
+    Attributes:
+    ship_number (int): Unique identifier for the owned ship.
+    user_id (str): Unique identifier of the user who owns the ship.
+    status (str): Status of the ship (e.g., 'owned', 'active').
+    ship_id (str): Unique identifier of the ship.
+    ship_name (str): Name of the ship owned by the user.
+    base_attack (float): Base attack power of the ship.
+    base_shield (float): Base shield strength of the ship.
+    base_evasion (float): Base evasion capability of the ship.
+    base_fire_rate (float): Base rate of fire of the ship's weapons.
+    base_hp (float): Base health points of the ship.
+    base_value (int): Base monetary or strategic value of the ship.
+    actual_attack (float): Actual attack power of the ship after any modifications.
+    actual_shield (float): Actual shield strength of the ship after any modifications.
+    actual_evasion (float): Actual evasion capability of the ship after any modifications.
+    actual_fire_rate (float): Actual rate of fire of the ship's weapons after any modifications.
+    actual_hp (float): Actual health points of the ship after any modifications.
+    actual_value (int): Actual monetary or strategic value of the ship after any modifications.
+    """
+    
     ship_number: int
     user_id: str
     status: str
     ship_id: str
     ship_name: str
-    attack: float
-    shield: float
-    evasion: float
-    fire_rate: float
-    hp: float
-    value: int
+    base_attack: float
+    base_shield: float
+    base_evasion: float
+    base_fire_rate: float
+    base_hp: float
+    base_value: int
+    actual_attack: float
+    actual_shield: float
+    actual_evasion: float
+    actual_fire_rate: float
+    actual_hp: float
+    actual_value: int
 
     class Config:
         from_attributes = True
@@ -102,7 +130,7 @@ class SeedShipsResponse(BaseModel):
     ships_seeded: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "message": "Ships seeded successfully.",
                 "ships_seeded": 5
@@ -114,7 +142,7 @@ class SeedUsersResponse(BaseModel):
     users_seeded: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "message": "Users seeded successfully.",
                 "users_seeded": 3
@@ -126,7 +154,7 @@ class SeedNPCShipsResponse(BaseModel):
     npc_ships_assigned: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "message": "NPC ships assigned successfully.",
                 "npc_ships_assigned": 10
@@ -152,6 +180,20 @@ class BattleHistoryResponse(BaseModel):
     winner_user_id: Optional[int]
     battle_log: List[str]
     extra: Optional[Dict[str, Any]]
+
+    class Config:
+        from_attributes = True
+
+class ActivateShipRequest(BaseModel):
+    user_id: int
+    ship_number: int
+
+class ActivateShipResponse(BaseModel):
+    ship_number: int
+    user_id: int
+    status: str
+    ship_id: Optional[int]
+    ship_name: Optional[str]
 
     class Config:
         from_attributes = True
