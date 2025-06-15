@@ -1,10 +1,12 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func
+from app.crud import ship_crud
 from app.database.create_database import SessionLocal
 from app.database.create_schemas import User, Ship, OwnedShips
-from app import schemas, crud
+from app import schemas
 
+# --- Seed CRUD Operations ---
 def seed_ships(db: Session) -> dict:
     """
     Seed the database with initial ship data if no ships exist.
@@ -14,7 +16,7 @@ def seed_ships(db: Session) -> dict:
     """
     db: Session = SessionLocal()
     try:
-        if not db.query(crud.models.Ship).first():
+        if not db.query(Ship).first():
             ships = [
                 schemas.ShipCreate(ship_name="Falcon", attack=15, shield=10, evasion=5, fire_rate=2, hp=1200, value=1500),
                 schemas.ShipCreate(ship_name="Eagle", attack=20, shield=15, evasion=10, fire_rate=3, hp=1500, value=2000),
@@ -48,10 +50,10 @@ def seed_ships(db: Session) -> dict:
                 schemas.ShipCreate(ship_name="Orion", attack=43, shield=36, evasion=31, fire_rate=7.2, hp=2500, value=4000),
             ]
             for ship in ships:
-                crud.create_ship(db=db, ship=ship)
+                ship_crud.create_ship(db=db, ship=ship)
             return {"message": "Ships seeded successfully.", "ships_seeded": len(ships)}
         else:
-            count = db.query(crud.models.Ship).count()
+            count = db.query(Ship).count()
             return {"message": "Ships already seeded.", "ships_seeded": count}
     except SQLAlchemyError as e:
         return {"message": f"Error: {str(e)}", "ships_seeded": 0}
@@ -67,25 +69,27 @@ def seed_users(db: Session) -> dict:
     """
     db: Session = SessionLocal()
     try:
-        if not db.query(crud.models.User).first():
+        if not db.query(User).first():
             users = [
-                schemas.UserCreate(nickname="Admin", rank_elo=1000, currency_value=9999999, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Astro", rank_elo=800, currency_value=5000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Cyber", rank_elo=950, currency_value=7000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Orion", rank_elo=1100, currency_value=9000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Vega", rank_elo=1250, currency_value=11000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Nebula", rank_elo=1400, currency_value=13000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Pulsar", rank_elo=1550, currency_value=15000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Quasar", rank_elo=1700, currency_value=17000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Titan", rank_elo=1850, currency_value=19000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Solaris", rank_elo=2000, currency_value=21000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Andromeda", rank_elo=2150, currency_value=23000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="Admin", elo_rank=1000, currency_value=9999999, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Astro", elo_rank=800, currency_value=5000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Cyber", elo_rank=950, currency_value=7000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Orion", elo_rank=1100, currency_value=9000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Vega", elo_rank=1250, currency_value=11000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Nebula", elo_rank=1400, currency_value=13000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Pulsar", elo_rank=1550, currency_value=15000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Quasar", elo_rank=1700, currency_value=17000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Titan", elo_rank=1850, currency_value=19000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Solaris", elo_rank=2000, currency_value=21000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Andromeda", elo_rank=2150, currency_value=23000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
             ]
             for user in users:
-                crud.create_user(db=db, user=user)
+                db_user = User(**user.dict())
+                db.add(db_user)
+            db.commit()
             return {"message": "Users seeded successfully.", "users_seeded": len(users)}
         else:
-            count = db.query(crud.models.User).count()
+            count = db.query(User).count()
             return {"message": "Users already seeded.", "users_seeded": count}
     except SQLAlchemyError as e:
         return {"message": f"Error: {str(e)}", "users_seeded": 0}
@@ -96,23 +100,29 @@ def seed_assign_npc_ships(db: Session):
     npcs = db.query(User).filter(User.nickname.like("NPC_%")).all()
     assigned = 0
     for npc in npcs:
-        # Use func.abs para calcular o valor absoluto no SQL
-        ship = db.query(Ship).order_by(func.abs(Ship.attack - (npc.rank_elo / 50))).first()
+        # Select the ship most compatible with the NPC's ELO
+        ship = db.query(Ship).order_by(func.abs(Ship.attack - (npc.elo_rank / 50))).first()
         if ship:
-            # Check if you already have a ship
+            # Check if you already have this ship
             already_owned = db.query(OwnedShips).filter_by(user_id=npc.user_id, ship_id=ship.ship_id).first()
             if not already_owned:
                 owned_ship = OwnedShips(
                     user_id=npc.user_id,
                     ship_id=ship.ship_id,
-                    status='owned',
                     ship_name=ship.ship_name,
-                    attack=ship.attack,
-                    shield=ship.shield,
-                    evasion=ship.evasion,
-                    fire_rate=ship.fire_rate,
-                    hp=ship.hp,
-                    value=ship.value
+                    status='owned',
+                    base_attack=ship.attack,
+                    base_shield=ship.shield,
+                    base_evasion=ship.evasion,
+                    base_fire_rate=ship.fire_rate,
+                    base_hp=ship.hp,
+                    base_value=ship.value,
+                    actual_attack=ship.attack,
+                    actual_shield=ship.shield,
+                    actual_evasion=ship.evasion,
+                    actual_fire_rate=ship.fire_rate,
+                    actual_hp=ship.hp,
+                    actual_value=ship.value
                 )
                 db.add(owned_ship)
                 assigned += 1
