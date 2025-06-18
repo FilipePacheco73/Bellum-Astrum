@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func
-from app.crud import ship_crud
-from app.database.create_database import SessionLocal
-from app.database.create_schemas import User, Ship, OwnedShips
-from app import schemas
+from backend.app.crud import ship_crud
+from backend.app.database.create_database import SessionLocal
+from backend.app.database.create_schemas import User, Ship, OwnedShips
+from backend.app import schemas
 
 # --- Seed CRUD Operations ---
 def seed_ships(db: Session) -> dict:

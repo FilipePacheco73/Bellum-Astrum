@@ -1,9 +1,9 @@
 # app/routes/ships.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.database import create_database as database_config
-from app.crud.seed_crud import seed_ships, seed_users, seed_assign_npc_ships
-from app.schemas import SeedShipsResponse, SeedUsersResponse, SeedNPCShipsResponse
+from backend.app.database import create_database as database_config
+from backend.app.crud.seed_crud import seed_ships, seed_users, seed_assign_npc_ships
+from backend.app.schemas import SeedShipsResponse, SeedUsersResponse, SeedNPCShipsResponse
 
 router = APIRouter(
     prefix="/seed",
