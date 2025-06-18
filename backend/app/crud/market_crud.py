@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app import schemas
-from app.database.create_schemas import User, Ship, OwnedShips
+from backend.app import schemas
+from backend.app.database.create_schemas import User, Ship, OwnedShips
 
 # --- Market CRUD Operations ---
 def buy_ship(db: Session, user_id: int, ship_id: int):

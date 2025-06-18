@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.routes import ships, users, market, seed, battle
-from app.database.create_database import engine, Base
+from backend.app.routes import ships, users, market, seed, battle
+from backend.app.database.create_database import engine, Base
 
 # Create all tables in the database
 # This is useful if you want the application to create tables on startup

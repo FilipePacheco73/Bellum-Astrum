@@ -1,4 +1,4 @@
-from app.database.create_database import engine, Base
+from backend.app.database.create_database import engine, Base
 
 """
 This script initializes the database schema for the Space Battle Game API.

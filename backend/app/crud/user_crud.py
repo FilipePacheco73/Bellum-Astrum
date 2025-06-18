@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app import schemas
-from app.database import create_schemas as models
+from backend.app import schemas
+from backend.app.database import create_schemas as models
 
 # --- User CRUD Operations ---
 def get_user(db: Session, user_id: int):
