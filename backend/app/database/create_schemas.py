@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Float, String, DateTime, JSON
-from app.database.create_database import Base
+from backend.app.database.create_database import Base
 from datetime import datetime
 
 class Ship(Base):

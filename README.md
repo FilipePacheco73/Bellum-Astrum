@@ -1,21 +1,21 @@
-# 🚀 Space BattleShip
+# 🚀 Bellum Astrum
 
-Space BattleShip is a learning project focused on backend development with FastAPI, SQLite database, and game logic integration for spaceship battles. The goal is to provide a robust API for managing users, ships, battles, and the market, serving as a foundation for future AI integrations and possible frontends.
+Bellum Astrum (formerly Space BattleShip) is a learning project focused on backend development with FastAPI, SQLite database, and spaceship battle logic. The project is now organized to facilitate expansion with a modern frontend.
 
 ---
 
 ## 🎯 Project Goals
 
 - 🧩 **Backend Learning:** Practice with FastAPI, SQLAlchemy, and Pydantic.
-- 🔗 **RESTful API:** Endpoints for managing game resources.
-- 🤖 **AI-Ready Base:** Structure ready for future integration of intelligent agents.
+- 🔗 **RESTful API:** Endpoints for game resources.
+- 🤖 **AI-Ready Base:** Structure ready for intelligent agents and frontend integration.
 
 ---
 
 ## ✨ Features
 
 - 🕹️ CRUD for users and ships
-- ⚔️ Battle system between users
+- ⚔️ Battle system
 - 🛒 Ship market (buy/sell)
 - 🌱 Data seeding endpoints
 - 📡 Modular and extensible REST API
@@ -27,6 +27,7 @@ Space BattleShip is a learning project focused on backend development with FastA
 - **Backend:** Python 3.12+, FastAPI, SQLAlchemy, Pydantic
 - **Database:** SQLite
 - **Testing:** Pytest, FastAPI TestClient
+- **Structure:** Backend in `backend/app/` (ready for a separate frontend)
 
 ---
 
@@ -41,9 +42,9 @@ Space BattleShip is a learning project focused on backend development with FastA
 
 ```bash
 # Clone the repository
-git clone https://github.com/FilipePacheco73/Space-BattleShip.git
-cd Space-BattleShip
-# Create and activate a virtual environment (optional)
+git clone https://github.com/FilipePacheco73/Bellum-Astrum.git
+cd Bellum-Astrum
+# Create and activate a virtual environment
 python -m venv venv
 # On Windows:
 venv\Scripts\activate
@@ -54,7 +55,7 @@ pip install -r requirements.txt
 ### Running the API
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn backend.app.main:app --reload
 ```
 
 Access the interactive documentation at: [http://localhost:8000/docs](http://localhost:8000/docs)
@@ -64,17 +65,19 @@ Access the interactive documentation at: [http://localhost:8000/docs](http://loc
 ## 🗂️ Project Structure
 
 ```
-/Space-BattleShip
+/Bellum-Astrum
 │
-├── app/
-│   ├── main.py              # FastAPI app entry point
-│   ├── schemas.py           # Pydantic schemas
-│   ├── crud/                # CRUD operations
-│   ├── database/            # Database config and models
-│   ├── routes/              # API routes/endpoints
-│   └── test/                # Automated tests
-├── requirements.txt         # Python dependencies
-└── README.md
+├── backend/
+│   ├── app/
+│   │   ├── main.py           # FastAPI entry point
+│   │   ├── schemas.py        # Pydantic schemas
+│   │   ├── crud/             # CRUD operations
+│   │   ├── database/         # Database config and models
+│   │   ├── routes/           # API routes/endpoints
+│   │   └── test/             # Automated tests
+│   └── requirements.txt      # Python dependencies
+├── README.md
+└── CHANGELOG.md
 ```
 
 ---
@@ -141,7 +144,9 @@ See the Swagger documentation for payload and response details.
 - [x] Data seeding endpoints
 - [x] Battle system
 - [x] Ship market (buy/sell)
-- [ ] AI agent interface
+- [x] Backend reorganization to `backend/app/`
+- [ ] Start modern frontend (React, Vite or Next.js)
+- [ ] Interface for AI agents
 - [ ] Authentication and multiplayer
 
 ---
@@ -149,9 +154,25 @@ See the Swagger documentation for payload and response details.
 ## 📈 Project History
 
 - Initial backend and database structure
-- Implementation of main endpoints (users, ships, battles, market)
-- Automated tests with pytest
-- Next steps: API refinement, AI integration, authentication
+- Implementation of main endpoints
+- Automated tests
+- Reorganization to facilitate frontend integration
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Open issues or submit pull requests to collaborate.
+
+## 📜 License
+
+MIT License
+
+## 👤 Author
+
+[FilipePacheco73](https://github.com/FilipePacheco73)
+
+---
 
 ---
 
@@ -174,21 +195,5 @@ Requirements & merges                 :done,    des8, 2025-06-15, 1d
 
 - Each bar represents a key phase or feature, based on actual commit dates and messages.
 - For full commit details, see the [GitHub commit history](https://github.com/FilipePacheco73/Space-BattleShip/commits/main).
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Open issues or submit pull requests to collaborate.
-
-## 📜 License
-
-MIT License
-
-## 👤 Author
-
-[FilipePacheco73](https://github.com/FilipePacheco73)
-
----
 
 *This project is a playground for exploring backend, APIs, and artificial intelligence in a fun, competitive setting!*

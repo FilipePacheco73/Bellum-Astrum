@@ -1,11 +1,10 @@
 # app/routes/ships.py
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-# models and database_config imports remain the same
-from app.database import create_schemas as models
-from app.database import create_database as database_config
-from app import schemas # schemas import remains
-from app.crud import ship_crud # Import the crud module
+from backend.app.database import create_schemas as models
+from backend.app.database import create_database as database_config
+from backend.app import schemas
+from backend.app.crud import ship_crud
 
 router = APIRouter(
     prefix="/ships",

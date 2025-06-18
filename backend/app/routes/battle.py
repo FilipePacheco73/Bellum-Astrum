@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.database.create_database import get_db
-from app.crud.battle_crud import battle_between_users, activate_owned_ship
-from app.schemas import BattleHistoryResponse, ActivateShipResponse
+from backend.app.database.create_database import get_db
+from backend.app.crud.battle_crud import battle_between_users, activate_owned_ship
+from backend.app.schemas import BattleHistoryResponse, ActivateShipResponse
 
 router = APIRouter(prefix="/battle", tags=["Battle"])
 
