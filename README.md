@@ -19,6 +19,7 @@ Bellum Astrum (formerly Space BattleShip) is a learning project focused on backe
 - 🛒 Ship market (buy/sell)
 - 🌱 Data seeding endpoints
 - 📡 Modular and extensible REST API
+- 🖥️ Modern web interface (React + Vite + Tailwind)
 
 ---
 
@@ -27,7 +28,8 @@ Bellum Astrum (formerly Space BattleShip) is a learning project focused on backe
 - **Backend:** Python 3.12+, FastAPI, SQLAlchemy, Pydantic
 - **Database:** SQLite
 - **Testing:** Pytest, FastAPI TestClient
-- **Structure:** Backend in `backend/app/` (ready for a separate frontend)
+- **Frontend:** React, Vite, TypeScript, Tailwind CSS
+- **Structure:** Backend in `backend/app/`, Frontend in `frontend/`
 
 ---
 
@@ -36,9 +38,10 @@ Bellum Astrum (formerly Space BattleShip) is a learning project focused on backe
 ### Prerequisites
 
 - Python 3.12+
+- Node.js 18+
 - (Recommended) Virtual environment: `python -m venv venv`
 
-### Installation
+### Backend Installation
 
 ```bash
 # Clone the repository
@@ -48,17 +51,32 @@ cd Bellum-Astrum
 python -m venv venv
 # On Windows:
 venv\Scripts\activate
-# Install dependencies
+# Install backend dependencies
 pip install -r requirements.txt
 ```
 
-### Running the API
+### Running the Backend API
 
 ```bash
 uvicorn backend.app.main:app --reload
 ```
 
 Access the interactive documentation at: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Frontend Installation
+
+```bash
+cd frontend
+npm install
+```
+
+### Running the Frontend
+
+```bash
+npm run dev
+```
+
+Access the web interface at: [http://localhost:5173](http://localhost:5173)
 
 ---
 
@@ -76,8 +94,41 @@ Access the interactive documentation at: [http://localhost:8000/docs](http://loc
 │   │   ├── routes/           # API routes/endpoints
 │   │   └── test/             # Automated tests
 │   └── requirements.txt      # Python dependencies
+│
+├── frontend/
+│   ├── src/                  # React source code
+│   │   ├── components/       # Reusable React components (Navbar, SpaceBackground, etc.)
+│   │   ├── pages/            # Main pages/routes (Home, Register, Market, etc.)
+│   │   ├── contexts/         # React context providers (LanguageContext, etc.)
+│   │   ├── locales/          # Localization and translations
+│   │   ├── assets/           # Static assets (images, icons)
+│   │   ├── App.tsx           # Main App component
+│   │   ├── main.tsx          # React entry point
+│   │   └── ...               # Other configs and styles
+│   ├── public/               # Static assets
+│   ├── package.json          # Frontend dependencies
+│   └── ...                   # Vite, Tailwind, config files
+│
 ├── README.md
 └── CHANGELOG.md
+```
+
+---
+
+## 🗺️ Project Flowchart
+
+```mermaid
+flowchart LR
+    User((User))
+    Frontend(Frontend: React/Vite/Tailwind)
+    Backend(Backend: FastAPI)
+    DB[(SQLite Database)]
+
+    User -- HTTP/Browser --> Frontend
+    Frontend -- REST API --> Backend
+    Backend -- ORM/SQL --> DB
+    Backend -- JSON Response --> Frontend
+    Frontend -- UI/UX --> User
 ```
 
 ---
@@ -145,34 +196,18 @@ See the Swagger documentation for payload and response details.
 - [x] Battle system
 - [x] Ship market (buy/sell)
 - [x] Backend reorganization to `backend/app/`
-- [ ] Start modern frontend (React, Vite or Next.js)
-- [ ] Interface for AI agents
+- [x] Start modern frontend (React, Vite or Next.js)
+- [x] Internationalization (i18n) for frontend
 - [ ] Authentication and multiplayer
-
----
-
-## 📈 Project History
-
-- Initial backend and database structure
-- Implementation of main endpoints
-- Automated tests
-- Reorganization to facilitate frontend integration
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Open issues or submit pull requests to collaborate.
-
-## 📜 License
-
-MIT License
-
-## 👤 Author
-
-[FilipePacheco73](https://github.com/FilipePacheco73)
-
----
+- [ ] User profile and settings page
+- [ ] Responsive/mobile-friendly frontend
+- [ ] Error handling and user feedback improvements
+- [ ] API documentation improvements (OpenAPI, examples)
+- [ ] CI/CD pipeline (tests, lint, deploy)
+- [ ] Docker support (dev/prod)
+- [ ] Admin dashboard for managing users/ships
+- [ ] Unit and integration tests for frontend
+- [ ] Interface for AI agents
 
 ---
 
@@ -191,9 +226,33 @@ Battle system & statistics            :done,    des5, 2025-06-10, 2d
 Refactor & .gitignore improvements    :done,    des6, 2025-06-10, 1d
 Battle/activation routes & tests      :done,    des7, 2025-06-11, 4d
 Requirements & merges                 :done,    des8, 2025-06-15, 1d
+Register page & .gitignore update     :done,    des9, 2025-06-24, 1d
+
+section Releases
+v0.1.0 :milestone, m1, 2025-06-10, 0d
+v0.1.1 :milestone, m2, 2025-06-15, 0d
+v0.1.2 :milestone, m3, 2025-06-18, 0d
+v0.2.0 :milestone, m4, 2025-06-18, 0d
+v0.2.1 :milestone, m5, 2025-06-24, 0d
 ```
 
 - Each bar represents a key phase or feature, based on actual commit dates and messages.
-- For full commit details, see the [GitHub commit history](https://github.com/FilipePacheco73/Space-BattleShip/commits/main).
+- For full commit details, see the [GitHub commit history](https://github.com/FilipePacheco73/Bellum-Astrum/commits/main).
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Open issues or submit pull requests to collaborate.
+
+## 📜 License
+
+MIT License
+
+## 👤 Author
+
+[FilipePacheco73](https://github.com/FilipePacheco73)
+
+---
 
 *This project is a playground for exploring backend, APIs, and artificial intelligence in a fun, competitive setting!*
