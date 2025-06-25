@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-06-24
+
+### Changed
+- Improved Register page UI: better spacing, font size, and responsive layout for the form fields.
+- Register form container now supports custom width and minHeight for better visual balance.
+- Updated `.gitignore`: reorganized sections for backend, frontend, logs, and IDE/system files; translated all comments to English; added explicit patterns for subfolders.
+- Started internationalization (i18n) support in the frontend (language context and translation files).
+
 ## [0.2.0] - 2025-06-18
 
 ### Changed
