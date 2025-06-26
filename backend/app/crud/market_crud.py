@@ -42,7 +42,7 @@ def sell_ship(db: Session, user_id: int, owned_ship_id: int):
     owned_ship = db.query(OwnedShips).filter(
         OwnedShips.ship_number == owned_ship_id,
         OwnedShips.user_id == user_id,
-        OwnedShips.status == 'owned'
+        OwnedShips.status != 'destroyed'
     ).first()
     if not owned_ship:
         return None, "Owned ship not found or already sold"
