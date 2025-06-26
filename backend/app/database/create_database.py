@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base
 import os
+from pydantic import BaseModel, ConfigDict
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'Bellum_Astrum.db')}"
@@ -26,3 +26,6 @@ def get_db():
         yield db
     finally:
         db.close()
+
+class MyModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")

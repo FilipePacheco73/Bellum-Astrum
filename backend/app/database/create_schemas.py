@@ -48,6 +48,8 @@ class User(Base):
     Attributes:
     user_id (int): Unique identifier of the user. Primary key.
     nickname (str): Unique nickname of the user. Required.
+    email (str): Unique email of the user. Required.
+    password_hash (str): Hash of the user's password. Required for authentication.
     elo_rank (float): Elo rating of the user, representing their skill level. Default: 1000.
     currency_value (float): Amount of in-game currency the user has. Default: 1500.
     victories (int): Number of victories. Default: 0.
@@ -62,6 +64,8 @@ class User(Base):
 
     user_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     nickname = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
     elo_rank = Column(Float, default=1000)
     currency_value = Column(Float, default=1500)
     victories = Column(Integer, default=0)

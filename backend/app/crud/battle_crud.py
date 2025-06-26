@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from backend.app import schemas
 from backend.app.database import create_schemas as models
 from backend.app.database.create_schemas import User, OwnedShips, BattleHistory
-from datetime import datetime
+from datetime import datetime, UTC
 import random
 
 # --- Battle CRUD Operations ---
@@ -167,7 +167,7 @@ def battle_between_users(db: Session, user1_id: int, user2_id: int, user1_ship_n
 
     # Save battle history
     battle_history = BattleHistory(
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(UTC),
         participants=[
             {
                 "user_id": user1.user_id, "nickname": user1.nickname, "ship_number": ship1.ship_number,

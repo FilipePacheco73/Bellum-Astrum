@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-06-26
+
+### Added
+- Password hashing and authentication for user registration and login.
+- JWT-based authentication for user login.
+- Environment variable support for admin and NPC user seeding.
+
+### Changed
+- Refactored backend automated tests for a realistic battle flow: creating two users, buying distinct ships, activating, battling, and selling the ships.
+- Tests now dynamically fetch available ships to avoid ID conflicts and ensure database state independence.
+- Pydantic models updated to use `model_config = ConfigDict(...)` for Pydantic v2 compatibility.
+- User creation now requires email and password, and stores hashed passwords.
+- User CRUD and routes updated to support secure registration and login.
+- Seed logic for users and ships improved for robustness and security.
+- Fixed usage of `datetime.utcnow()` to `datetime.now(UTC)` in `battle_crud.py`, eliminating Python deprecation warnings.
+- Updated requirements.txt to reflect new dependencies.
+
+### Removed
+- Unnecessary seed calls and dependencies in automated tests.
+- Legacy or duplicate code in user and ship creation flows.
+
 ## [0.2.1] - 2025-06-24
 
 ### Changed
@@ -59,8 +80,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial documentation (README.md)
 - MIT License file
 - Basic .gitignore configuration
-
-[0.2.0]: https://github.com/FilipePacheco73/Bellum-Astrum/compare/v0.1.2...v0.2.0
-[0.1.2]: https://github.com/FilipePacheco73/Bellum-Astrum/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/FilipePacheco73/Space-BattleShip/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/FilipePacheco73/Space-BattleShip/releases/tag/v0.1.0

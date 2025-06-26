@@ -1,10 +1,28 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func
-from backend.app.crud import ship_crud
+from backend.app.crud import ship_crud, user_crud
 from backend.app.database.create_database import SessionLocal
 from backend.app.database.create_schemas import User, Ship, OwnedShips
 from backend.app import schemas
+import os
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))
+
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+NPC_PASSWORD = os.getenv('NPC_PASSWORD')
+NPC_ASTRO_EMAIL = os.getenv('NPC_ASTRO_EMAIL')
+NPC_CYBER_EMAIL = os.getenv('NPC_CYBER_EMAIL')
+NPC_ORION_EMAIL = os.getenv('NPC_ORION_EMAIL')
+NPC_VEGA_EMAIL = os.getenv('NPC_VEGA_EMAIL')
+NPC_NEBULA_EMAIL = os.getenv('NPC_NEBULA_EMAIL')
+NPC_PULSAR_EMAIL = os.getenv('NPC_PULSAR_EMAIL')
+NPC_QUASAR_EMAIL = os.getenv('NPC_QUASAR_EMAIL')
+NPC_TITAN_EMAIL = os.getenv('NPC_TITAN_EMAIL')
+NPC_SOLARIS_EMAIL = os.getenv('NPC_SOLARIS_EMAIL')
+NPC_ANDROMEDA_EMAIL = os.getenv('NPC_ANDROMEDA_EMAIL')
 
 # --- Seed CRUD Operations ---
 def seed_ships(db: Session) -> dict:
@@ -71,22 +89,20 @@ def seed_users(db: Session) -> dict:
     try:
         if not db.query(User).first():
             users = [
-                schemas.UserCreate(nickname="Admin", elo_rank=1000, currency_value=9999999, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Astro", elo_rank=800, currency_value=5000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Cyber", elo_rank=950, currency_value=7000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Orion", elo_rank=1100, currency_value=9000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Vega", elo_rank=1250, currency_value=11000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Nebula", elo_rank=1400, currency_value=13000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Pulsar", elo_rank=1550, currency_value=15000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Quasar", elo_rank=1700, currency_value=17000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Titan", elo_rank=1850, currency_value=19000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Solaris", elo_rank=2000, currency_value=21000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
-                schemas.UserCreate(nickname="NPC_Andromeda", elo_rank=2150, currency_value=23000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="Admin", email=ADMIN_EMAIL, password=ADMIN_PASSWORD, elo_rank=1000, currency_value=9999999, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Astro", email=NPC_ASTRO_EMAIL, password=NPC_PASSWORD, elo_rank=800, currency_value=5000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Cyber", email=NPC_CYBER_EMAIL, password=NPC_PASSWORD, elo_rank=950, currency_value=7000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Orion", email=NPC_ORION_EMAIL, password=NPC_PASSWORD, elo_rank=1100, currency_value=9000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Vega", email=NPC_VEGA_EMAIL, password=NPC_PASSWORD, elo_rank=1250, currency_value=11000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Nebula", email=NPC_NEBULA_EMAIL, password=NPC_PASSWORD, elo_rank=1400, currency_value=13000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Pulsar", email=NPC_PULSAR_EMAIL, password=NPC_PASSWORD, elo_rank=1550, currency_value=15000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Quasar", email=NPC_QUASAR_EMAIL, password=NPC_PASSWORD, elo_rank=1700, currency_value=17000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Titan", email=NPC_TITAN_EMAIL, password=NPC_PASSWORD, elo_rank=1850, currency_value=19000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Solaris", email=NPC_SOLARIS_EMAIL, password=NPC_PASSWORD, elo_rank=2000, currency_value=21000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
+                schemas.UserCreate(nickname="NPC_Andromeda", email=NPC_ANDROMEDA_EMAIL, password=NPC_PASSWORD, elo_rank=2150, currency_value=23000, victories=0, defeats=0, damage_dealt=0, damage_taken=0, ships_destroyed_by_user=0, ships_lost_by_user=0),
             ]
             for user in users:
-                db_user = User(**user.dict())
-                db.add(db_user)
-            db.commit()
+                user_crud.create_user(db, user)
             return {"message": "Users seeded successfully.", "users_seeded": len(users)}
         else:
             count = db.query(User).count()
