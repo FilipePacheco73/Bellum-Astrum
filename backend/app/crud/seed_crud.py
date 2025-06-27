@@ -5,10 +5,11 @@ from backend.app.crud import ship_crud, user_crud
 from backend.app.database.create_database import SessionLocal
 from backend.app.database.create_schemas import User, Ship, OwnedShips
 from backend.app import schemas
-import os
 from dotenv import load_dotenv
+import os
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))
+# Carrega o .env da pasta backend
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')

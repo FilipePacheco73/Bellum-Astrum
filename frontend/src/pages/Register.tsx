@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import translations from '../locales/translations';
 import { useLanguage } from '../contexts/LanguageContext';
+import PageLayout from '../components/PageLayout';
+import Button from '../components/Button';
+import { API_BASE_URL } from '../config/api';
 
 const Register: React.FC = () => {
   const { language } = useLanguage();
@@ -13,49 +16,54 @@ const Register: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui será feita a integração com o backend
-    alert('Cadastro enviado!');
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nickname: form.name,
+          email: form.email,
+          password: form.password
+        })
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.detail || t.home.error_register || 'Erro ao cadastrar!');
+        return;
+      }
+      alert(t.home.success_register || 'Cadastro realizado com sucesso!');
+      navigate('/');
+    } catch (err) {
+      alert(t.home.connection_error || 'Erro de conexão com o servidor!');
+    }
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-start p-8 text-center text-white relative"
-      style={{
-        backgroundImage: 'url(/home_img.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center 60%',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
+    <PageLayout backgroundImage="/home_img.png">
       <div
-        className="mb-12 px-4 py-12 rounded-3xl shadow-2xl border-4 border-white/30 bg-black/70 backdrop-blur-xl flex flex-col items-center justify-center"
-        style={{ marginTop: '120px', minWidth: '500px', minHeight: '300px', boxShadow: '0 8px 32px 0 rgba(0,0,0,0.37)', WebkitBackdropFilter: 'blur(20px)', backdropFilter: 'blur(20px)' }}
+        className="mb-12 px-2 sm:px-4 py-6 sm:py-8 rounded-2xl shadow-2xl border-4 border-white/30 bg-black/70 backdrop-blur-xl flex flex-col items-center justify-center mt-4 w-full max-w-md min-h-[220px] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-[20px]"
       >
         {/* Avatar/Icon */}
-        <div 
-            style={{ marginBottom: '20px', marginTop: '20px', width: '100%' }}
-            className="flex justify-center mb-4 w-full"
-            >
-          <img src="/vite.svg" alt="Avatar" className="w-16 h-16 rounded-full bg-white/20 shadow-lg" />
+        <div className="flex justify-center w-full my-4">
+          <img src="/bellum-astrum-logo-3d.svg" alt="Bellum Astrum Logo" className="w-12 h-12 sm:w-14 sm:h-14" />
         </div>
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col items-center gap-6 max-w-sm mx-auto"
+          className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto"
         >
-          <h2 className="text-3xl font-bold text-white mb-2 text-center drop-shadow-lg">
+          <h2 className="text-2xl font-bold text-white mb-2 text-center drop-shadow-lg">
             {t.home.create_account}
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="flex flex-col gap-4 w-full">
             <input
               type="text"
               name="name"
               placeholder={t.home.name}
               value={form.name}
               onChange={handleChange}
-              style={ {marginTop: '20px', fontSize: '18px' }}
-              className="max-w-sm px-4 py-3 rounded-xl bg-white/10 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 shadow-sm hover:bg-white/20 placeholder-white/60"
+              className="text-base w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 shadow-sm hover:bg-white/20 placeholder-white/60"
               required
             />
             <input
@@ -64,8 +72,7 @@ const Register: React.FC = () => {
               placeholder={t.home.email}
               value={form.email}
               onChange={handleChange}
-              style={{ fontSize: '18px' }}
-              className="max-w-sm px-4 py-3 rounded-xl bg-white/10 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 shadow-sm hover:bg-white/20 placeholder-white/60"
+              className="text-base w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 shadow-sm hover:bg-white/20 placeholder-white/60"
               required
             />
             <input
@@ -74,29 +81,22 @@ const Register: React.FC = () => {
               placeholder={t.home.password}
               value={form.password}
               onChange={handleChange}
-              style={{ fontSize: '18px' }}
-              className="max-w-sm px-4 py-3 rounded-xl bg-white/10 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 shadow-sm hover:bg-white/20 placeholder-white/60"
+              className="text-base w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 shadow-sm hover:bg-white/20 placeholder-white/60"
               required
             />
           </div>
-          <button
-            type="submit"
-            style={{ marginTop: '20px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)' }}
-            className="max-w-sm py-3 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-xl shadow-lg transition-colors duration-200 mb-2 mt-4 drop-shadow-md"
-          >
+          <Button type="submit">
             {t.home.register}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            style={{ marginTop: '20px', marginBottom: '20px', fontSize: '16px' }}
             onClick={() => navigate('/')}
-            className="max-w-sm py-2 text-blue-300 hover:text-blue-500 text-sm mt-2 transition-colors duration-200"
           >
             {t.home.back_to_home}
-          </button>
+          </Button>
         </form>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

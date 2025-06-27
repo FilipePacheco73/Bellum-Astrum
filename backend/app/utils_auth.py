@@ -4,7 +4,8 @@ import bcrypt
 from datetime import datetime, timedelta
 from jose import jwt
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))
+# Carrega o .env da pasta backend
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # Configurações para JWT
 SECRET_KEY = os.getenv("JWT_SECRET_KEY") 
