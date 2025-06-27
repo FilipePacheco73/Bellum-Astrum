@@ -9,7 +9,10 @@ const translations = {
       email: 'Email',
       password: 'Senha',
       register: 'Cadastrar',
-      back_to_home: 'Voltar para o início'
+      back_to_home: 'Voltar para o início',
+      success_register: 'Cadastro realizado com sucesso!',
+      error_register: 'Erro ao cadastrar!',
+      connection_error: 'Erro de conexão com o servidor!'
     },
     users: {
       title: 'Usuários',
@@ -46,7 +49,10 @@ const translations = {
       email: 'Email',
       password: 'Password',
       register: 'Register',
-      back_to_home: 'Back to Home'
+      back_to_home: 'Back to Home',
+      success_register: 'Registration successful!',
+      error_register: 'Registration error!',
+      connection_error: 'Connection error with the server!'
     },
     users: {
       title: 'Users',

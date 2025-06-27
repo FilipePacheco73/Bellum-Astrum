@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -28,9 +28,7 @@ class ShipCreate(ShipBase):
 
 class ShipResponse(ShipBase):
     ship_id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Pydantic models for User
 class UserBase(BaseModel):
@@ -57,14 +55,36 @@ class UserBase(BaseModel):
     ships_destroyed_by_user: Optional[int] = 0
     ships_lost_by_user: Optional[int] = 0
 
-class UserCreate(UserBase):
-    pass
+class UserCreate(BaseModel):
+    nickname: str
+    email: EmailStr
+    password: str
+    elo_rank: Optional[float] = 1000
+    currency_value: Optional[float] = 1500
+    victories: Optional[int] = 0
+    defeats: Optional[int] = 0
+    damage_dealt: Optional[float] = 0
+    damage_taken: Optional[float] = 0
+    ships_destroyed_by_user: Optional[int] = 0
+    ships_lost_by_user: Optional[int] = 0
 
-class UserResponse(UserBase):
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
     user_id: int
-
-    class Config:
-        from_attributes = True
+    nickname: str
+    email: EmailStr
+    elo_rank: float
+    currency_value: float
+    victories: int
+    defeats: int
+    damage_dealt: float
+    damage_taken: float
+    ships_destroyed_by_user: int
+    ships_lost_by_user: int
+    model_config = ConfigDict(from_attributes=True)
 
 class MarketBuyRequest(BaseModel):
     user_id: int
@@ -121,45 +141,37 @@ class OwnedShipResponse(BaseModel):
     actual_fire_rate: float
     actual_hp: float
     actual_value: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SeedShipsResponse(BaseModel):
     message: str
     ships_seeded: int
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "message": "Ships seeded successfully.",
-                "ships_seeded": 5
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "message": "Ships seeded successfully.",
+            "ships_seeded": 5
         }
+    })
 
 class SeedUsersResponse(BaseModel):
     message: str
     users_seeded: int
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "message": "Users seeded successfully.",
-                "users_seeded": 3
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "message": "Users seeded successfully.",
+            "users_seeded": 3
         }
+    })
 
 class SeedNPCShipsResponse(BaseModel):
     message: str
     npc_ships_assigned: int
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "message": "NPC ships assigned successfully.",
-                "npc_ships_assigned": 10
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "message": "NPC ships assigned successfully.",
+            "npc_ships_assigned": 10
         }
+    })
 
 class BattleParticipant(BaseModel):
     user_id: int
@@ -180,9 +192,7 @@ class BattleHistoryResponse(BaseModel):
     winner_user_id: Optional[int]
     battle_log: List[str]
     extra: Optional[Dict[str, Any]]
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ActivateShipRequest(BaseModel):
     user_id: int
@@ -194,6 +204,4 @@ class ActivateShipResponse(BaseModel):
     status: str
     ship_id: Optional[int]
     ship_name: Optional[str]
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
