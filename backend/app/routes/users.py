@@ -21,9 +21,20 @@ def get_db():
 
 @router.post("/register", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter((models.User.nickname == user.nickname) | (models.User.email == user.email)).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Nickname or email already registered")
+    existing_email = db.query(models.User).filter(models.User.email == user.email).first()
+    
+    existing_nickname = db.query(models.User).filter(models.User.nickname == user.nickname).first()
+    
+    errors = []
+    if existing_email:
+        errors.append("Email already registered")
+    if existing_nickname:
+        errors.append("Nickname already registered")
+    
+    if errors:
+        error_message = "; ".join(errors)
+        raise HTTPException(status_code=400, detail=error_message)
+    
     return user_crud.create_user(db=db, user=user)
 
 @router.post("/login")
