@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2025-06-28
+
+### Added
+- **New Authentication System**: Complete authentication flow with login/logout functionality
+  - JWT-based token authentication with automatic storage and validation
+  - `AuthContext` and `PrivateRoute` components for secure route protection
+  - Login page with email validation and error handling
+- **Game Layout System**: New game interface architecture
+  - `GameLayout` component with starfield background animation and header
+  - `Sidebar` component with navigation menu and user info display
+  - `SidebarContext` for sidebar state management
+- **Enhanced UI Components**: 
+  - Updated `Navbar` with language switcher and dynamic positioning
+  - `Button` component for consistent styling across the app
+  - Starfield CSS animations added to `App.css`
+- **Complete Page Redesigns**: All game pages converted to use new GameLayout
+  - Dashboard with user statistics and activity feed
+  - Ships page with fleet management interface
+  - Market page with tabs for ships, upgrades, and resources
+  - Battle page with ship selection and opponent choice
+  - Users page with leaderboard and online players
+- **API Integration**: 
+  - Axios configuration with automatic token injection
+  - Complete API client setup for backend communication
+
+### Fixed
+- **Dashboard Critical Bug**: Fixed blank screen issue after login caused by data structure mismatch between frontend and backend
+  - Updated `UserData` interface to match backend response fields (`currency_value`, `victories`, `defeats`, `elo_rank`, etc.)
+  - Fixed `Cannot read properties of undefined (reading 'toLocaleString')` error that was causing the Dashboard to crash
+  - Dashboard now correctly displays user statistics with proper field mappings
+- **Registration Error Handling**: Enhanced user registration with detailed error messages
+  - Better validation for email format and password length
+  - Specific error messages for duplicate email/nickname
+  - Improved UI feedback for registration process
+- **Authentication Flow**: Enhanced authentication debugging and error handling
+- **Route Protection**: Improved PrivateRoute component for better authentication state management
+
+### Changed
+- **Complete Frontend Architecture Overhaul**: 
+  - Migrated from basic routing to context-based authentication system
+  - Replaced `SpaceBackground` with integrated starfield animations
+  - Updated all pages to use consistent GameLayout instead of PageLayout
+- **UI/UX Improvements**:
+  - Dashboard now displays ELO rank and damage statistics instead of level/experience system
+  - Updated stats cards to show relevant game metrics: victories, currency, damage dealt, and defeats
+  - Improved user info display with ELO rating and total damage caused
+  - Modern glass-morphism design with backdrop blur effects
+- **Navigation System**: Complete sidebar navigation with game-themed icons and descriptions
+- **Responsive Design**: Enhanced mobile and desktop layouts across all components
+- **Translation System**: Expanded translations for new authentication and game features
+
+### Technical Improvements
+- **Code Organization**: Better separation of concerns with context providers
+- **Type Safety**: Enhanced TypeScript interfaces for better data handling
+- **Performance**: Optimized component rendering and state management
+- **Error Handling**: Comprehensive error boundaries and user feedback
+- **Backend Enhancements**: Improved user registration endpoint with detailed error handling for duplicate emails/nicknames
+
 ## [0.2.3] - 2025-06-26
 
 ### Added
