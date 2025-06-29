@@ -15,11 +15,15 @@ Bellum Astrum (formerly Space BattleShip) is a learning project focused on backe
 ## ✨ Features
 
 - 🕹️ CRUD for users and ships
-- ⚔️ Battle system
+- ⚔️ Battle system with ship activation
 - 🛒 Ship market (buy/sell)
 - 🌱 Data seeding endpoints
 - 📡 Modular and extensible REST API
 - 🖥️ Modern web interface (React + Vite + Tailwind)
+- 🔐 JWT-based authentication system
+- 🌍 Multi-language support (Portuguese/English)
+- 🎮 Complete game interface with sidebar navigation
+- 📊 User dashboard with statistics and ELO ranking
 
 ---
 
@@ -27,8 +31,11 @@ Bellum Astrum (formerly Space BattleShip) is a learning project focused on backe
 
 - **Backend:** Python 3.12+, FastAPI, SQLAlchemy, Pydantic
 - **Database:** SQLite
+- **Authentication:** JWT with bcrypt password hashing
 - **Testing:** Pytest, FastAPI TestClient
-- **Frontend:** React, Vite, TypeScript, Tailwind CSS
+- **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v3
+- **API Client:** Axios with automatic token injection
+- **Internationalization:** Custom translation system (PT-BR/EN-US)
 - **Structure:** Backend in `backend/app/`, Frontend in `frontend/`
 
 ---
@@ -97,15 +104,16 @@ Access the web interface at: [http://localhost:5173](http://localhost:5173)
 │
 ├── frontend/
 │   ├── src/                  # React source code
-│   │   ├── components/       # Reusable React components (Navbar, SpaceBackground, etc.)
-│   │   ├── pages/            # Main pages/routes (Home, Register, Market, etc.)
-│   │   ├── contexts/         # React context providers (LanguageContext, etc.)
-│   │   ├── locales/          # Localization and translations
+│   │   ├── components/       # Reusable React components (Navbar, GameLayout, Sidebar, etc.)
+│   │   ├── pages/            # Main pages/routes (Home, Dashboard, Register, Market, etc.)
+│   │   ├── contexts/         # React context providers (AuthContext, LanguageContext, SidebarContext)
+│   │   ├── locales/          # Localization and translations (PT-BR/EN-US)
+│   │   ├── config/           # API configuration and types
 │   │   ├── assets/           # Static assets (images, icons)
 │   │   ├── App.tsx           # Main App component
 │   │   ├── main.tsx          # React entry point
 │   │   └── ...               # Other configs and styles
-│   ├── public/               # Static assets
+│   ├── public/               # Static assets (logos, backgrounds, flags)
 │   ├── package.json          # Frontend dependencies
 │   └── ...                   # Vite, Tailwind, config files
 │
@@ -123,12 +131,20 @@ flowchart LR
     Frontend(Frontend: React/Vite/Tailwind)
     Backend(Backend: FastAPI)
     DB[(SQLite Database)]
+    Auth{JWT Authentication}
 
     User -- HTTP/Browser --> Frontend
-    Frontend -- REST API --> Backend
+    Frontend -- API Requests --> Auth
+    Auth -- Validate Token --> Backend
+    Auth -- Login/Register --> Backend
+    Frontend -- REST API + JWT --> Backend
     Backend -- ORM/SQL --> DB
     Backend -- JSON Response --> Frontend
     Frontend -- UI/UX --> User
+    
+    %% Authentication Flow
+    Frontend -.-> Auth
+    Auth -.-> Frontend
 ```
 
 ---
@@ -144,7 +160,13 @@ erDiagram
     USER {
         int user_id
         string nickname
-        int elo
+        string email
+        string password_hash
+        int elo_rank
+        int currency_value
+        int victories
+        int defeats
+        datetime created_at
     }
     SHIP {
         int ship_id
@@ -170,6 +192,9 @@ erDiagram
         int user1_ship_number
         int user2_ship_number
         datetime timestamp
+        json participants
+        json battle_log
+        json extra
     }
 ```
 
@@ -177,12 +202,27 @@ erDiagram
 
 ## 🧩 Main Endpoints
 
+### Authentication
+- `POST /api/v1/users/register` – Register new user with email and password
+- `POST /api/v1/users/login` – Login user and receive JWT token
+
+### Data Management
 - `POST /api/v1/seed/users` – Seed the database with initial users
 - `POST /api/v1/seed/ships` – Seed the database with initial ships
+- `POST /api/v1/seed/npc-ships` – Assign ships to NPCs based on ELO
+
+### Game Resources
 - `GET /api/v1/users/` – List all users
+- `GET /api/v1/users/{user_id}` – Get specific user details
 - `GET /api/v1/ships/` – List all ships
+- `GET /api/v1/ships/{ship_id}` – Get specific ship details
+
+### Market System
 - `POST /api/v1/market/buy/{user_id}/{ship_id}` – User buys a ship
 - `POST /api/v1/market/sell/{user_id}/{owned_ship_number}` – User sells a ship
+
+### Battle System
+- `POST /api/v1/battle/activate-ship/` – Activate a ship for battle
 - `POST /api/v1/battle/battle` – Battle between two users
 
 See the Swagger documentation for payload and response details.
@@ -193,16 +233,24 @@ See the Swagger documentation for payload and response details.
 
 - [x] CRUD for users and ships
 - [x] Data seeding endpoints
-- [x] Battle system
+- [x] Battle system with ship activation
 - [x] Ship market (buy/sell)
 - [x] Backend reorganization to `backend/app/`
-- [x] Start modern frontend (React, Vite or Next.js)
-- [x] Internationalization (i18n) for frontend
-- [ ] Authentication and multiplayer
+- [x] Modern frontend (React 19, Vite, TypeScript)
+- [x] JWT-based authentication system
+- [x] Password hashing and security
+- [x] Internationalization (i18n) for frontend (PT-BR/EN-US)
+- [x] Complete game interface with sidebar navigation
+- [x] User dashboard with ELO ranking and statistics
+- [x] Enhanced UI components and layouts
 - [ ] User profile and settings page
 - [ ] Responsive/mobile-friendly frontend
-- [ ] Error handling and user feedback improvements
+- [ ] Real-time multiplayer features
+- [ ] Enhanced battle system with animations
+- [ ] Ship customization and upgrades
+- [ ] Leaderboards and tournaments
 - [ ] API documentation improvements (OpenAPI, examples)
+- [ ] Enhanced error handling and user feedback
 - [ ] CI/CD pipeline (tests, lint, deploy)
 - [ ] Docker support (dev/prod)
 - [ ] Admin dashboard for managing users/ships
@@ -227,6 +275,8 @@ Refactor & .gitignore improvements    :done,    des6, 2025-06-10, 1d
 Battle/activation routes & tests      :done,    des7, 2025-06-11, 4d
 Requirements & merges                 :done,    des8, 2025-06-15, 1d
 Register page & .gitignore update     :done,    des9, 2025-06-24, 1d
+JWT Authentication & Security         :done,    des10, 2025-06-26, 2d
+Complete Game Interface & Dashboard   :active,  des11, 2025-06-26, 3d
 
 section Releases
 v0.1.0 :milestone, m1, 2025-06-10, 0d
@@ -234,6 +284,9 @@ v0.1.1 :milestone, m2, 2025-06-15, 0d
 v0.1.2 :milestone, m3, 2025-06-18, 0d
 v0.2.0 :milestone, m4, 2025-06-18, 0d
 v0.2.1 :milestone, m5, 2025-06-24, 0d
+v0.2.2 :milestone, m6, 2025-06-26, 0d
+v0.2.3 :milestone, m7, 2025-06-26, 0d
+v0.2.4 :milestone, m8, 2025-06-28, 0d
 ```
 
 - Each bar represents a key phase or feature, based on actual commit dates and messages.
