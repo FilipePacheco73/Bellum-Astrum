@@ -287,6 +287,7 @@ v0.2.1 :milestone, m5, 2025-06-24, 0d
 v0.2.2 :milestone, m6, 2025-06-26, 0d
 v0.2.3 :milestone, m7, 2025-06-26, 0d
 v0.2.4 :milestone, m8, 2025-06-28, 0d
+v0.2.5 :milestone, m9, 2025-07-01, 0d
 ```
 
 - Each bar represents a key phase or feature, based on actual commit dates and messages.

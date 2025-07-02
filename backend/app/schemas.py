@@ -205,3 +205,43 @@ class ActivateShipResponse(BaseModel):
     ship_id: Optional[int]
     ship_name: Optional[str]
     model_config = ConfigDict(from_attributes=True)
+
+# Log Schemas
+class SystemLogBase(BaseModel):
+    log_level: str
+    log_category: str
+    action: str
+    details: Optional[Dict[str, Any]] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    session_id: Optional[str] = None
+    resource_affected: Optional[str] = None
+    old_value: Optional[Dict[str, Any]] = None
+    new_value: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
+    execution_time_ms: Optional[int] = None
+
+class SystemLogCreate(SystemLogBase):
+    user_id: Optional[int] = None
+
+class SystemLogResponse(SystemLogBase):
+    log_id: int
+    timestamp: datetime
+    user_id: Optional[int]
+    model_config = ConfigDict(from_attributes=True)
+
+class LogQueryRequest(BaseModel):
+    user_id: Optional[int] = None
+    log_level: Optional[str] = None
+    log_category: Optional[str] = None
+    action: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    limit: int = 100
+    offset: int = 0
+
+class LogQueryResponse(BaseModel):
+    logs: List[SystemLogResponse]
+    total_count: int
+    page: int
+    per_page: int

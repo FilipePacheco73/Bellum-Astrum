@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from backend.app import schemas
 from backend.app.database import create_schemas as models
-from backend.app.utils_auth import get_password_hash, verify_password
+from backend.app.utils import get_password_hash, verify_password
 
 # --- User CRUD Operations ---
 def get_user(db: Session, user_id: int):
