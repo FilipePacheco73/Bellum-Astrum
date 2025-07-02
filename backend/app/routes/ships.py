@@ -1,8 +1,7 @@
 # app/routes/ships.py
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from backend.app.database import create_schemas as models
-from backend.app.database import create_database as database_config
+from database import get_db, Ship
 from backend.app import schemas
 from backend.app.crud import ship_crud
 from backend.app.utils import log_user_action, log_error, log_event, GameAction, LogCategory, LogLevel
@@ -12,16 +11,6 @@ router = APIRouter(
     prefix="/ships",
     tags=["Ships"],
 )
-
-def get_db():
-    """
-    Dependency to get the database session.
-    """
-    db = database_config.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.post("/", response_model=schemas.ShipResponse)
 def create_ship_route(ship: schemas.ShipCreate, request: Request, db: Session = Depends(get_db)):

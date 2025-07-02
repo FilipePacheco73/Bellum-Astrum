@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from backend.app.database.create_database import get_db
+from database import get_db
 from backend.app.crud.market_crud import buy_ship, sell_ship
 from backend.app.schemas import MarketBuyRequest, MarketBuyResponse, MarketSellRequest, MarketSellResponse
 from backend.app.utils import log_user_action, log_error, GameAction

@@ -1,8 +1,7 @@
 # app/routes/users.py
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from backend.app.database import create_schemas as models
-from backend.app.database import create_database as database_config
+from database import get_db, User
 from backend.app import schemas
 from backend.app.crud import user_crud
 from backend.app.utils import create_access_token, log_user_action, log_security_event, log_error, GameAction
@@ -13,20 +12,13 @@ router = APIRouter(
     tags=["Users"],
 )
 
-def get_db():
-    db = database_config.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 @router.post("/register", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, request: Request, db: Session = Depends(get_db)):
     start_time = time.time()
     
     try:
-        existing_email = db.query(models.User).filter(models.User.email == user.email).first()
-        existing_nickname = db.query(models.User).filter(models.User.nickname == user.nickname).first()
+        existing_email = db.query(User).filter(User.email == user.email).first()
+        existing_nickname = db.query(User).filter(User.nickname == user.nickname).first()
         
         errors = []
         if existing_email:

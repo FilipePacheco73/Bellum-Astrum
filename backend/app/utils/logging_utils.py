@@ -4,7 +4,7 @@ Provides convenient methods to log different types of events to the SystemLogs t
 """
 
 from sqlalchemy.orm import Session
-from backend.app.database.create_schemas import SystemLogs
+from database import SystemLogs
 from datetime import datetime, UTC
 import json
 from typing import Optional, Dict, Any

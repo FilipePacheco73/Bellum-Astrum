@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-07-02
+
+### Added
+- **Centralized Database Module**: Complete reorganization of database management
+  - New `database/` module with clean imports and exports
+  - Centralized configuration in `database/config.py`
+  - Session management and dependency injection in `database/session.py`
+  - All SQLAlchemy models consolidated in `database/models.py`
+  - Initial data management in `database/base_data.py`
+  - Database lifecycle management in `database/lifecycle.py`
+  - Command-line setup script `database/setup.py` with full CRUD operations
+  - Quick utility scripts in `database/scripts/` for common operations
+- **Enhanced Database Management Tools**:
+  - Database initialization with optional seeding
+  - Database health checks with proper SQLAlchemy 2.0+ compatibility
+  - Database reset and data clearing functionality
+  - Comprehensive logging of all database operations
+  - Environment variable support with fallback defaults
+- **Improved Application Architecture**:
+  - FastAPI application lifespan management for proper database cleanup
+  - Health check endpoint (`/health`) for monitoring API and database status
+  - Removed automatic database initialization from API startup (now managed separately)
+  - Clean separation between API and database management concerns
+
+### Changed
+- **Database Import Structure**: All database-related imports now use clean `from database import ...` syntax
+- **CRUD Layer Refactoring**: Updated all CRUD operations to use centralized database imports
+- **Route Handler Updates**: All API routes now use centralized database session management
+- **Application Startup**: Removed automatic database seeding from FastAPI startup (now manual)
+- **Dependency Management**: Added `python-dotenv` to requirements for environment variable support
+
+### Removed
+- **Legacy Database Structure**: Removed old `backend/app/database/` module
+- **Duplicate Database Code**: Eliminated redundant database configuration and model files
+- **Seed Route**: Removed `/api/v1/seed` endpoints (now handled by command-line tools)
+- **Automatic Database Initialization**: No longer automatically creates/seeds database on API startup
+
+### Fixed
+- **Database Health Check**: Fixed SQLAlchemy 2.0+ compatibility issue with `text()` wrapper for raw SQL
+- **Environment Variable Loading**: Proper fallback handling when `python-dotenv` is not installed
+- **Import Path Issues**: Resolved all import conflicts between old and new database modules
+- **Session Management**: Improved database session lifecycle and cleanup
+
+### Technical Details
+- **Database Models**: All models now in `database/models.py` with comprehensive constraints and indexes
+- **Base Data**: Centralized seed data in `database/base_data.py` with environment variable support
+- **Command Line Tools**: 
+  - `python database/setup.py init --seed` - Initialize with data
+  - `python database/setup.py reset --seed` - Reset and seed
+  - `python database/setup.py health` - Check database status
+- **Clean Architecture**: Database module now provides clean, organized access to all components
+- **Lifecycle Management**: Proper database initialization, health monitoring, and cleanup
+- **Development Workflow**: Improved development experience with dedicated database management tools
+
 ## [0.2.5] - 2025-07-01
 
 ### Added

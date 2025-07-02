@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from backend.app.database.create_database import get_db
+from database import get_db
 from backend.app.crud.battle_crud import battle_between_users, activate_owned_ship
 from backend.app.schemas import BattleHistoryResponse, ActivateShipResponse
 from backend.app.utils import log_user_action, log_game_event, log_error, GameAction

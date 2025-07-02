@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from backend.app import schemas
-from backend.app.database import create_schemas as models
-from backend.app.database.create_schemas import User, OwnedShips, BattleHistory
+from database import User, OwnedShips, BattleHistory
 from datetime import datetime, UTC
 import random
 

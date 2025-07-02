@@ -2,8 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func
 from backend.app.crud import ship_crud, user_crud
-from backend.app.database.create_database import SessionLocal
-from backend.app.database.create_schemas import User, Ship, OwnedShips
+from database import SessionLocal, User, Ship, OwnedShips
 from backend.app import schemas
 from dotenv import load_dotenv
 import os
