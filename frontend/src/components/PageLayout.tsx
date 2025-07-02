@@ -18,7 +18,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children, backgroundImage }) =>
         />
       )}
       <div
-        className={`min-h-screen w-full flex flex-col items-center justify-start p-8 text-center text-white relative ${
+        className={`min-h-screen w-full flex flex-col items-center justify-start p-8 text-center text-white relative pt-8 ${
           !backgroundImage ? 'bg-gray-900' : ''
         }`}
         style={{ backgroundColor: !backgroundImage ? '#000000' : 'transparent' }}

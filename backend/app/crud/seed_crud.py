@@ -2,8 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func
 from backend.app.crud import ship_crud, user_crud
-from backend.app.database.create_database import SessionLocal
-from backend.app.database.create_schemas import User, Ship, OwnedShips
+from database import SessionLocal, User, Ship, OwnedShips
 from backend.app import schemas
 from dotenv import load_dotenv
 import os
@@ -37,36 +36,36 @@ def seed_ships(db: Session) -> dict:
     try:
         if not db.query(Ship).first():
             ships = [
-                schemas.ShipCreate(ship_name="Falcon", attack=15, shield=10, evasion=5, fire_rate=2, hp=1200, value=1500),
-                schemas.ShipCreate(ship_name="Eagle", attack=20, shield=15, evasion=10, fire_rate=3, hp=1500, value=2000),
-                schemas.ShipCreate(ship_name="Hawk", attack=25, shield=20, evasion=15, fire_rate=4, hp=1800, value=2500),
-                schemas.ShipCreate(ship_name="Condor", attack=30, shield=25, evasion=20, fire_rate=5, hp=2000, value=3000),
-                schemas.ShipCreate(ship_name="Vulture", attack=35, shield=30, evasion=25, fire_rate=6, hp=2200, value=3500),
-                schemas.ShipCreate(ship_name="Raven", attack=18, shield=12, evasion=7, fire_rate=2.5, hp=1300, value=1600),
-                schemas.ShipCreate(ship_name="Osprey", attack=22, shield=17, evasion=12, fire_rate=3.2, hp=1550, value=2100),
-                schemas.ShipCreate(ship_name="Kestrel", attack=27, shield=22, evasion=17, fire_rate=4.1, hp=1850, value=2600),
-                schemas.ShipCreate(ship_name="Merlin", attack=32, shield=27, evasion=22, fire_rate=5.3, hp=2050, value=3100),
-                schemas.ShipCreate(ship_name="Phoenix", attack=37, shield=32, evasion=27, fire_rate=6.4, hp=2250, value=3600),
-                schemas.ShipCreate(ship_name="Griffin", attack=19, shield=13, evasion=8, fire_rate=2.7, hp=1350, value=1700),
-                schemas.ShipCreate(ship_name="Harrier", attack=23, shield=18, evasion=13, fire_rate=3.4, hp=1600, value=2200),
-                schemas.ShipCreate(ship_name="Sparrow", attack=28, shield=23, evasion=18, fire_rate=4.3, hp=1900, value=2700),
-                schemas.ShipCreate(ship_name="Swift", attack=33, shield=28, evasion=23, fire_rate=5.5, hp=2100, value=3200),
-                schemas.ShipCreate(ship_name="Thunder", attack=38, shield=33, evasion=28, fire_rate=6.6, hp=2300, value=3700),
-                schemas.ShipCreate(ship_name="Storm", attack=21, shield=14, evasion=9, fire_rate=2.9, hp=1400, value=1800),
-                schemas.ShipCreate(ship_name="Tempest", attack=24, shield=19, evasion=14, fire_rate=3.6, hp=1650, value=2300),
-                schemas.ShipCreate(ship_name="Cyclone", attack=29, shield=24, evasion=19, fire_rate=4.5, hp=1950, value=2800),
-                schemas.ShipCreate(ship_name="Typhoon", attack=34, shield=29, evasion=24, fire_rate=5.7, hp=2150, value=3300),
-                schemas.ShipCreate(ship_name="Blizzard", attack=39, shield=34, evasion=29, fire_rate=6.8, hp=2350, value=3800),
-                schemas.ShipCreate(ship_name="Nova", attack=22, shield=15, evasion=10, fire_rate=3.1, hp=1450, value=1900),
-                schemas.ShipCreate(ship_name="Comet", attack=26, shield=20, evasion=15, fire_rate=4.0, hp=1750, value=2400),
-                schemas.ShipCreate(ship_name="Meteor", attack=31, shield=25, evasion=20, fire_rate=5.2, hp=2000, value=2900),
-                schemas.ShipCreate(ship_name="Asteroid", attack=36, shield=30, evasion=25, fire_rate=6.3, hp=2200, value=3400),
-                schemas.ShipCreate(ship_name="Pulsar", attack=41, shield=35, evasion=30, fire_rate=7.0, hp=2400, value=3900),
-                schemas.ShipCreate(ship_name="Nebula", attack=24, shield=16, evasion=11, fire_rate=3.3, hp=1500, value=2000),
-                schemas.ShipCreate(ship_name="Quasar", attack=28, shield=21, evasion=16, fire_rate=4.2, hp=1800, value=2500),
-                schemas.ShipCreate(ship_name="Galaxy", attack=33, shield=26, evasion=21, fire_rate=5.4, hp=2100, value=3000),
-                schemas.ShipCreate(ship_name="Andromeda", attack=38, shield=31, evasion=26, fire_rate=6.5, hp=2300, value=3500),
-                schemas.ShipCreate(ship_name="Orion", attack=43, shield=36, evasion=31, fire_rate=7.2, hp=2500, value=4000),
+                schemas.ShipCreate(ship_name="Falcon", attack=15, shield=10, evasion=0.05, fire_rate=2, hp=1200, value=1500),
+                schemas.ShipCreate(ship_name="Eagle", attack=20, shield=15, evasion=0.10, fire_rate=3, hp=1500, value=2000),
+                schemas.ShipCreate(ship_name="Hawk", attack=25, shield=20, evasion=0.15, fire_rate=4, hp=1800, value=2500),
+                schemas.ShipCreate(ship_name="Condor", attack=30, shield=25, evasion=0.20, fire_rate=5, hp=2000, value=3000),
+                schemas.ShipCreate(ship_name="Vulture", attack=35, shield=30, evasion=0.25, fire_rate=6, hp=2200, value=3500),
+                schemas.ShipCreate(ship_name="Raven", attack=18, shield=12, evasion=0.07, fire_rate=2.5, hp=1300, value=1600),
+                schemas.ShipCreate(ship_name="Osprey", attack=22, shield=17, evasion=0.12, fire_rate=3.2, hp=1550, value=2100),
+                schemas.ShipCreate(ship_name="Kestrel", attack=27, shield=22, evasion=0.17, fire_rate=4.1, hp=1850, value=2600),
+                schemas.ShipCreate(ship_name="Merlin", attack=32, shield=27, evasion=0.22, fire_rate=5.3, hp=2050, value=3100),
+                schemas.ShipCreate(ship_name="Phoenix", attack=37, shield=32, evasion=0.27, fire_rate=6.4, hp=2250, value=3600),
+                schemas.ShipCreate(ship_name="Griffin", attack=19, shield=13, evasion=0.08, fire_rate=2.7, hp=1350, value=1700),
+                schemas.ShipCreate(ship_name="Harrier", attack=23, shield=18, evasion=0.13, fire_rate=3.4, hp=1600, value=2200),
+                schemas.ShipCreate(ship_name="Sparrow", attack=28, shield=23, evasion=0.18, fire_rate=4.3, hp=1900, value=2700),
+                schemas.ShipCreate(ship_name="Swift", attack=33, shield=28, evasion=0.23, fire_rate=5.5, hp=2100, value=3200),
+                schemas.ShipCreate(ship_name="Thunder", attack=38, shield=33, evasion=0.28, fire_rate=6.6, hp=2300, value=3700),
+                schemas.ShipCreate(ship_name="Storm", attack=21, shield=14, evasion=0.09, fire_rate=2.9, hp=1400, value=1800),
+                schemas.ShipCreate(ship_name="Tempest", attack=24, shield=19, evasion=0.14, fire_rate=3.6, hp=1650, value=2300),
+                schemas.ShipCreate(ship_name="Cyclone", attack=29, shield=24, evasion=0.19, fire_rate=4.5, hp=1950, value=2800),
+                schemas.ShipCreate(ship_name="Typhoon", attack=34, shield=29, evasion=0.24, fire_rate=5.7, hp=2150, value=3300),
+                schemas.ShipCreate(ship_name="Blizzard", attack=39, shield=34, evasion=0.29, fire_rate=6.8, hp=2350, value=3800),
+                schemas.ShipCreate(ship_name="Nova", attack=22, shield=15, evasion=0.10, fire_rate=3.1, hp=1450, value=1900),
+                schemas.ShipCreate(ship_name="Comet", attack=26, shield=20, evasion=0.15, fire_rate=4.0, hp=1750, value=2400),
+                schemas.ShipCreate(ship_name="Meteor", attack=31, shield=25, evasion=0.20, fire_rate=5.2, hp=2000, value=2900),
+                schemas.ShipCreate(ship_name="Asteroid", attack=36, shield=30, evasion=0.25, fire_rate=6.3, hp=2200, value=3400),
+                schemas.ShipCreate(ship_name="Pulsar", attack=41, shield=35, evasion=0.30, fire_rate=7.0, hp=2400, value=3900),
+                schemas.ShipCreate(ship_name="Nebula", attack=24, shield=16, evasion=0.11, fire_rate=3.3, hp=1500, value=2000),
+                schemas.ShipCreate(ship_name="Quasar", attack=28, shield=21, evasion=0.16, fire_rate=4.2, hp=1800, value=2500),
+                schemas.ShipCreate(ship_name="Galaxy", attack=33, shield=26, evasion=0.21, fire_rate=5.4, hp=2100, value=3000),
+                schemas.ShipCreate(ship_name="Andromeda", attack=38, shield=31, evasion=0.26, fire_rate=6.5, hp=2300, value=3500),
+                schemas.ShipCreate(ship_name="Orion", attack=43, shield=36, evasion=0.31, fire_rate=7.2, hp=2500, value=4000),
             ]
             for ship in ships:
                 ship_crud.create_ship(db=db, ship=ship)
@@ -75,7 +74,8 @@ def seed_ships(db: Session) -> dict:
             count = db.query(Ship).count()
             return {"message": "Ships already seeded.", "ships_seeded": count}
     except SQLAlchemyError as e:
-        return {"message": f"Error: {str(e)}", "ships_seeded": 0}
+        db.rollback()  # Rollback em caso de erro
+        raise Exception(f"Error seeding ships: {str(e)}")  # Levanta exception para retornar erro HTTP
     finally:
         db.close()
 
@@ -109,7 +109,8 @@ def seed_users(db: Session) -> dict:
             count = db.query(User).count()
             return {"message": "Users already seeded.", "users_seeded": count}
     except SQLAlchemyError as e:
-        return {"message": f"Error: {str(e)}", "users_seeded": 0}
+        db.rollback()  # Rollback em caso de erro
+        raise Exception(f"Error seeding users: {str(e)}")  # Levanta exception para retornar erro HTTP
     finally:
         db.close()
 

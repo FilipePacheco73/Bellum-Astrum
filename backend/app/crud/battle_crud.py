@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from backend.app import schemas
-from backend.app.database import create_schemas as models
-from backend.app.database.create_schemas import User, OwnedShips, BattleHistory
+from database import User, OwnedShips, BattleHistory
 from datetime import datetime, UTC
 import random
 
@@ -34,7 +33,7 @@ def battle_between_users(db: Session, user1_id: int, user2_id: int, user1_ship_n
         for _ in range(int(ship1.actual_fire_rate)):
             if hp2 <= 0:
                 break
-            if random.random() < (ship2.actual_evasion / 100):
+            if random.random() < (ship2.actual_evasion):
                 battle_log.append(f"{user2.nickname} evaded an attack from {user1.nickname}!")
                 continue
             base_damage = ship1.actual_attack - (ship2.actual_shield * 0.5)
@@ -48,7 +47,7 @@ def battle_between_users(db: Session, user1_id: int, user2_id: int, user1_ship_n
         for _ in range(int(ship2.actual_fire_rate)):
             if hp1 <= 0:
                 break
-            if random.random() < (ship1.actual_evasion / 100):
+            if random.random() < (ship1.actual_evasion):
                 battle_log.append(f"{user1.nickname} evaded an attack from {user2.nickname}!")
                 continue
             base_damage = ship2.actual_attack - (ship1.actual_shield * 0.5)

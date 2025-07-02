@@ -7,9 +7,11 @@
 __pycache__/
 **/__pycache__/
 *.pyc
+.pytest_cache/
 
 # Database files
 *.db
+database/*.db
 
 # === FRONTEND (Node/Vite/React) ===
 /frontend/node_modules/
