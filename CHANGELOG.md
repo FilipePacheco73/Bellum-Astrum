@@ -5,6 +5,82 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2025-07-01
+
+### Added
+- **Comprehensive Logging System**: Complete audit trail and monitoring infrastructure
+  - New `SystemLogs` table with comprehensive event tracking
+  - Logging utilities with categorized event types (USER_ACTION, SYSTEM, GAME_EVENT, SECURITY, PERFORMANCE, AUDIT)
+  - Detailed performance monitoring with execution time tracking
+  - Security event logging for authentication and authorization
+  - Comprehensive error logging with stack traces and context
+- **Enhanced Database Schema**: Improved data integrity and performance
+  - Added constraints and indexes to all tables for better data validation
+  - Foreign key relationships between users, ships, and owned_ships tables
+  - Proper string length limits and data type constraints
+  - Optimized indexes for common query patterns
+- **Improved Authentication System**: Consolidated authentication utilities
+  - Moved authentication functions to dedicated `utils` module
+  - Enhanced JWT token verification with security logging
+  - Better error handling for expired and invalid tokens
+  - Comprehensive security event tracking
+- **Battle System Improvements**: Enhanced game mechanics and balance
+  - Fixed evasion calculation bug (was percentage-based, now properly decimal-based)
+  - Updated ship seed data with proper evasion values (0.05-0.31 range)
+  - Improved battle logging with detailed combat information
+  - Better error handling and validation in battle system
+
+### Fixed
+- **Critical Battle Bug**: Fixed evasion calculation that was causing battles to be unbalanced
+  - Evasion was incorrectly calculated as percentage (5-31%) instead of decimal (0.05-0.31)
+  - Updated all ship seed data to use proper decimal evasion values
+  - Fixed battle logic to properly handle evasion probabilities
+- **Authentication Module**: Resolved import issues and consolidated auth utilities
+  - Removed duplicate `utils_auth.py` file
+  - Consolidated all authentication functions in `utils/auth_utils.py`
+  - Fixed import paths across all route modules
+- **Database Schema Issues**: Enhanced data integrity and validation
+  - Added proper constraints to prevent invalid data entry
+  - Fixed foreign key relationships and cascade behaviors
+  - Improved error handling for database operations
+- **Error Handling**: Comprehensive error tracking and user feedback
+  - All API endpoints now include proper error logging
+  - Enhanced error messages with context and debugging information
+  - Better exception handling with categorized error types
+
+### Changed
+- **Code Organization**: Major refactoring for better maintainability
+  - Restructured `utils` module with proper separation of concerns
+  - Added comprehensive `__init__.py` files for better module organization
+  - Improved import structure and dependency management
+- **Database Performance**: Optimized queries and data structures
+  - Added strategic indexes for common query patterns
+  - Improved constraint validation for better data integrity
+  - Enhanced database schema with proper data types and limits
+- **Security Enhancements**: Improved authentication and authorization
+  - Enhanced JWT token handling with proper expiration management
+  - Better security event logging and monitoring
+  - Improved password hashing and verification
+- **API Improvements**: Enhanced error handling and logging across all endpoints
+  - All routes now include comprehensive logging
+  - Better error messages and status codes
+  - Improved request/response validation
+
+### Technical Improvements
+- **Logging Infrastructure**: Complete audit and monitoring system
+  - Structured logging with JSON details and metadata
+  - Performance monitoring with execution time tracking
+  - Security event tracking for compliance and monitoring
+  - Comprehensive error logging with context and stack traces
+- **Database Optimization**: Enhanced performance and data integrity
+  - Strategic indexes for improved query performance
+  - Proper constraints and validation rules
+  - Optimized foreign key relationships
+- **Code Quality**: Improved maintainability and organization
+  - Better module structure and import management
+  - Enhanced error handling and validation
+  - Improved code documentation and type hints
+
 ## [0.2.4] - 2025-06-28
 
 ### Added
