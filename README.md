@@ -24,19 +24,78 @@ Bellum Astrum (formerly Space BattleShip) is a learning project focused on backe
 - 🌍 Multi-language support (Portuguese/English)
 - 🎮 Complete game interface with sidebar navigation
 - 📊 User dashboard with statistics and ELO ranking
+- 🗄️ **Centralized Database Module**: Organized database management with lifecycle controls
+- 📝 **Comprehensive Logging**: System audit trails and monitoring
+- 🔧 **Database Scripts**: Command-line tools for database management
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Backend:** Python 3.12+, FastAPI, SQLAlchemy, Pydantic
-- **Database:** SQLite
+- **Database:** SQLite with comprehensive schema and constraints
 - **Authentication:** JWT with bcrypt password hashing
 - **Testing:** Pytest, FastAPI TestClient
 - **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v3
 - **API Client:** Axios with automatic token injection
 - **Internationalization:** Custom translation system (PT-BR/EN-US)
-- **Structure:** Backend in `backend/app/`, Frontend in `frontend/`
+- **Structure:** Backend in `backend/app/`, Frontend in `frontend/`, Database in `database/`
+
+---
+
+## 🏗️ Database Architecture
+
+The project features a centralized database module with clean imports and lifecycle management:
+
+### Database Structure
+```
+database/
+├── __init__.py           # Clean exports for easy imports
+├── config.py             # Database configuration and engine setup
+├── session.py            # Session management and dependency injection
+├── models.py             # SQLAlchemy models (User, Ship, OwnedShips, etc.)
+├── base_data.py          # Initial data for seeding
+├── lifecycle.py          # Database initialization and health checks
+├── setup.py              # Main command-line setup script
+└── scripts/              # Quick utility scripts
+    ├── init_db.py        # Quick initialization
+    ├── seed_db.py        # Quick seeding
+    └── reset_db.py       # Quick reset
+```
+
+### Database Models
+- **User**: Game user accounts with ELO ranking and statistics
+- **Ship**: Ship templates with base characteristics
+- **OwnedShips**: Individual ships owned by users with current stats
+- **BattleHistory**: Records of battles with detailed logs
+- **SystemLogs**: Comprehensive audit logging for security and debugging
+
+### Database Management
+```bash
+# Initialize database with sample data
+python database/setup.py init --seed
+
+# Add sample data to existing database  
+python database/setup.py seed
+
+# Reset database (drop + recreate)
+python database/setup.py reset --seed
+
+# Clear all data (keep structure)
+python database/setup.py clear
+
+# Check database health
+python database/setup.py health
+```
+
+### Clean Imports
+```python
+# Simple imports for common use cases
+from database import get_db, User, Ship, OwnedShips
+from database import initialize_database, check_database_health
+
+# All database functionality accessible through clean interface
+```
 
 ---
 
@@ -48,42 +107,59 @@ Bellum Astrum (formerly Space BattleShip) is a learning project focused on backe
 - Node.js 18+
 - (Recommended) Virtual environment: `python -m venv venv`
 
-### Backend Installation
+### Quick Start
 
 ```bash
 # Clone the repository
 git clone https://github.com/FilipePacheco73/Bellum-Astrum.git
 cd Bellum-Astrum
-# Create and activate a virtual environment
+
+# Create and activate virtual environment
 python -m venv venv
 # On Windows:
 venv\Scripts\activate
-# Install backend dependencies
+# On Linux/macOS:
+# source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### Running the Backend API
+# Initialize database with sample data
+python database/setup.py init --seed
 
-```bash
+# Start the API server
 uvicorn backend.app.main:app --reload
 ```
 
-Access the interactive documentation at: [http://localhost:8000/docs](http://localhost:8000/docs)
+The API will be available at: [http://localhost:8000](http://localhost:8000)  
+Interactive docs at: [http://localhost:8000/docs](http://localhost:8000/docs)  
+Health check at: [http://localhost:8000/health](http://localhost:8000/health)
 
-### Frontend Installation
+### Frontend Setup (Optional)
 
 ```bash
 cd frontend
 npm install
-```
-
-### Running the Frontend
-
-```bash
 npm run dev
 ```
 
-Access the web interface at: [http://localhost:5173](http://localhost:5173)
+Frontend will be available at: [http://localhost:5173](http://localhost:5173)
+
+### Database Management
+
+```bash
+# Check database health
+python database/setup.py health
+
+# Reset database with fresh data
+python database/setup.py reset --seed
+
+# Clear all data (keep structure)
+python database/setup.py clear
+
+# Add sample data to existing database
+python database/setup.py seed
+```
 
 ---
 
@@ -93,33 +169,98 @@ Access the web interface at: [http://localhost:5173](http://localhost:5173)
 /Bellum-Astrum
 │
 ├── backend/
-│   ├── app/
-│   │   ├── main.py           # FastAPI entry point
-│   │   ├── schemas.py        # Pydantic schemas
-│   │   ├── crud/             # CRUD operations
-│   │   ├── database/         # Database config and models
-│   │   ├── routes/           # API routes/endpoints
-│   │   └── test/             # Automated tests
-│   └── requirements.txt      # Python dependencies
+│   └── app/
+│       ├── main.py           # FastAPI entry point with lifespan management
+│       ├── schemas.py        # Pydantic schemas for API validation
+│       ├── crud/             # CRUD operations (users, ships, battles, market)
+│       │   ├── user_crud.py
+│       │   ├── ship_crud.py
+│       │   ├── battle_crud.py
+│       │   ├── market_crud.py
+│       │   └── seed_crud.py
+│       ├── routes/           # API routes/endpoints
+│       │   ├── users.py      # User management and authentication
+│       │   ├── ships.py      # Ship CRUD operations
+│       │   ├── battle.py     # Battle system and ship activation
+│       │   └── market.py     # Ship buying and selling
+│       ├── utils/            # Utility functions
+│       │   ├── auth_utils.py # JWT authentication utilities
+│       │   └── logging_utils.py # System logging utilities
+│       └── test/             # Automated tests
+│           └── test_routes.py
+│
+├── database/                 # 🆕 Centralized database module
+│   ├── __init__.py           # Clean exports and imports
+│   ├── config.py             # Database configuration and engine
+│   ├── session.py            # Session management and dependency injection
+│   ├── models.py             # SQLAlchemy models (User, Ship, OwnedShips, etc.)
+│   ├── base_data.py          # Initial seed data with environment variables
+│   ├── lifecycle.py          # Database initialization and health checks
+│   ├── setup.py              # 🆕 Main command-line setup script
+│   ├── requirements.txt      # Database-specific dependencies
+│   └── scripts/              # 🆕 Quick utility scripts
+│       ├── init_db.py        # Quick database initialization
+│       ├── seed_db.py        # Quick database seeding
+│       └── reset_db.py       # Quick database reset
 │
 ├── frontend/
 │   ├── src/                  # React source code
-│   │   ├── components/       # Reusable React components (Navbar, GameLayout, Sidebar, etc.)
-│   │   ├── pages/            # Main pages/routes (Home, Dashboard, Register, Market, etc.)
-│   │   ├── contexts/         # React context providers (AuthContext, LanguageContext, SidebarContext)
-│   │   ├── locales/          # Localization and translations (PT-BR/EN-US)
-│   │   ├── config/           # API configuration and types
-│   │   ├── assets/           # Static assets (images, icons)
+│   │   ├── components/       # Reusable React components
+│   │   │   ├── Navbar.tsx    # Navigation bar
+│   │   │   ├── Sidebar.tsx   # Game sidebar
+│   │   │   ├── GameLayout.tsx # Main game layout
+│   │   │   ├── PageLayout.tsx # Page wrapper
+│   │   │   ├── Button.tsx    # Custom button component
+│   │   │   └── PrivateRoute.tsx # Protected route wrapper
+│   │   ├── pages/            # Main pages/routes
+│   │   │   ├── Home.tsx      # Landing page
+│   │   │   ├── Login.tsx     # Login page
+│   │   │   ├── Register.tsx  # User registration
+│   │   │   ├── Dashboard.tsx # User dashboard
+│   │   │   ├── Ships.tsx     # Ship management
+│   │   │   ├── Market.tsx    # Ship marketplace
+│   │   │   ├── Battle.tsx    # Battle interface
+│   │   │   └── Users.tsx     # User listing
+│   │   ├── contexts/         # React context providers
+│   │   │   ├── AuthContext.tsx    # Authentication state
+│   │   │   ├── LanguageContext.tsx # Internationalization
+│   │   │   └── SidebarContext.tsx  # Sidebar state
+│   │   ├── locales/          # Localization and translations
+│   │   │   └── translations.ts # PT-BR/EN-US translations
+│   │   ├── config/           # Configuration
+│   │   │   └── api.ts        # API client configuration
+│   │   ├── assets/           # Static assets
 │   │   ├── App.tsx           # Main App component
 │   │   ├── main.tsx          # React entry point
-│   │   └── ...               # Other configs and styles
-│   ├── public/               # Static assets (logos, backgrounds, flags)
+│   │   ├── index.css         # Global styles
+│   │   └── vite-env.d.ts     # TypeScript definitions
+│   ├── public/               # Static assets
+│   │   ├── bellum-astrum-logo-3d.svg
+│   │   ├── bellum-astrum-logo.svg
+│   │   ├── home_img.png
+│   │   └── flags/            # Country flags for language selection
+│   │       ├── br.svg
+│   │       └── us.svg
 │   ├── package.json          # Frontend dependencies
-│   └── ...                   # Vite, Tailwind, config files
+│   ├── vite.config.ts        # Vite configuration
+│   ├── tailwind.config.ts    # Tailwind CSS configuration
+│   ├── tsconfig.json         # TypeScript configuration
+│   └── eslint.config.js      # ESLint configuration
 │
-├── README.md
-└── CHANGELOG.md
+├── .env                      # 🆕 Environment variables (database credentials, etc.)
+├── .gitignore               # Git ignore rules
+├── requirements.txt         # Main Python dependencies
+├── README.md               # Project documentation
+└── CHANGELOG.md            # Version history and changes
 ```
+
+### Key Changes in v0.3.0
+- **🆕 Centralized `database/` module** - All database logic consolidated
+- **🆕 Command-line database tools** - `setup.py` and utility scripts
+- **🆕 Environment variable support** - `.env` file for configuration
+- **🔧 Improved imports** - Clean `from database import ...` syntax
+- **📝 Enhanced logging** - Comprehensive audit trails
+- **🩺 Health monitoring** - Database and API health checks
 
 ---
 
@@ -153,24 +294,30 @@ flowchart LR
 
 ```mermaid
 erDiagram
-    USER ||--o{ OWNED_SHIP : owns
-    USER ||--o{ BATTLE_HISTORY : participates_in
-    SHIP ||--o{ OWNED_SHIP : is_type
-    OWNED_SHIP ||--o{ BATTLE_HISTORY : used_in
+    USER ||--o{ OWNED_SHIPS : owns
+    USER ||--o{ BATTLE_HISTORY : "participates in"
+    USER ||--o{ SYSTEM_LOGS : "generates logs"
+    SHIP ||--o{ OWNED_SHIPS : "template for"
+    OWNED_SHIPS ||--o{ BATTLE_HISTORY : "used in battles"
+    
     USER {
-        int user_id
-        string nickname
-        string email
+        int user_id PK
+        string nickname UK
+        string email UK
         string password_hash
-        int elo_rank
-        int currency_value
+        float elo_rank
+        float currency_value
         int victories
         int defeats
-        datetime created_at
+        float damage_dealt
+        float damage_taken
+        int ships_destroyed_by_user
+        int ships_lost_by_user
     }
+    
     SHIP {
-        int ship_id
-        string ship_name
+        int ship_id PK
+        string ship_name UK
         float attack
         float shield
         float evasion
@@ -178,25 +325,68 @@ erDiagram
         float hp
         int value
     }
-    OWNED_SHIP {
-        int owned_ship_number
-        int user_id
-        int ship_id
-        bool is_active
+    
+    OWNED_SHIPS {
+        int ship_number PK
+        int user_id FK
+        int ship_id FK
+        string status
+        string ship_name
+        float base_attack
+        float base_shield
+        float base_evasion
+        float base_fire_rate
+        float base_hp
+        int base_value
+        float actual_attack
+        float actual_shield
+        float actual_evasion
+        float actual_fire_rate
+        float actual_hp
+        int actual_value
     }
+    
     BATTLE_HISTORY {
-        int battle_id
-        int user1_id
-        int user2_id
-        int winner_id
-        int user1_ship_number
-        int user2_ship_number
+        int battle_id PK
         datetime timestamp
+        int winner_user_id FK
         json participants
         json battle_log
         json extra
     }
+    
+    SYSTEM_LOGS {
+        int log_id PK
+        datetime timestamp
+        int user_id FK
+        string log_level
+        string log_category
+        string action
+        json details
+        string ip_address
+        string user_agent
+        string session_id
+        string resource_affected
+        json old_value
+        json new_value
+        string error_message
+        int execution_time_ms
+    }
 ```
+
+### Model Relationships
+- **User → OwnedShips**: One user can own many ships (1:N)
+- **Ship → OwnedShips**: One ship template can be owned by many users (1:N)  
+- **User → BattleHistory**: Users participate in many battles (1:N)
+- **OwnedShips → BattleHistory**: Ships are used in battles (implicit through participants JSON)
+- **User → SystemLogs**: Users generate system logs for audit trails (1:N)
+
+### Key Features
+- **Dual Stats System**: OwnedShips have both `base_*` and `actual_*` stats for upgrades/damage
+- **Flexible Battle System**: BattleHistory uses JSON for participants and battle logs
+- **Comprehensive Logging**: SystemLogs capture all user actions and system events
+- **Status Management**: OwnedShips have status ('owned', 'active', 'destroyed', 'upgrading', 'sold')
+- **Security**: Users store password_hash, logs track IP addresses and user agents
 
 ---
 
@@ -276,22 +466,33 @@ Battle/activation routes & tests      :done,    des7, 2025-06-11, 4d
 Requirements & merges                 :done,    des8, 2025-06-15, 1d
 Register page & .gitignore update     :done,    des9, 2025-06-24, 1d
 JWT Authentication & Security         :done,    des10, 2025-06-26, 2d
-Complete Game Interface & Dashboard   :active,  des11, 2025-06-26, 3d
+Complete Game Interface & Dashboard   :done,    des11, 2025-06-26, 3d
+Comprehensive Logging System          :done,    des12, 2025-07-01, 1d
+Centralized Database Module           :done,    des13, 2025-07-02, 1d
 
 section Releases
-v0.1.0 :milestone, m1, 2025-06-10, 0d
-v0.1.1 :milestone, m2, 2025-06-15, 0d
-v0.1.2 :milestone, m3, 2025-06-18, 0d
-v0.2.0 :milestone, m4, 2025-06-18, 0d
-v0.2.1 :milestone, m5, 2025-06-24, 0d
-v0.2.2 :milestone, m6, 2025-06-26, 0d
-v0.2.3 :milestone, m7, 2025-06-26, 0d
-v0.2.4 :milestone, m8, 2025-06-28, 0d
-v0.2.5 :milestone, m9, 2025-07-01, 0d
+v0.1.0 Basic API        :milestone, m1, 2025-06-10, 0d
+v0.1.1 Market System    :milestone, m2, 2025-06-15, 0d
+v0.1.2 Battle System    :milestone, m3, 2025-06-18, 0d
+v0.2.0 Frontend Base    :milestone, m4, 2025-06-18, 0d
+v0.2.1 User Registration:milestone, m5, 2025-06-24, 0d
+v0.2.2 JWT Auth         :milestone, m6, 2025-06-26, 0d
+v0.2.3 Game Interface   :milestone, m7, 2025-06-26, 0d
+v0.2.4 UI Enhancements  :milestone, m8, 2025-06-28, 0d
+v0.2.5 Logging System   :milestone, m9, 2025-07-01, 0d
+v0.3.0 Database Module  :milestone, m10, 2025-07-02, 0d
 ```
 
-- Each bar represents a key phase or feature, based on actual commit dates and messages.
-- For full commit details, see the [GitHub commit history](https://github.com/FilipePacheco73/Bellum-Astrum/commits/main).
+### Recent Major Changes (v0.3.0 - July 2, 2025)
+- 🗄️ **Centralized Database Module**: Complete reorganization with clean imports
+- 🔧 **Database Management Tools**: Command-line scripts for setup, seeding, and health checks  
+- 📝 **Enhanced Logging**: Comprehensive audit trails and system monitoring
+- 🩺 **Health Monitoring**: API and database health check endpoints
+- ⚡ **Improved Architecture**: Proper lifecycle management and dependency injection
+- 📋 **Updated Documentation**: Comprehensive README and CHANGELOG updates
+
+- Each bar represents a key development phase based on actual commit dates and features.
+- For detailed commit history, see the [GitHub repository](https://github.com/FilipePacheco73/Bellum-Astrum/commits/main).
 
 ---
 

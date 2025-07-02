@@ -143,36 +143,6 @@ class OwnedShipResponse(BaseModel):
     actual_value: int
     model_config = ConfigDict(from_attributes=True)
 
-class SeedShipsResponse(BaseModel):
-    message: str
-    ships_seeded: int
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "message": "Ships seeded successfully.",
-            "ships_seeded": 5
-        }
-    })
-
-class SeedUsersResponse(BaseModel):
-    message: str
-    users_seeded: int
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "message": "Users seeded successfully.",
-            "users_seeded": 3
-        }
-    })
-
-class SeedNPCShipsResponse(BaseModel):
-    message: str
-    npc_ships_assigned: int
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "message": "NPC ships assigned successfully.",
-            "npc_ships_assigned": 10
-        }
-    })
-
 class BattleParticipant(BaseModel):
     user_id: int
     nickname: str

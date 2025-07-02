@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from backend.app import schemas
-from backend.app.database.create_schemas import Ship
+from database import Ship
 
 # --- Ship CRUD Operations ---
 def get_ship(db: Session, ship_id: int):
