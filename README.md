@@ -266,127 +266,68 @@ python database/setup.py seed
 
 ## 🗺️ Project Flowchart
 
-```mermaid
-flowchart LR
-    User((User))
-    Frontend(Frontend: React/Vite/Tailwind)
-    Backend(Backend: FastAPI)
-    DB[(SQLite Database)]
-    Auth{JWT Authentication}
+### User-Facing Flow
 
-    User -- HTTP/Browser --> Frontend
-    Frontend -- API Requests --> Auth
-    Auth -- Validate Token --> Backend
-    Auth -- Login/Register --> Backend
-    Frontend -- REST API + JWT --> Backend
-    Backend -- ORM/SQL --> DB
-    Backend -- JSON Response --> Frontend
-    Frontend -- UI/UX --> User
-    
-    %% Authentication Flow
-    Frontend -.-> Auth
-    Auth -.-> Frontend
+```mermaid
+flowchart TB
+    User((👤 Game User))
+    WebUI[🌐 Web Interface\\nReact + Vite + Tailwind]
+    API[🚀 FastAPI Backend\\nRoutes + Authentication]
+    DBModule[🗄️ Database Module\\nModels + Lifecycle + Logging]
+    SQLite[(💾 SQLite Database)]
+
+    User -->|UI/UX Interaction| WebUI
+    WebUI --|API Request\\nJWT Auth|--> API
+    API --|ORM/SQL|--> DBModule
+    DBModule --|SQL|--> SQLite
+    API <==>|Response\\nJWT Token| WebUI
+    DBModule <==>|Data/Models| API
+    SQLite <==>|Data| DBModule
 ```
+
+**Legend:**
+- `-->` Data/request flow
+- `<==>` Bidirectional flow (request/response)
+- **UI/UX Interaction**: User actions in the web interface
+- **API Request / JWT Auth**: Authenticated API calls using JWT
+- **ORM/SQL**: Backend uses ORM (SQLAlchemy) to interact with the database
+- **SQL**: Raw SQL queries to SQLite
+
+**Layers:**
+1. 👤 User: Game player
+2. 🌐 Web Interface: React frontend
+3. 🚀 API: FastAPI backend (with JWT authentication)
+4. 🗄️ Data: Centralized database module (ORM) and SQLite
 
 ---
 
-## 🗺️ Data Model Flowchart
+## 🛠️ Developer/Admin Tools & Flows
+
+Developers and admins use CLI/database management tools and environment configuration, which are not part of the game user's experience.
 
 ```mermaid
-erDiagram
-    USER ||--o{ OWNED_SHIPS : owns
-    USER ||--o{ BATTLE_HISTORY : "participates in"
-    USER ||--o{ SYSTEM_LOGS : "generates logs"
-    SHIP ||--o{ OWNED_SHIPS : "template for"
-    OWNED_SHIPS ||--o{ BATTLE_HISTORY : "used in battles"
-    
-    USER {
-        int user_id PK
-        string nickname UK
-        string email UK
-        string password_hash
-        float elo_rank
-        float currency_value
-        int victories
-        int defeats
-        float damage_dealt
-        float damage_taken
-        int ships_destroyed_by_user
-        int ships_lost_by_user
-    }
-    
-    SHIP {
-        int ship_id PK
-        string ship_name UK
-        float attack
-        float shield
-        float evasion
-        float fire_rate
-        float hp
-        int value
-    }
-    
-    OWNED_SHIPS {
-        int ship_number PK
-        int user_id FK
-        int ship_id FK
-        string status
-        string ship_name
-        float base_attack
-        float base_shield
-        float base_evasion
-        float base_fire_rate
-        float base_hp
-        int base_value
-        float actual_attack
-        float actual_shield
-        float actual_evasion
-        float actual_fire_rate
-        float actual_hp
-        int actual_value
-    }
-    
-    BATTLE_HISTORY {
-        int battle_id PK
-        datetime timestamp
-        int winner_user_id FK
-        json participants
-        json battle_log
-        json extra
-    }
-    
-    SYSTEM_LOGS {
-        int log_id PK
-        datetime timestamp
-        int user_id FK
-        string log_level
-        string log_category
-        string action
-        json details
-        string ip_address
-        string user_agent
-        string session_id
-        string resource_affected
-        json old_value
-        json new_value
-        string error_message
-        int execution_time_ms
-    }
+flowchart TB
+    Dev((👨‍💻 Developer/Admin))
+    CLI[⚙️ CLI Tools\\nsetup.py, scripts]
+    EnvFile[⚙️ .env\\nConfiguration]
+    DBModule[🗄️ Database Module]
+    SQLite[(💾 SQLite Database)]
+    API[🚀 FastAPI Backend]
+
+    Dev --> CLI
+    CLI --> DBModule
+    DBModule --> SQLite
+    EnvFile -.-> DBModule
+    EnvFile -.-> API
 ```
 
-### Model Relationships
-- **User → OwnedShips**: One user can own many ships (1:N)
-- **Ship → OwnedShips**: One ship template can be owned by many users (1:N)  
-- **User → BattleHistory**: Users participate in many battles (1:N)
-- **OwnedShips → BattleHistory**: Ships are used in battles (implicit through participants JSON)
-- **User → SystemLogs**: Users generate system logs for audit trails (1:N)
+**Legend:**
+- `-->` Direct tool/data flow
+- `-.->` Configuration injection
 
-### Key Features
-- **Dual Stats System**: OwnedShips have both `base_*` and `actual_*` stats for upgrades/damage
-- **Flexible Battle System**: BattleHistory uses JSON for participants and battle logs
-- **Comprehensive Logging**: SystemLogs capture all user actions and system events
-- **Status Management**: OwnedShips have status ('owned', 'active', 'destroyed', 'upgrading', 'sold')
-- **Security**: Users store password_hash, logs track IP addresses and user agents
+**Notes:**
+- CLI/database management and .env config are for developers/admins only.
+- Game users interact only via the web interface.
 
 ---
 
