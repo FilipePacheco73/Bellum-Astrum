@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from backend.app import schemas
+from backend.app.schemas.user_schemas import UserCreate
 from database import User
 from backend.app.utils import get_password_hash, verify_password
 
@@ -10,7 +10,7 @@ def get_user(db: Session, user_id: int):
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(User).offset(skip).limit(limit).all()
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: UserCreate):
     hashed_password = get_password_hash(user.password)
     db_user = User(
         nickname=user.nickname,

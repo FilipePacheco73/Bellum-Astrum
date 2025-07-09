@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 from database import get_db, User
-from backend.app import schemas
+from backend.app.schemas.user_schemas import UserCreate, UserLogin, UserResponse
 from backend.app.crud import user_crud
 from backend.app.utils import create_access_token, log_user_action, log_security_event, log_error, GameAction
 import time
@@ -12,8 +12,8 @@ router = APIRouter(
     tags=["Users"],
 )
 
-@router.post("/register", response_model=schemas.UserResponse)
-def register_user(user: schemas.UserCreate, request: Request, db: Session = Depends(get_db)):
+@router.post("/register", response_model=UserResponse)
+def register_user(user: UserCreate, request: Request, db: Session = Depends(get_db)):
     start_time = time.time()
     
     try:
@@ -83,7 +83,7 @@ def register_user(user: schemas.UserCreate, request: Request, db: Session = Depe
         raise HTTPException(status_code=500, detail="Registration failed")
 
 @router.post("/login")
-def login_user(user: schemas.UserLogin, request: Request, db: Session = Depends(get_db)):
+def login_user(user: UserLogin, request: Request, db: Session = Depends(get_db)):
     start_time = time.time()
     
     try:
@@ -140,12 +140,12 @@ def login_user(user: schemas.UserLogin, request: Request, db: Session = Depends(
         )
         raise HTTPException(status_code=500, detail="Login failed")
 
-@router.get("/", response_model=list[schemas.UserResponse])
+@router.get("/", response_model=list[UserResponse])
 def list_users_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = user_crud.get_users(db=db, skip=skip, limit=limit)
     return users
 
-@router.get("/{user_id}", response_model=schemas.UserResponse)
+@router.get("/{user_id}", response_model=UserResponse)
 def get_user_route(user_id: int, db: Session = Depends(get_db)):
     db_user = user_crud.get_user(db=db, user_id=user_id)
     if db_user is None:

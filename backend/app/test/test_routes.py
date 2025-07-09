@@ -103,3 +103,44 @@ def test_sell_ships(ship_numbers):
     assert sell_response2.status_code == 200
     assert "message" in sell_response2.json()
     assert "value_received" in sell_response2.json()
+
+created_log_id = None
+
+def test_create_log():
+    global created_log_id
+    log_data = {
+        "log_level": "INFO",
+        "log_category": "SYSTEM",
+        "action": "REGISTER",
+        "details": {"test": "log"},
+        "user_id": None
+    }
+    response = client.post("/api/v1/logs/", json=log_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["log_id"]
+    assert data["log_level"] == "INFO"
+    created_log_id = data["log_id"]
+
+def test_list_logs():
+    global created_log_id
+    response = client.get("/api/v1/logs/")
+    assert response.status_code == 200
+    data = response.json()
+    assert "logs" in data
+    assert any(log["log_id"] == created_log_id for log in data["logs"])
+
+def test_get_log_by_id():
+    global created_log_id
+    response = client.get(f"/api/v1/logs/{created_log_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["log_id"] == created_log_id
+
+def test_delete_log():
+    global created_log_id
+    response = client.delete(f"/api/v1/logs/{created_log_id}")
+    assert response.status_code == 200
+    # Confirm deletion
+    response = client.get(f"/api/v1/logs/{created_log_id}")
+    assert response.status_code == 404
