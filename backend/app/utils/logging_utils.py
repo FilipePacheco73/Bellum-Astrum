@@ -9,6 +9,8 @@ from datetime import datetime, UTC
 import json
 from typing import Optional, Dict, Any
 from enum import Enum
+from backend.app.crud.log_crud import create_log
+from backend.app.schemas.log_schemas import SystemLogCreate
 
 class LogLevel(Enum):
     DEBUG = "DEBUG"
@@ -66,7 +68,7 @@ def log_event(
     execution_time_ms: Optional[int] = None
 ) -> SystemLogs:
     """
-    Create a new log entry in the SystemLogs table.
+    Create a new log entry in the SystemLogs table using the CRUD layer.
     
     Args:
         db: Database session
@@ -87,12 +89,11 @@ def log_event(
     Returns:
         The created SystemLogs entry
     """
-    log_entry = SystemLogs(
-        timestamp=datetime.now(UTC),
-        user_id=user_id,
+    log_data = SystemLogCreate(
         log_level=level.value,
         log_category=category.value,
         action=action.value,
+        user_id=user_id,
         details=details,
         ip_address=ip_address,
         user_agent=user_agent,
@@ -103,10 +104,7 @@ def log_event(
         error_message=error_message,
         execution_time_ms=execution_time_ms
     )
-    
-    db.add(log_entry)
-    db.commit()
-    return log_entry
+    return create_log(db, log_data)
 
 # Convenience functions for common log types
 

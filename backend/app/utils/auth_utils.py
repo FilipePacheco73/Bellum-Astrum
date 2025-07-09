@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, UTC
 from jose import jwt
 
 # Carrega o .env da pasta backend
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 # Configurações para JWT
 SECRET_KEY = os.getenv("JWT_SECRET_KEY") 
