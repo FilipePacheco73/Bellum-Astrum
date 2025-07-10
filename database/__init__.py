@@ -17,8 +17,7 @@ Usage:
 from .config import (
     engine,
     Base,
-    DATABASE_URL,
-    DATABASE_NAME
+    DATABASE_URL
 )
 
 # Session management
@@ -64,7 +63,6 @@ __all__ = [
     "engine",
     "Base", 
     "DATABASE_URL",
-    "DATABASE_NAME",
     
     # Session management
     "SessionLocal",
