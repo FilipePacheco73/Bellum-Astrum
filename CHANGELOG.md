@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2025-07-09
+
+### Changed
+- **Database Backend**: Removed all fallback and support for SQLite. The backend now requires a PostgreSQL-compatible `DATABASE_URL` (e.g., Neon) and will raise an error if not set.
+- **Environment Variables**: All database modules now require `DATABASE_URL` to be set via environment variables. `.env` loading is explicit and configurable via `ENV_FILE`.
+- **Test Improvements**: The automated test suite now begins with a health check using the `/health` API endpoint, ensuring the FastAPI app and database are both accessible before running other tests. All test comments are now in English for consistency.
+- **Code Cleanup**: Removed all references to `DATABASE_NAME` and SQLite logic from the codebase, including imports and error handling.
+
+### Added
+- **API Health Check Test**: Added a test to `test_routes.py` that validates the `/health` endpoint as the first test, ensuring the application and database are both running.
+
+### Fixed
+- **Import Errors**: Fixed import errors related to removed `DATABASE_NAME` and SQLite fallback logic.
+- **Test Consistency**: Ensured all test comments and fixtures are in English and that the health check is always executed first.
+
 ## [0.3.1] - 2025-07-09
 
 ### Added
