@@ -5,6 +5,8 @@ Database setup and seeding script for Bellum Astrum.
 This script provides commands to initialize, seed, reset, and manage
 the database from the command line.
 
+Database: Neon (PostgreSQL as a Service)
+
 Usage:
     python setup.py init              # Initialize database (create tables)
     python setup.py init --seed       # Initialize database with sample data
@@ -18,6 +20,11 @@ Usage:
 import argparse
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_file = os.getenv("ENV_FILE", ".env")
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), env_file))
 
 # Add the current directory to Python path so we can import the database module
 current_dir = os.path.dirname(__file__)

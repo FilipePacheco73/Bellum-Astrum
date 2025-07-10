@@ -9,8 +9,8 @@ from typing import List, Dict, Any
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from root .env file
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+# Load environment variables from database .env file
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
 # Environment variables for users
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')

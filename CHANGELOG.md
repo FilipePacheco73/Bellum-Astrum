@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2025-07-09
+
+### Changed
+- **Database Backend**: Removed all fallback and support for SQLite. The backend now requires a PostgreSQL-compatible `DATABASE_URL` (e.g., Neon) and will raise an error if not set.
+- **Environment Variables**: All database modules now require `DATABASE_URL` to be set via environment variables. `.env` loading is explicit and configurable via `ENV_FILE`.
+- **Test Improvements**: The automated test suite now begins with a health check using the `/health` API endpoint, ensuring the FastAPI app and database are both accessible before running other tests. All test comments are now in English for consistency.
+- **Code Cleanup**: Removed all references to `DATABASE_NAME` and SQLite logic from the codebase, including imports and error handling.
+
+### Added
+- **API Health Check Test**: Added a test to `test_routes.py` that validates the `/health` endpoint as the first test, ensuring the application and database are both running.
+
+### Fixed
+- **Import Errors**: Fixed import errors related to removed `DATABASE_NAME` and SQLite fallback logic.
+- **Test Consistency**: Ensured all test comments and fixtures are in English and that the health check is always executed first.
+
+## [0.3.1] - 2025-07-09
+
+### Added
+- **Modularized Schemas**: All Pydantic schemas are now organized into domain-specific modules under `backend/app/schemas/` (`user_schemas.py`, `ship_schemas.py`, `market_schemas.py`, `battle_schemas.py`, `log_schemas.py`, `owned_ship_schemas.py`).
+- **Schema Documentation**: All schema files now include comprehensive English docstrings for improved API documentation.
+- **Log CRUD Layer**: New `log_crud.py` file for log operations, fully integrated with the logging system.
+- **Log Endpoints**: New `routes/logs.py` route file with endpoints to create, list, retrieve by ID, and delete logs (`/api/v1/logs`).
+- **Test Coverage**: Automated tests in `test_routes.py` expanded to cover all log endpoints.
+
+### Changed
+- **Environment Variable Management**: Backend `.env` moved to `backend/.env` and a dedicated `.env` created in `database/.env`. All modules updated to load environment variables from the correct location.
+- **Logging Refactor**: Logging utilities now use the CRUD layer for log creation, ensuring traceability and auditability.
+- **Pydantic v2+ Compatibility**: Replaced `.dict()` with `.model_dump()` in all CRUD operations to avoid warnings and ensure compatibility.
+- **Updated Imports**: All routes and CRUDs now import schemas from the new modular structure.
+
+### Removed
+- **Ship Endpoints**: Ship creation, update, and delete endpoints removed from the API routes as requested.
+
+### Fixed
+- **Test Coverage**: All automated tests pass and cover the new endpoints and refactored code.
+- **Pydantic Warnings**: All Pydantic deprecation warnings resolved.
+
+### Technical Details
+- **Modular Structure**: Backend and database are now organized for easy extension and maintainability.
+- **Documentation & Auditing**: Improved internal documentation and event traceability via CRUD-based logs.
+- **Changelog Updated**: All changes are reflected in this version.
+
 ## [0.3.0] - 2025-07-02
 
 ### Added

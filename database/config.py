@@ -7,21 +7,24 @@ database URL construction and engine initialization.
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
+from dotenv import load_dotenv
 import os
 
-# Database configuration
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_NAME = "Bellum_Astrum.db"
-DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, DATABASE_NAME)}"
+# Load environment variables from .env
+env_file = os.getenv("ENV_FILE", ".env")
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), env_file))
 
-# SQLite specific configuration for FastAPI
-SQLITE_CONNECT_ARGS = {"check_same_thread": False}
+# Database configuration
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable must be set.")
 
 # Create database engine
+echo_flag = os.getenv("DB_ECHO", "False").lower() == "true"
+
 engine = create_engine(
-    DATABASE_URL, 
-    connect_args=SQLITE_CONNECT_ARGS,
-    echo=False  # Set to True for SQL query logging in development
+    DATABASE_URL,
+    echo=echo_flag
 )
 
 # Declarative base for SQLAlchemy models

@@ -3,23 +3,34 @@ from fastapi.testclient import TestClient
 from backend.app.main import app
 import random
 import string
+from sqlalchemy import text
+from database import engine
 
 client = TestClient(app)
 
-# Função utilitária para gerar strings aleatórias
+# Test API and database health via /health endpoint (should be the first test)
+def test_health_check():
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["api"] == "running"
+    assert data["status"] == "healthy"
+    assert data["database"] == "connected"
+
+# Utility function to generate random strings
 def random_string(length=8):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
-# Fixture para criar dois usuários e retornar seus ids
+# Fixture to create two users and return their ids
 def create_users():
     user1 = {
-        "nickname": f"user1_{random_string()}",
-        "email": f"user1_{random_string()}@email.com",
+        "nickname": f"test_user_1_{random_string()}",
+        "email": f"test_user_1_{random_string()}@email.com",
         "password": random_string(12)
     }
     user2 = {
-        "nickname": f"user2_{random_string()}",
-        "email": f"user2_{random_string()}@email.com",
+        "nickname": f"test_user_2_{random_string()}",
+        "email": f"test_user_2_{random_string()}@email.com",
         "password": random_string(12)
     }
     client.post("/api/v1/users/register", json=user1)
@@ -53,7 +64,7 @@ def test_root():
     assert response.status_code == 200
     assert "message" in response.json()
 
-# Test criando usuários
+# Test user creation
 def test_create_users(user_ids):
     user1_id, user2_id = user_ids
     assert isinstance(user1_id, int)
@@ -103,3 +114,48 @@ def test_sell_ships(ship_numbers):
     assert sell_response2.status_code == 200
     assert "message" in sell_response2.json()
     assert "value_received" in sell_response2.json()
+
+created_log_id = None
+
+# Test log creation
+def test_create_log():
+    global created_log_id
+    log_data = {
+        "log_level": "INFO",
+        "log_category": "SYSTEM",
+        "action": "REGISTER",
+        "details": {"test": "log"},
+        "user_id": None
+    }
+    response = client.post("/api/v1/logs/", json=log_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["log_id"]
+    assert data["log_level"] == "INFO"
+    created_log_id = data["log_id"]
+
+# Test log listing
+def test_list_logs():
+    global created_log_id
+    response = client.get("/api/v1/logs/")
+    assert response.status_code == 200
+    data = response.json()
+    assert "logs" in data
+    assert any(log["log_id"] == created_log_id for log in data["logs"])
+
+# Test get log by id
+def test_get_log_by_id():
+    global created_log_id
+    response = client.get(f"/api/v1/logs/{created_log_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["log_id"] == created_log_id
+
+# Test delete log
+def test_delete_log():
+    global created_log_id
+    response = client.delete(f"/api/v1/logs/{created_log_id}")
+    assert response.status_code == 200
+    # Confirm deletion
+    response = client.get(f"/api/v1/logs/{created_log_id}")
+    assert response.status_code == 404

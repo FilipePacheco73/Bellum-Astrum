@@ -2,6 +2,7 @@
 # Virtual environments
 *venv
 .env
+.env.prod
 
 # Cache and bytecode
 __pycache__/
