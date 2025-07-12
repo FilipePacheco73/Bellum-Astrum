@@ -266,19 +266,9 @@ flowchart LR
 - `POST /api/v1/market/buy/{ship_id}` – Authenticated user buys a ship
 - `POST /api/v1/market/sell/{owned_ship_number}` – Authenticated user sells a ship
 
+
 ### Shipyard
 - `POST /api/v1/shipyard/repair` – Repair a ship (authenticated, with cooldown)
----
-
-## 🚀 Release Automation
-
-Releases are now created automatically on every push to `main`, using the latest changelog entry as the release notes.
-
----
-
-## 🤖 Copilot Instructions
-
-Custom Copilot instructions for this project are available in `.github/instructions/copilot-instructions.md`.
 
 ### Battle System
 - `POST /api/v1/battle/activate-ship/` – Activate a ship for battle
@@ -291,6 +281,16 @@ Custom Copilot instructions for this project are available in `.github/instructi
 - `DELETE /api/v1/logs/{log_id}` – Delete log by ID
 
 ---
+
+## 🚀 Release Automation
+
+Releases are now created automatically on every push to `main`, using the latest changelog entry as the release notes.
+
+---
+
+## 🤖 Copilot Instructions
+
+Custom Copilot instructions for this project are available in `.github/instructions/copilot-instructions.md`.
 
 ## 🏆 Next Steps
 
