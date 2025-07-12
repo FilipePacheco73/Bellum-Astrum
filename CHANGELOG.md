@@ -5,6 +5,69 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-07-12
+
+### Added
+- **Progression System**: Complete user progression system with experience, levels, and ranks
+  - New `UserRank` enum with 11 ranks from Recruit to Fleet Admiral
+  - User model now includes `experience`, `level`, and `rank` fields
+  - Fibonacci-based level requirements for rank progression
+  - New `RankBonus` table to store rank-based stat bonuses
+  - Progression utilities in `backend/app/utils/progression_utils.py`
+- **Enhanced Battle System**: Major improvements to battle mechanics
+  - Rank bonuses now apply to ship stats during battles
+  - NPC-specific handling in battles (NPCs don't lose money, ships auto-restore)
+  - Experience and level-up system integrated into battle outcomes
+  - Improved ELO system with NPC-specific handling
+  - Dynamic XP gain based on opponent level difference
+  - Automatic rank promotion checks after battles
+- **Expanded Game Data**: Significantly enhanced ship and NPC variety
+  - 30 ships organized in 6 tiers with 5 different strategies each
+  - 11 NPCs with appropriate levels, ranks, and ship assignments
+  - Hardcoded ship assignments based on user rank and level
+  - Comprehensive rank bonus system for all stats
+- **NPC Battle Mechanics**: Special handling for NPC opponents
+  - NPCs don't lose or gain currency in battles
+  - Human players lose money when defeated by NPCs but NPCs don't gain it
+  - Human players gain money when defeating NPCs but NPCs don't lose it
+  - NPC ships automatically restore to full condition after battles
+  - Destroyed NPC ships are automatically repaired and reactivated
+  - ELO changes only affect human players when fighting NPCs
+
+### Changed
+- **Battle Algorithm**: Completely overhauled battle system
+  - Now uses rank-modified stats instead of base ship stats
+  - Improved damage calculation with rank bonuses
+  - Better battle logging with rank and level information
+  - Enhanced ship degradation system (only affects human players)
+- **Database Schema**: Updated user and ship data structure
+  - Currency values changed from float to int for consistency
+  - Default starting currency increased from 1500 to 2000 credits
+  - Added experience, level, and rank tracking to users
+  - Enhanced base data with proper level/rank distributions
+- **Test Coverage**: Extended test suite to include NPC battles
+  - New test for battle against NPC opponents
+  - Verification of NPC-specific battle mechanics
+  - Enhanced battle log analysis and validation
+- **Data Seeding**: Improved database initialization
+  - Rank bonuses are now seeded automatically
+  - Hardcoded ship assignments based on user progression
+  - Better NPC distribution across different ranks and levels
+
+### Fixed
+- **Schema Consistency**: Fixed currency type inconsistencies across all schema files
+- **Battle Statistics**: Corrected ship destruction counting logic
+- **GitHub Actions**: Updated release workflow to use specific action version
+- **Database Setup**: Fixed missing file ending in `database/setup.py`
+
+### Technical Details
+- **Progression Formula**: Exponential XP growth (base 100, factor 1.5) with Fibonacci-like rank thresholds
+- **Rank Bonuses**: Multiplicative bonuses from 0% (Recruit) to 60% (Fleet Admiral) for all ship stats
+- **Battle Balance**: NPCs provide challenging opponents while maintaining game economy balance
+  - NPCs neither gain nor lose currency to preserve economic stability
+  - Human players face consequences (lose money) but NPCs don't accumulate wealth
+- **Code Organization**: New utility modules for progression calculations and rank management
+
 ## [0.3.3] - 2025-07-12
 
 ### Added
