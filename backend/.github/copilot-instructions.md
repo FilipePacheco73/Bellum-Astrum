@@ -1,5 +1,4 @@
 # Copilot Instructions
-
 This project uses GitHub Copilot to assist with code suggestions and documentation. Please follow these guidelines to ensure consistency and maintainability:
 
 ## General Guidelines

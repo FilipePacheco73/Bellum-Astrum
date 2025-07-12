@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
+from backend.app.utils.auth_utils import get_current_user
 from sqlalchemy.orm import Session
 from database import get_db
 from backend.app.crud.market_crud import buy_ship, sell_ship
@@ -8,12 +9,17 @@ import time
 
 router = APIRouter(prefix="/market", tags=["Market"])
 
-@router.post("/buy/{user_id}/{ship_id}")
-def buy_ship_route(user_id: int, ship_id: int, request: Request, db: Session = Depends(get_db)):
+@router.post("/buy/{ship_id}")
+def buy_ship_route(
+    ship_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     start_time = time.time()
     
     try:
-        result, message, ship_number = buy_ship(db, user_id, ship_id)
+        result, message, ship_number = buy_ship(db, current_user.user_id, ship_id)
         execution_time = int((time.time() - start_time) * 1000)
         
         if not result:
@@ -22,7 +28,7 @@ def buy_ship_route(user_id: int, ship_id: int, request: Request, db: Session = D
                 db=db,
                 action=GameAction.BUY_SHIP,
                 error_message=message,
-                user_id=user_id,
+                user_id=current_user.user_id,
                 details={
                     "ship_id": ship_id,
                     "success": False,
@@ -35,7 +41,7 @@ def buy_ship_route(user_id: int, ship_id: int, request: Request, db: Session = D
         log_user_action(
             db=db,
             action=GameAction.BUY_SHIP,
-            user_id=user_id,
+            user_id=current_user.user_id,
             details={
                 "ship_id": ship_id,
                 "ship_number": ship_number,
@@ -55,7 +61,7 @@ def buy_ship_route(user_id: int, ship_id: int, request: Request, db: Session = D
             db=db,
             action=GameAction.BUY_SHIP,
             error_message=str(e),
-            user_id=user_id,
+            user_id=current_user.user_id,
             details={
                 "ship_id": ship_id,
                 "execution_time_ms": execution_time,
@@ -64,12 +70,17 @@ def buy_ship_route(user_id: int, ship_id: int, request: Request, db: Session = D
         )
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.post("/sell/{user_id}/{owned_ship_number}")
-def sell_ship_route(user_id: int, owned_ship_number: int, request: Request, db: Session = Depends(get_db)):
+@router.post("/sell/{owned_ship_number}")
+def sell_ship_route(
+    owned_ship_number: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     start_time = time.time()
     
     try:
-        value, message = sell_ship(db, user_id, owned_ship_number)
+        value, message = sell_ship(db, current_user.user_id, owned_ship_number)
         execution_time = int((time.time() - start_time) * 1000)
         
         if value is None:
@@ -78,7 +89,7 @@ def sell_ship_route(user_id: int, owned_ship_number: int, request: Request, db: 
                 db=db,
                 action=GameAction.SELL_SHIP,
                 error_message=message,
-                user_id=user_id,
+                user_id=current_user.user_id,
                 details={
                     "owned_ship_number": owned_ship_number,
                     "success": False,
@@ -91,7 +102,7 @@ def sell_ship_route(user_id: int, owned_ship_number: int, request: Request, db: 
         log_user_action(
             db=db,
             action=GameAction.SELL_SHIP,
-            user_id=user_id,
+            user_id=current_user.user_id,
             details={
                 "owned_ship_number": owned_ship_number,
                 "value_received": value,
@@ -111,7 +122,7 @@ def sell_ship_route(user_id: int, owned_ship_number: int, request: Request, db: 
             db=db,
             action=GameAction.SELL_SHIP,
             error_message=str(e),
-            user_id=user_id,
+            user_id=current_user.user_id,
             details={
                 "owned_ship_number": owned_ship_number,
                 "execution_time_ms": execution_time,

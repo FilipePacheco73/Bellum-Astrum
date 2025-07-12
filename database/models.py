@@ -186,6 +186,36 @@ class OwnedShips(Base):
     
     def __repr__(self) -> str:
         return f"<OwnedShips(ship_number={self.ship_number}, user_id={self.user_id}, ship_id={self.ship_id}, ship_name={self.ship_name}, status={self.status})>"
+
+
+# ShipyardLog: registra o último uso do shipyard por usuário
+class ShipyardLog(Base):
+    """
+    Records the last use of the shipyard by user and ship.
+
+    Attributes:
+        id: Unique log identifier
+        user_id: User ID (FK to users)
+        ship_number: Ship instance number (FK to owned_ships)
+        ship_id: Ship type (FK to ships)
+        last_used_at: Datetime of last use
+    """
+    __tablename__ = 'shipyard_log'
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False, index=True)
+    ship_number = Column(Integer, ForeignKey('owned_ships.ship_number'), nullable=False, index=True)
+    ship_id = Column(Integer, ForeignKey('ships.ship_id'), nullable=False, index=True)
+    last_used_at = Column(DateTime, nullable=False, default=utc_now)
+
+    __table_args__ = (
+        Index('idx_shipyardlog_user', 'user_id'),
+        Index('idx_shipyardlog_ship', 'ship_number'),
+        Index('idx_shipyardlog_shipid', 'ship_id'),
+    )
+
+    def __repr__(self) -> str:
+        return f"<ShipyardLog(id={self.id}, user_id={self.user_id}, ship_number={self.ship_number}, ship_id={self.ship_id}, last_used_at={self.last_used_at})>"
     
 class BattleHistory(Base):
     """
