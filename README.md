@@ -1,6 +1,6 @@
 # 🚀 Bellum Astrum
 
-Bellum Astrum is a learning project focused on backend development with FastAPI, SQLite database, and spaceship battle logic. The project is now organized to facilitate expansion with a modern frontend.
+Bellum Astrum is a learning project focused on backend development with FastAPI, PostgreSQL database (Neon), and spaceship battle logic. The project is now organized to facilitate expansion with a modern frontend.
 
 ---
 
@@ -17,6 +17,7 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 - 🕹️ CRUD for users and ships
 - ⚔️ Battle system with ship activation
 - 🛒 Ship market (buy/sell)
+- 🛠️ Shipyard system with repair and cooldown
 - 🌱 Data seeding endpoints
 - 📡 Modular and extensible REST API
 - 🖥️ Modern web interface (React + Vite + Tailwind)
@@ -27,6 +28,9 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 - 🗄️ **Centralized Database Module**: Organized database management with lifecycle controls
 - 📝 **Comprehensive Logging**: System audit trails and monitoring
 - 🔧 **Database Scripts**: Command-line tools for database management
+- 🔄 Automated GitHub release workflow (changelog-based)
+- 🧪 Full end-to-end automated tests (buy, activate, battle, repair, sell)
+- 📝 Standardized Copilot instructions
 
 ---
 
@@ -69,6 +73,7 @@ database/
 - **OwnedShips**: Individual ships owned by users with current stats
 - **BattleHistory**: Records of battles with detailed logs
 - **SystemLogs**: Comprehensive audit logging for security and debugging
+- **ShipyardLog**: Tracks last shipyard usage per user/ship
 
 ### Database Management
 
@@ -93,7 +98,6 @@ python database/setup.py health
 
 > **Note:**
 > - Make sure your `DATABASE_URL` environment variable is set to your PostgreSQL connection string before running these commands.
-> - If `DATABASE_URL` is not set, the project will use SQLite locally by default (for development only).
 
 ### Clean Imports
 ```python
@@ -257,9 +261,24 @@ flowchart LR
 - `GET /api/v1/ships/` – List all ships
 - `GET /api/v1/ships/{ship_id}` – Get specific ship details
 
+
 ### Market System
-- `POST /api/v1/market/buy/{user_id}/{ship_id}` – User buys a ship
-- `POST /api/v1/market/sell/{user_id}/{owned_ship_number}` – User sells a ship
+- `POST /api/v1/market/buy/{ship_id}` – Authenticated user buys a ship
+- `POST /api/v1/market/sell/{owned_ship_number}` – Authenticated user sells a ship
+
+### Shipyard
+- `POST /api/v1/shipyard/repair` – Repair a ship (authenticated, with cooldown)
+---
+
+## 🚀 Release Automation
+
+Releases are now created automatically on every push to `main`, using the latest changelog entry as the release notes.
+
+---
+
+## 🤖 Copilot Instructions
+
+Custom Copilot instructions for this project are available in `.github/instructions/copilot-instructions.md`.
 
 ### Battle System
 - `POST /api/v1/battle/activate-ship/` – Activate a ship for battle
