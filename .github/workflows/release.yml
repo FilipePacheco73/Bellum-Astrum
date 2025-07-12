@@ -21,7 +21,7 @@ jobs:
       - name: Get latest changelog entry
         id: changelog
         run: |
-          VERSION=$(grep -m1 '^## ' $CHANGELOG_FILE | sed -E 's/^## \[([^\]]+)\].*/v\1/')
+          VERSION=$(grep -m1 '^## ' $CHANGELOG_FILE | sed -E 's/^## \[([0-9.]+)\].*/v\1/')
           BODY=$(awk '/^## /{i++}i==2{exit}i==1' $CHANGELOG_FILE | tail -n +2)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "body<<EOF" >> $GITHUB_OUTPUT
