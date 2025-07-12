@@ -12,7 +12,8 @@ All models use the declarative base and include proper constraints,
 indexes, and relationships for optimal database performance.
 """
 
-from sqlalchemy import Column, Integer, Float, String, DateTime, JSON, ForeignKey, Index, CheckConstraint
+import enum
+from sqlalchemy import Column, Integer, Float, String, DateTime, JSON, ForeignKey, Index, CheckConstraint, Enum
 from .config import Base
 from datetime import datetime, UTC
 from typing import Dict, Any
@@ -20,6 +21,39 @@ from typing import Dict, Any
 def utc_now() -> datetime:
     """Helper function to return current UTC datetime for SQLAlchemy defaults"""
     return datetime.now(UTC)
+
+# Ensure UserRank is defined before any usage
+class UserRank(enum.Enum):
+    """
+    Enumeration of user ranks for progression and bonuses.
+
+    Each rank represents a stage in the user's career, used for progression,
+    unlocking features, and applying rank-based bonuses throughout the game.
+
+    Values:
+        RECRUIT: Entry-level rank
+        ENSIGN: Second rank
+        LIEUTENANT: Third rank
+        LIEUTENANT_COMMANDER: Fourth rank
+        COMMANDER: Fifth rank
+        CAPTAIN: Sixth rank
+        COMMODORE: Seventh rank
+        REAR_ADMIRAL: Eighth rank
+        VICE_ADMIRAL: Ninth rank
+        ADMIRAL: Tenth rank
+        FLEET_ADMIRAL: Highest rank
+    """
+    RECRUIT = "Recruit"
+    ENSIGN = "Ensign"
+    LIEUTENANT = "Lieutenant"
+    LIEUTENANT_COMMANDER = "Lieutenant Commander"
+    COMMANDER = "Commander"
+    CAPTAIN = "Captain"
+    COMMODORE = "Commodore"
+    REAR_ADMIRAL = "Rear Admiral"
+    VICE_ADMIRAL = "Vice Admiral"
+    ADMIRAL = "Admiral"
+    FLEET_ADMIRAL = "Fleet Admiral"
 
 class Ship(Base):
     """
@@ -95,13 +129,16 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     elo_rank = Column(Float, default=1000, nullable=False)
-    currency_value = Column(Float, default=1500, nullable=False)
+    currency_value = Column(Integer, default=2000, nullable=False)
     victories = Column(Integer, default=0, nullable=False)
     defeats = Column(Integer, default=0, nullable=False)
     damage_dealt = Column(Float, default=0, nullable=False)
     damage_taken = Column(Float, default=0, nullable=False)
     ships_destroyed_by_user = Column(Integer, default=0, nullable=False)
     ships_lost_by_user = Column(Integer, default=0, nullable=False)
+    experience = Column(Integer, default=0, nullable=False)
+    level = Column(Integer, default=1, nullable=False)
+    rank = Column(Enum(UserRank), default=UserRank.RECRUIT, nullable=False)
 
     # Database constraints to ensure valid values
     __table_args__ = (
@@ -113,14 +150,18 @@ class User(Base):
         CheckConstraint('damage_taken >= 0', name='check_damage_taken_positive'),
         CheckConstraint('ships_destroyed_by_user >= 0', name='check_ships_destroyed_positive'),
         CheckConstraint('ships_lost_by_user >= 0', name='check_ships_lost_positive'),
+        CheckConstraint('experience >= 0', name='check_experience_positive'),
+        CheckConstraint('level >= 1', name='check_level_positive'),
         Index('idx_user_nickname', 'nickname'),
         Index('idx_user_email', 'email'),
         Index('idx_user_elo_rank', 'elo_rank'),
         Index('idx_user_currency', 'currency_value'),
+        Index('idx_user_level', 'level'),
+        Index('idx_user_rank', 'rank'),
     )
 
     def __repr__(self) -> str:
-        return f"<User(user_id={self.user_id}, nickname={self.nickname}, elo_rank={self.elo_rank}, currency_value={self.currency_value}, victories={self.victories}, defeats={self.defeats})>"
+        return f"<User(user_id={self.user_id}, nickname={self.nickname}, elo_rank={self.elo_rank}, currency_value={self.currency_value}, victories={self.victories}, defeats={self.defeats}, level={self.level}, rank={self.rank.name})>"
         
 class OwnedShips(Base):
     """
@@ -316,3 +357,40 @@ class SystemLogs(Base):
 
     def __repr__(self) -> str:
         return f"<SystemLogs(log_id={self.log_id}, timestamp={self.timestamp}, user_id={self.user_id}, level={self.log_level}, category={self.log_category}, action={self.action})>"
+
+
+class RankBonus(Base):
+    """
+    Rank bonus table for user progression.
+
+    Stores bonus values for each user rank in the database.
+    Allows dynamic adjustment of bonuses without code changes.
+
+    Attributes:
+        id: Unique identifier for the rank bonus entry
+        rank: User rank (enum, unique)
+        min_level: Minimum level required for this rank
+        attack: Bonus attack value for this rank
+        shield: Bonus shield value for this rank
+        hp: Bonus hit points for this rank
+        evasion: Bonus evasion for this rank
+        fire_rate: Bonus fire rate for this rank
+        value: Additional value or multiplier for this rank
+    """
+    __tablename__ = 'rank_bonus'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rank = Column(Enum(UserRank), unique=True, nullable=False, index=True)
+    min_level = Column(Integer, nullable=False)
+    attack = Column(Float, default=0, nullable=False)
+    shield = Column(Float, default=0, nullable=False)
+    hp = Column(Float, default=0, nullable=False)
+    evasion = Column(Float, default=0, nullable=False)
+    fire_rate = Column(Float, default=0, nullable=False)
+    value = Column(Float, default=0, nullable=False)
+
+    def __repr__(self) -> str:
+        return (
+            f"<RankBonus(rank={self.rank}, min_level={self.min_level}, attack={self.attack}, "
+            f"shield={self.shield}, hp={self.hp}, evasion={self.evasion}, fire_rate={self.fire_rate}, value={self.value})>"
+        )

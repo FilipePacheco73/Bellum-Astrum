@@ -15,7 +15,7 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 ## ✨ Features
 
 - 🕹️ CRUD for users and ships
-- ⚔️ Battle system with ship activation
+- ⚔️ Advanced battle system with rank-based bonuses and NPC mechanics
 - 🛒 Ship market (buy/sell)
 - 🛠️ Shipyard system with repair and cooldown
 - 🌱 Data seeding endpoints
@@ -31,6 +31,10 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 - 🔄 Automated GitHub release workflow (changelog-based)
 - 🧪 Full end-to-end automated tests (buy, activate, battle, repair, sell)
 - 📝 Standardized Copilot instructions
+- 🎯 **Progression System**: Experience, levels, and military ranks (Recruit to Fleet Admiral)
+- ⭐ **Rank Bonuses**: Multiplicative stat bonuses based on user rank
+- 🤖 **Smart NPC System**: Balanced AI opponents with special battle mechanics
+- 📈 **Dynamic XP Gains**: Experience scales based on opponent difficulty
 
 ---
 
@@ -68,12 +72,13 @@ database/
 ```
 
 ### Database Models
-- **User**: Game user accounts with ELO ranking and statistics
-- **Ship**: Ship templates with base characteristics
+- **User**: Game user accounts with ELO ranking, experience, levels, ranks, and statistics
+- **Ship**: Ship templates with base characteristics (30 ships in 6 tiers)
 - **OwnedShips**: Individual ships owned by users with current stats
 - **BattleHistory**: Records of battles with detailed logs
 - **SystemLogs**: Comprehensive audit logging for security and debugging
 - **ShipyardLog**: Tracks last shipyard usage per user/ship
+- **RankBonus**: Stores rank-based stat bonuses for progression system
 
 ### Database Management
 
@@ -272,13 +277,58 @@ flowchart LR
 
 ### Battle System
 - `POST /api/v1/battle/activate-ship/` – Activate a ship for battle
-- `POST /api/v1/battle/battle` – Battle between two users
+- `POST /api/v1/battle/battle` – Battle between two users with rank bonuses and progression
 
 ### Logs
 - `POST /api/v1/logs/` – Create a new log entry
 - `GET /api/v1/logs/` – List all logs
 - `GET /api/v1/logs/{log_id}` – Get log by ID
 - `DELETE /api/v1/logs/{log_id}` – Delete log by ID
+
+---
+
+## 🎯 Progression System
+
+Bellum Astrum features a comprehensive progression system that enhances gameplay through experience, levels, and military ranks.
+
+### Experience & Levels
+- **Exponential Growth**: XP requirements increase exponentially (base 100, factor 1.5)
+- **Dynamic XP Gains**: Earn more XP fighting higher-level opponents, less for lower-level
+- **Battle Participation**: Both winners and losers gain experience from battles
+- **Level-Up Rewards**: Automatic progression checks after each battle
+
+### Military Ranks
+The game features 11 military ranks based on Fibonacci-like level requirements:
+
+| Rank | Level Required | Stat Bonus |
+|------|----------------|------------|
+| Recruit | 1 | 0% |
+| Ensign | 3 | 5% |
+| Lieutenant | 5 | 10% |
+| Lieutenant Commander | 8 | 15% |
+| Commander | 13 | 20% |
+| Captain | 21 | 25% |
+| Commodore | 35 | 30% |
+| Rear Admiral | 55 | 35% |
+| Vice Admiral | 89 | 40% |
+| Admiral | 144 | 50% |
+| Fleet Admiral | 233 | 60% |
+
+### Rank Bonuses
+Rank bonuses apply multiplicatively to all ship stats during battles:
+- **Attack**: Increased damage output
+- **Shield**: Enhanced defensive capabilities
+- **HP**: Additional health points
+- **Evasion**: Improved dodge chance
+- **Fire Rate**: Faster attack speed
+- **Value**: Higher ship worth
+
+### NPC System
+11 NPCs distributed across different ranks provide balanced opposition:
+- **Balanced Economy**: NPCs don't gain or lose currency
+- **Ship Restoration**: NPC ships auto-repair after battles
+- **ELO Protection**: Only human players gain/lose ELO against NPCs
+- **Progressive Challenge**: NPCs scale from Recruit to Fleet Admiral
 
 ---
 
@@ -298,13 +348,17 @@ Custom Copilot instructions for this project are available in `.github/instructi
 - [ ] Responsive/mobile-friendly frontend
 - [ ] Real-time multiplayer features
 - [ ] Enhanced battle system with animations
-- [ ] Ship customization and upgrades
-- [ ] Leaderboards and tournaments
+- [ ] Ship customization and upgrades beyond rank bonuses
+- [ ] Guild/Alliance system for team battles
+- [ ] Leaderboards and tournaments with rank-based brackets
+- [ ] Mission/Campaign system with story progression
+- [ ] Advanced NPC AI behaviors and personalities
+- [ ] Ship crafting and blueprint system
 - [ ] API documentation improvements (OpenAPI, examples)
 - [ ] Enhanced error handling and user feedback
 - [ ] CI/CD pipeline (tests, lint, deploy)
 - [ ] Docker support (dev/prod)
-- [ ] Admin dashboard for managing users/ships
+- [ ] Admin dashboard for managing users/ships/NPCs
 - [ ] Unit and integration tests for frontend
 - [ ] Interface for AI agents
 
@@ -332,6 +386,8 @@ Comprehensive Logging System          :done,    des12, 2025-07-01, 1d
 Centralized Database Module           :done,    des13, 2025-07-02, 1d
 Logs endpoints & modular schemas      :done,    des14, 2025-07-09, 1d
 Migration to PostgreSQL/Neon/Render   :done,    des15, 2025-07-09, 1d
+Shipyard system & GitHub automation   :done,    des16, 2025-07-12, 1d
+Progression System & NPC Mechanics    :done,    des17, 2025-07-12, 1d
 ```
 
 ---

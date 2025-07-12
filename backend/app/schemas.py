@@ -37,7 +37,7 @@ class UserBase(BaseModel):
     Attributes:
     nickname (str): Unique nickname of the user. Required.
     elo_rank (float): Elo rating of the user, representing their skill level. Default: 1000.
-    currency_value (float): Amount of in-game currency the user has. Default: 1500.
+    currency_value (int): Amount of in-game currency the user has. Default: 2000.
     victories (int): Number of victories. Default: 0.
     defeats (int): Number of defeats. Default: 0.
     damage_dealt (float): Total damage dealt by the user. Default: 0.
@@ -47,7 +47,7 @@ class UserBase(BaseModel):
     """
     nickname: str
     elo_rank: Optional[float] = 1000
-    currency_value: Optional[float] = 1500
+    currency_value: Optional[int] = 2000
     victories: Optional[int] = 0
     defeats: Optional[int] = 0
     damage_dealt: Optional[float] = 0
@@ -60,7 +60,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     elo_rank: Optional[float] = 1000
-    currency_value: Optional[float] = 1500
+    currency_value: Optional[int] = 2000
     victories: Optional[int] = 0
     defeats: Optional[int] = 0
     damage_dealt: Optional[float] = 0
@@ -77,7 +77,7 @@ class UserResponse(BaseModel):
     nickname: str
     email: EmailStr
     elo_rank: float
-    currency_value: float
+    currency_value: int
     victories: int
     defeats: int
     damage_dealt: float

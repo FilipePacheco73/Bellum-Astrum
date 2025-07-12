@@ -123,6 +123,48 @@ def test_battle_between_two_users(ship_numbers):
     assert "winner_user_id" in data
     assert "battle_log" in data
 
+# Test battle against NPC (User1 vs NPC_Astro)
+def test_battle_against_npc(ship_numbers):
+    (user1_id, token1, ship_number1), (user2_id, token2, ship_number2) = ship_numbers
+    
+    # Hardcoded NPC values for simplicity
+    npc_astro_id = 2
+    npc_ship_number = 2
+    
+    # User1 battles against NPC_Astro
+    print(f"\nDEBUG: user1_id={user1_id}, npc_astro_id={npc_astro_id}")
+    print(f"DEBUG: ship_number1={ship_number1}, npc_ship_number={npc_ship_number}")
+    
+    battle = client.post(
+        "/api/v1/battle/battle",
+        params={
+            "opponent_user_id": npc_astro_id,
+            "user_ship_number": ship_number1,
+            "opponent_ship_number": npc_ship_number
+        },
+        headers={"Authorization": f"Bearer {token1}"}
+    )
+    print(f"DEBUG: Battle response status: {battle.status_code}")
+    print(f"DEBUG: Battle response text: {battle.text}")
+    assert battle.status_code == 200
+    data = battle.json()
+    assert "battle_id" in data
+    assert "participants" in data
+    assert "winner_user_id" in data
+    assert "battle_log" in data
+    
+    # Print battle log to verify NPC special handling
+    battle_log = data["battle_log"]
+    print("\n=== BATTLE LOG vs NPC ===")
+    for log_entry in battle_log:
+        print(log_entry)
+    print("=== END BATTLE LOG ===\n")
+    
+    # Verify that NPC appears in participants
+    participants = data["participants"]
+    npc_participant = next((p for p in participants if p["nickname"] == "NPC_Astro"), None)
+    assert npc_participant is not None, "NPC_Astro not found in battle participants"
+
 # Test repairing ships for both users before selling
 def test_repair_ships_before_selling(ship_numbers):
     (user1_id, token1, ship_number1), (user2_id, token2, ship_number2) = ship_numbers

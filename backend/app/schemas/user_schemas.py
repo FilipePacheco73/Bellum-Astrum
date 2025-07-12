@@ -8,7 +8,7 @@ class UserBase(BaseModel):
     Attributes:
         nickname (str): Unique nickname of the user.
         elo_rank (float, optional): Elo rating representing user skill. Default is 1000.
-        currency_value (float, optional): In-game currency amount. Default is 1500.
+        currency_value (int, optional): In-game currency amount. Default is 2000.
         victories (int, optional): Number of victories. Default is 0.
         defeats (int, optional): Number of defeats. Default is 0.
         damage_dealt (float, optional): Total damage dealt. Default is 0.
@@ -18,7 +18,7 @@ class UserBase(BaseModel):
     """
     nickname: str
     elo_rank: Optional[float] = 1000
-    currency_value: Optional[float] = 1500
+    currency_value: Optional[int] = 2000
     victories: Optional[int] = 0
     defeats: Optional[int] = 0
     damage_dealt: Optional[float] = 0
@@ -35,7 +35,7 @@ class UserCreate(BaseModel):
         email (EmailStr): Email address of the user.
         password (str): User password (plain text, will be hashed).
         elo_rank (float, optional): Elo rating. Default is 1000.
-        currency_value (float, optional): In-game currency. Default is 1500.
+        currency_value (int, optional): In-game currency. Default is 2000.
         victories (int, optional): Number of victories. Default is 0.
         defeats (int, optional): Number of defeats. Default is 0.
         damage_dealt (float, optional): Total damage dealt. Default is 0.
@@ -47,7 +47,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     elo_rank: Optional[float] = 1000
-    currency_value: Optional[float] = 1500
+    currency_value: Optional[int] = 2000
     victories: Optional[int] = 0
     defeats: Optional[int] = 0
     damage_dealt: Optional[float] = 0
@@ -75,7 +75,7 @@ class UserResponse(BaseModel):
         nickname (str): User nickname.
         email (EmailStr): User email address.
         elo_rank (float): User Elo rating.
-        currency_value (float): In-game currency.
+        currency_value (int): In-game currency.
         victories (int): Number of victories.
         defeats (int): Number of defeats.
         damage_dealt (float): Total damage dealt.
@@ -87,7 +87,7 @@ class UserResponse(BaseModel):
     nickname: str
     email: EmailStr
     elo_rank: float
-    currency_value: float
+    currency_value: int
     victories: int
     defeats: int
     damage_dealt: float
