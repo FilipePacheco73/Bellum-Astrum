@@ -7,7 +7,7 @@ and initial data seeding. Centralizes all database lifecycle concerns.
 
 from .config import engine, Base
 from .session import create_session
-from .models import User, Ship, OwnedShips, SystemLogs
+from .models import User, Ship, OwnedShips, SystemLogs, ShipyardLog
 from .base_data import get_ships_data, get_users_data, get_npc_users
 from sqlalchemy import func, text
 import logging

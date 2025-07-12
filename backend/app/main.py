@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from backend.app.routes import ships, users, market, battle, logs
-from database import initialize_database, shutdown_database, check_database_health
+from backend.app.routes import ships, users, market, battle, logs, shipyard
+from database import shutdown_database, check_database_health
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,7 +34,9 @@ app.include_router(ships.router, prefix="/api/v1") # Using ships.router as defin
 app.include_router(users.router, prefix="/api/v1") # Using users.router as defined in users.py
 app.include_router(market.router, prefix="/api/v1") # Using market.router as defined in market.py
 app.include_router(battle.router, prefix="/api/v1")  # Using battle.router as defined in battle.py
+app.include_router(shipyard.router, prefix="/api/v1")  # Using shipyard.router as defined in shipyard.py
 app.include_router(logs.router, prefix="/api/v1")  # Using logs.router as defined in logs.py
+
 
 @app.get("/")
 async def root():

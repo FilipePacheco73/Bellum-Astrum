@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from backend.app.utils.auth_utils import get_current_user
 from sqlalchemy.orm import Session
 from database import get_db
 from backend.app.crud.battle_crud import battle_between_users, activate_owned_ship
@@ -11,15 +12,15 @@ router = APIRouter(prefix="/battle", tags=["Battle"])
 
 @router.post("/activate-ship/", response_model=ActivateShipResponse)
 def activate_ship_route(
-    user_id: int,
     ship_number: int,
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     start_time = time.time()
     
     try:
-        ship, message = activate_owned_ship(db, user_id, ship_number)
+        ship, message = activate_owned_ship(db, current_user.user_id, ship_number)
         execution_time = int((time.time() - start_time) * 1000)
         
         if not ship:
@@ -28,7 +29,7 @@ def activate_ship_route(
                 db=db,
                 action=GameAction.ACTIVATE_SHIP,
                 error_message=message,
-                user_id=user_id,
+                user_id=current_user.user_id,
                 details={
                     "ship_number": ship_number,
                     "success": False,
@@ -41,7 +42,7 @@ def activate_ship_route(
         log_user_action(
             db=db,
             action=GameAction.ACTIVATE_SHIP,
-            user_id=user_id,
+            user_id=current_user.user_id,
             details={
                 "ship_number": ship_number,
                 "ship_id": ship.ship_id,
@@ -62,7 +63,7 @@ def activate_ship_route(
             db=db,
             action=GameAction.ACTIVATE_SHIP,
             error_message=str(e),
-            user_id=user_id,
+            user_id=current_user.user_id,
             details={
                 "ship_number": ship_number,
                 "execution_time_ms": execution_time,
@@ -73,17 +74,17 @@ def activate_ship_route(
 
 @router.post("/battle", response_model=BattleHistoryResponse)
 def battle_route(
-    user1_id: int,
-    user2_id: int,
-    user1_ship_number: int,
-    user2_ship_number: int,
+    opponent_user_id: int,
+    user_ship_number: int,
+    opponent_ship_number: int,
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     start_time = time.time()
     
     try:
-        result, message = battle_between_users(db, user1_id, user2_id, user1_ship_number, user2_ship_number)
+        result, message = battle_between_users(db, current_user.user_id, opponent_user_id, user_ship_number, opponent_ship_number)
         execution_time = int((time.time() - start_time) * 1000)
         
         if not result:
@@ -92,12 +93,12 @@ def battle_route(
                 db=db,
                 action=GameAction.BATTLE_START,
                 error_message=message,
-                user_id=user1_id,
+                user_id=current_user.user_id,
                 details={
-                    "user1_id": user1_id,
-                    "user2_id": user2_id,
-                    "user1_ship_number": user1_ship_number,
-                    "user2_ship_number": user2_ship_number,
+                    "user1_id": current_user.user_id,
+                    "user2_id": opponent_user_id,
+                    "user1_ship_number": user_ship_number,
+                    "user2_ship_number": opponent_ship_number,
                     "success": False,
                     "execution_time_ms": execution_time
                 }
@@ -108,13 +109,13 @@ def battle_route(
         log_game_event(
             db=db,
             action=GameAction.BATTLE_END,
-            user_id=user1_id,
+            user_id=current_user.user_id,
             details={
                 "battle_id": result.battle_id,
-                "user1_id": user1_id,
-                "user2_id": user2_id,
-                "user1_ship_number": user1_ship_number,
-                "user2_ship_number": user2_ship_number,
+                "user1_id": current_user.user_id,
+                "user2_id": opponent_user_id,
+                "user1_ship_number": user_ship_number,
+                "user2_ship_number": opponent_ship_number,
                 "winner_user_id": result.winner_user_id,
                 "participants": result.participants,
                 "success": True,
@@ -133,12 +134,12 @@ def battle_route(
             db=db,
             action=GameAction.BATTLE_START,
             error_message=str(e),
-            user_id=user1_id,
+            user_id=current_user.user_id,
             details={
-                "user1_id": user1_id,
-                "user2_id": user2_id,
-                "user1_ship_number": user1_ship_number,
-                "user2_ship_number": user2_ship_number,
+                "user1_id": current_user.user_id,
+                "user2_id": opponent_user_id,
+                "user1_ship_number": user_ship_number,
+                "user2_ship_number": opponent_ship_number,
                 "execution_time_ms": execution_time,
                 "exception_type": type(e).__name__
             }
