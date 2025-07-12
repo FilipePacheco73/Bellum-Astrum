@@ -7,8 +7,8 @@ and initial data seeding. Centralizes all database lifecycle concerns.
 
 from .config import engine, Base
 from .session import create_session
-from .models import User, Ship, OwnedShips, SystemLogs, ShipyardLog
-from .base_data import get_ships_data, get_users_data, get_npc_users
+from .models import User, Ship, OwnedShips, SystemLogs, ShipyardLog, RankBonus, UserRank
+from .base_data import get_ships_data, get_users_data, get_npc_users, get_rank_bonuses_data, get_owned_ships_assignments
 from sqlalchemy import func, text
 import logging
 import time
@@ -204,76 +204,100 @@ def seed_initial_data() -> None:
     Safe to call multiple times - checks for existing data.
     """
     start_time = time.time()
+    logger.info("Starting database seeding...")
+    session = create_session()
     try:
-        logger.info("Starting database seeding...")
-        
-        session = create_session()
-        try:
-            # Log the start of seeding process
-            log_system_event(
-                session, 
-                action="SEED_START",
-                details={"message": "Starting database seeding process"},
-                category="SYSTEM"
-            )
-            
-            ships_count = seed_ships(session)
-            users_count = seed_users(session)
-            
-            # Flush to ensure all IDs are available for foreign key references
-            session.flush()
-            
-            owned_ships_count = seed_owned_ships(session)
-            
-            # Calculate total execution time
-            execution_time_ms = int((time.time() - start_time) * 1000)
-            
-            # Log the completion of seeding process
-            log_system_event(
-                session,
-                action="SEED_COMPLETE",
-                details={
-                    "message": "Database seeding completed successfully",
-                    "ships_seeded": ships_count,
-                    "users_seeded": users_count,
-                    "owned_ships_seeded": owned_ships_count,
-                    "total_records": ships_count + users_count + owned_ships_count
-                },
-                category="SYSTEM",
-                execution_time_ms=execution_time_ms
-            )
-            
-            session.commit()
-            logger.info("Database seeding completed successfully")
-        except Exception as e:
-            session.rollback()
-            
-            # Log the error
-            execution_time_ms = int((time.time() - start_time) * 1000)
-            log_system_event(
-                session,
-                action="SEED_ERROR",
-                details={
-                    "message": "Database seeding failed",
-                    "error": str(e)
-                },
-                log_level="ERROR",
-                category="SYSTEM",
-                execution_time_ms=execution_time_ms
-            )
-            
-            try:
-                session.commit()  # Try to save the error log
-            except:
-                pass  # If we can't log, at least don't hide the original error
-                
-            raise e
-        finally:
-            session.close()
-            
+        # Log the start of seeding process
+        log_system_event(
+            session, 
+            action="SEED_START",
+            details={"message": "Starting database seeding process"},
+            category="SYSTEM"
+        )
+        ships_count = seed_ships(session)
+        users_count = seed_users(session)
+        # Flush to ensure all IDs are available for foreign key references
+        session.flush()
+        owned_ships_count = seed_owned_ships(session)
+        # Seed rank bonuses
+        rank_bonus_count = seed_rank_bonuses(session)
+        # Calculate total execution time
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        # Log the completion of seeding process
+        log_system_event(
+            session,
+            action="SEED_COMPLETE",
+            details={
+                "message": "Database seeding completed successfully",
+                "ships_seeded": ships_count,
+                "users_seeded": users_count,
+                "owned_ships_seeded": owned_ships_count,
+                "rank_bonuses_seeded": rank_bonus_count,
+                "total_records": ships_count + users_count + owned_ships_count
+            },
+            category="SYSTEM",
+            execution_time_ms=execution_time_ms
+        )
+        session.commit()
+        logger.info("Database seeding completed successfully")
     except Exception as e:
-        logger.error(f"Error seeding database: {e}")
-        raise
+        session.rollback()
+        # Log the error
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        log_system_event(
+            session,
+            action="SEED_ERROR",
+            details={
+                "message": "Database seeding failed",
+                "error": str(e)
+            },
+            log_level="ERROR",
+            category="SYSTEM",
+            execution_time_ms=execution_time_ms
+        )
+        try:
+            session.commit()  # Try to save the error log
+        except:
+            pass  # If we can't log, at least don't hide the original error
+        raise e
+    finally:
+        session.close()
+
+def seed_rank_bonuses(session) -> int:
+    """Seed the RankBonus table with default values for each UserRank if not present."""
+    existing_count = session.query(RankBonus).count()
+    if existing_count > 0:
+        logger.info("RankBonus entries already exist, skipping rank bonus seeding")
+        log_system_event(
+            session,
+            action="SEED_RANKBONUS_SKIPPED",
+            details={
+                "message": "RankBonus entries already exist in database",
+                "existing_count": existing_count
+            },
+            category="SYSTEM"
+        )
+        return 0
+
+    logger.info("Seeding rank bonuses...")
+    bonuses = get_rank_bonuses_data()
+    count = 0
+    for bonus in bonuses:
+        rb = RankBonus(**bonus)
+        session.add(rb)
+        count += 1
+    log_system_event(
+        session,
+        action="SEED_RANKBONUS",
+        details={
+            "message": "RankBonus seeded successfully",
+            "rank_bonuses_added": count,
+            "total_available": len(bonuses)
+        },
+        category="SYSTEM"
+    )
+    logger.info(f"Added {count} rank bonuses")
+    return count
 
 def seed_ships(session) -> int:
     """Seed basic ship templates using data from base_data.py."""
@@ -390,7 +414,7 @@ def seed_users(session) -> int:
     return users_added
 
 def seed_owned_ships(session) -> int:
-    """Seed some owned ships for NPCs using intelligent assignment."""
+    """Seed owned ships using hardcoded assignments from base_data."""
     start_time = time.time()
     
     # Check if owned ships already exist
@@ -408,125 +432,69 @@ def seed_owned_ships(session) -> int:
         )
         return 0
     
-    logger.info("Seeding owned ships...")
+    logger.info("Seeding owned ships using hardcoded assignments...")
     
-    # Get NPCs and assign ships based on their ELO
-    npcs = session.query(User).filter(User.nickname.like("NPC_%")).all()
-    logger.info(f"Found {len(npcs)} NPCs to assign ships to")
-    
-    # Get all available ships
-    ships = session.query(Ship).all()
-    logger.info(f"Found {len(ships)} ships available for assignment")
-    
-    if not ships:
-        logger.warning("No ships available for assignment")
-        return 0
-    
+    # Get hardcoded assignments from base_data
+    assignments = get_owned_ships_assignments()
     assigned = 0
     ship_assignments = []
     
-    for npc in npcs:
+    for assignment in assignments:
         try:
-            logger.debug(f"Assigning ship to NPC {npc.nickname} (ELO: {npc.elo_rank})")
+            user_nickname = assignment["user_nickname"]
+            ship_name = assignment["ship_name"]
+            status = assignment["status"]
             
-            # Select ship most compatible with NPC's ELO (attack scales with ELO)
-            target_attack = npc.elo_rank / 50  # Scale ELO to reasonable attack range
-            logger.debug(f"Target attack for {npc.nickname}: {target_attack}")
+            # Get user and ship from database
+            user = session.query(User).filter(User.nickname == user_nickname).first()
+            ship = session.query(Ship).filter(Ship.ship_name == ship_name).first()
             
-            # Find closest ship by attack power
-            best_ship = min(ships, key=lambda s: abs(s.attack - target_attack))
-            logger.debug(f"Selected ship {best_ship.ship_name} (attack: {best_ship.attack}) for {npc.nickname}")
+            if not user:
+                logger.warning(f"User {user_nickname} not found, skipping ship assignment")
+                continue
+                
+            if not ship:
+                logger.warning(f"Ship {ship_name} not found, skipping assignment for {user_nickname}")
+                continue
             
-            # Create owned ship for this NPC
+            logger.debug(f"Assigning {ship_name} to {user_nickname} (Level: {user.level}, Rank: {user.rank.value})")
+            
+            # Create owned ship
             owned_ship = OwnedShips(
-                user_id=npc.user_id,
-                ship_id=best_ship.ship_id,
-                ship_name=best_ship.ship_name,
-                status="active",  # NPCs start with active ships
-                base_attack=best_ship.attack,
-                base_shield=best_ship.shield,
-                base_evasion=best_ship.evasion,
-                base_fire_rate=best_ship.fire_rate,
-                base_hp=best_ship.hp,
-                base_value=best_ship.value,
-                actual_attack=best_ship.attack,
-                actual_shield=best_ship.shield,
-                actual_evasion=best_ship.evasion,
-                actual_fire_rate=best_ship.fire_rate,
-                actual_hp=best_ship.hp,
-                actual_value=best_ship.value
+                user_id=user.user_id,
+                ship_id=ship.ship_id,
+                ship_name=ship.ship_name,
+                status=status,
+                base_attack=ship.attack,
+                base_shield=ship.shield,
+                base_evasion=ship.evasion,
+                base_fire_rate=ship.fire_rate,
+                base_hp=ship.hp,
+                base_value=ship.value,
+                actual_attack=ship.attack,
+                actual_shield=ship.shield,
+                actual_evasion=ship.evasion,
+                actual_fire_rate=ship.fire_rate,
+                actual_hp=ship.hp,
+                actual_value=ship.value
             )
             session.add(owned_ship)
             assigned += 1
             
             ship_assignments.append({
-                "user_nickname": npc.nickname,
-                "user_id": npc.user_id,
-                "user_elo": npc.elo_rank,
-                "ship_name": best_ship.ship_name,
-                "ship_id": best_ship.ship_id,
-                "ship_attack": best_ship.attack
+                "user_nickname": user_nickname,
+                "user_id": user.user_id,
+                "user_level": user.level,
+                "user_rank": user.rank.value,
+                "ship_name": ship_name,
+                "ship_id": ship.ship_id,
+                "ship_attack": ship.attack
             })
             
-            logger.debug(f"Successfully assigned {best_ship.ship_name} to {npc.nickname}")
+            logger.debug(f"Successfully assigned {ship_name} to {user_nickname}")
             
         except Exception as e:
-            logger.error(f"Failed to assign ship to NPC {npc.nickname}: {e}")
-            logger.error(f"NPC details: user_id={npc.user_id}, nickname={npc.nickname}")
-            if 'best_ship' in locals():
-                logger.error(f"Ship details: ship_id={best_ship.ship_id}, ship_name={best_ship.ship_name}")
-    
-    # Give Admin a powerful ship
-    admin_user = session.query(User).filter(User.nickname == "Admin").first()
-    if admin_user:
-        try:
-            logger.debug(f"Assigning ship to Admin (user_id: {admin_user.user_id})")
-            
-            # Get the most powerful ship
-            powerful_ship = session.query(Ship).order_by(Ship.attack.desc()).first()
-            if powerful_ship:
-                logger.debug(f"Selected most powerful ship: {powerful_ship.ship_name} (attack: {powerful_ship.attack})")
-                
-                admin_owned_ship = OwnedShips(
-                    user_id=admin_user.user_id,
-                    ship_id=powerful_ship.ship_id,
-                    ship_name=powerful_ship.ship_name,
-                    status="active",
-                    base_attack=powerful_ship.attack,
-                    base_shield=powerful_ship.shield,
-                    base_evasion=powerful_ship.evasion,
-                    base_fire_rate=powerful_ship.fire_rate,
-                    base_hp=powerful_ship.hp,
-                    base_value=powerful_ship.value,
-                    actual_attack=powerful_ship.attack,
-                    actual_shield=powerful_ship.shield,
-                    actual_evasion=powerful_ship.evasion,
-                    actual_fire_rate=powerful_ship.fire_rate,
-                    actual_hp=powerful_ship.hp,
-                    actual_value=powerful_ship.value
-                )
-                session.add(admin_owned_ship)
-                assigned += 1
-                
-                ship_assignments.append({
-                    "user_nickname": "Admin",
-                    "user_id": admin_user.user_id,
-                    "user_elo": admin_user.elo_rank,
-                    "ship_name": powerful_ship.ship_name,
-                    "ship_id": powerful_ship.ship_id,
-                    "ship_attack": powerful_ship.attack
-                })
-                
-                logger.debug(f"Successfully assigned {powerful_ship.ship_name} to Admin")
-            else:
-                logger.warning("No ships available to assign to Admin")
-        except Exception as e:
-            logger.error(f"Failed to assign ship to Admin: {e}")
-            logger.error(f"Admin details: user_id={admin_user.user_id}")
-            if 'powerful_ship' in locals():
-                logger.error(f"Ship details: ship_id={powerful_ship.ship_id}, ship_name={powerful_ship.ship_name}")
-    else:
-        logger.warning("Admin user not found")
+            logger.error(f"Failed to assign ship {assignment.get('ship_name', 'unknown')} to {assignment.get('user_nickname', 'unknown')}: {e}")
     
     execution_time_ms = int((time.time() - start_time) * 1000)
     
@@ -534,17 +502,16 @@ def seed_owned_ships(session) -> int:
         session,
         action="SEED_OWNED_SHIPS",
         details={
-            "message": "Owned ships seeded successfully",
+            "message": "Owned ships seeded successfully using hardcoded assignments",
             "ships_assigned": assigned,
-            "npc_count": len(npcs),
-            "admin_assigned": 1 if admin_user and assigned > len(npcs) else 0,
+            "total_assignments": len(assignments),
             "ship_assignments": ship_assignments
         },
         category="SYSTEM",
         execution_time_ms=execution_time_ms
     )
     
-    logger.info(f"Added {assigned} owned ships")
+    logger.info(f"Added {assigned} owned ships from {len(assignments)} assignments")
     return assigned
 
 def clear_all_data() -> None:
