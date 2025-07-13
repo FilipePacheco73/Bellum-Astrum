@@ -95,3 +95,27 @@ class UserResponse(BaseModel):
     ships_destroyed_by_user: int
     ships_lost_by_user: int
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserShipLimitsResponse(BaseModel):
+    """
+    Response model for user ship limits information.
+    
+    Provides information about a user's ship activation limits
+    based on their rank and current usage.
+    
+    Attributes:
+        user_rank (str): Current user rank name
+        user_level (int): Current user level
+        max_active_ships (int): Maximum ships allowed to be active
+        current_active_ships (int): Number of currently active ships
+        can_activate_more (bool): Whether user can activate more ships
+        slots_remaining (int): Number of remaining activation slots
+    """
+    user_rank: str
+    user_level: int
+    max_active_ships: int
+    current_active_ships: int
+    can_activate_more: bool
+    slots_remaining: int
+    model_config = ConfigDict(from_attributes=True)

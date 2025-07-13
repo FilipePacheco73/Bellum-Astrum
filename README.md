@@ -14,34 +14,44 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 
 ## ✨ Features
 
+### 🎮 Core Game Systems
 - 🕹️ CRUD for users and ships
 - ⚔️ Advanced battle system with rank-based bonuses and NPC mechanics
 - 🛒 Ship market (buy/sell)
 - 🛠️ Shipyard system with repair and cooldown
+- 💼 **Work System**: Soft recovery mechanism for players who lose all ships/money
 - 🌱 Data seeding endpoints
 - 📡 Modular and extensible REST API
+
+### 🎯 Progression & Economy
+- 🎯 **Progression System**: Experience, levels, and military ranks (Recruit to Fleet Admiral)
+- ⭐ **Rank Bonuses**: Multiplicative stat bonuses based on user rank
+- 💰 **Work System**: Rank-based jobs with progressive income (700-40,000 credits)
+- ⏰ **Cooldown System**: Shorter work intervals for higher ranks (2h to 30min)
+- 🤖 **Smart NPC System**: Balanced AI opponents with special battle mechanics
+- 📈 **Dynamic XP Gains**: Experience scales based on opponent difficulty
+
+### 🖥️ Frontend & UI
 - 🖥️ Modern web interface (React + Vite + Tailwind)
 - 🔐 JWT-based authentication system
 - 🌍 Multi-language support (Portuguese/English)
 - 🎮 Complete game interface with sidebar navigation
 - 📊 User dashboard with statistics and ELO ranking
+
+### 🔧 Technical Infrastructure
 - 🗄️ **Centralized Database Module**: Organized database management with lifecycle controls
 - 📝 **Comprehensive Logging**: System audit trails and monitoring
 - 🔧 **Database Scripts**: Command-line tools for database management
 - 🔄 Automated GitHub release workflow (changelog-based)
-- 🧪 Full end-to-end automated tests (buy, activate, battle, repair, sell)
+- 🧪 Full end-to-end automated tests (18 tests covering all systems)
 - 📝 Standardized Copilot instructions
-- 🎯 **Progression System**: Experience, levels, and military ranks (Recruit to Fleet Admiral)
-- ⭐ **Rank Bonuses**: Multiplicative stat bonuses based on user rank
-- 🤖 **Smart NPC System**: Balanced AI opponents with special battle mechanics
-- 📈 **Dynamic XP Gains**: Experience scales based on opponent difficulty
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Backend:** Python 3.12+, FastAPI, SQLAlchemy, Pydantic
-- **Database:** PostgreSQL (Neon, Render, etc.) — `DATABASE_URL` required
+- **Database:** PostgreSQL (Neon, etc.) — `DATABASE_URL` required
 - **Authentication:** JWT with bcrypt password hashing
 - **Testing:** Pytest, FastAPI TestClient
 - **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v3
@@ -53,7 +63,7 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 
 ## 🏗️ Database Architecture
 
-The project features a centralized database module with clean imports and lifecycle management, now using PostgreSQL (Neon/Render) as the only supported backend:
+The project features a centralized database module with clean imports and lifecycle management, now using PostgreSQL (Neon) as the only supported backend:
 
 ### Database Structure
 ```
@@ -121,7 +131,7 @@ from database import initialize_database, check_database_health
 
 - Python 3.12+
 - Node.js 18+
-- PostgreSQL database (Neon, Render, etc.)
+- PostgreSQL database (Neon,, etc.)
 - (Recommended) Virtual environment: `python -m venv venv`
 
 ### Quick Start
@@ -141,7 +151,7 @@ venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Set your PostgreSQL connection string (Neon, Render, etc.)
+# Set your PostgreSQL connection string (Neon,, etc.)
 # Example (Windows):
 $env:DATABASE_URL="postgresql://user:password@host:port/dbname"
 # Example (Linux/macOS):
@@ -175,51 +185,58 @@ Frontend will be available at: [http://localhost:5173](http://localhost:5173)
 ```
 /Bellum-Astrum
 │
+├── .github/                            # GitHub configuration and automation
+│   ├── instructions/                   # Development guidelines and instructions
+│   │   └── copilot-instructions.md     # Custom Copilot instructions for this project
+│   └── workflows/                      # GitHub Actions CI/CD workflows
+│       └── release.yml                 # Automated release workflow based on changelog
+│
 ├── backend/
 │   └── app/
-│       ├── main.py            # FastAPI entry point with lifespan management
-│       ├── crud/              # CRUD operations (users, ships, battles, market, logs)
-│       ├── routes/            # API routes/endpoints
-│       ├── schemas/           # Pydantic schemas (modularized)
-│       ├── test/              # Automated tests (pytest)
-│       ├── utils/             # Utility functions (auth, logging, etc.)
+│       ├── main.py                     # FastAPI entry point with lifespan management
+│       ├── crud/                       # CRUD operations (users, ships, battles, market, logs)
+│       ├── routes/                     # API routes/endpoints
+│       ├── schemas/                    # Pydantic schemas (modularized)
+│       ├── test/                       # Automated tests (pytest)
+│       ├── utils/                      # Utility functions (auth, logging, etc.)
 │       └── __init__.py
 │
-├── database/                  # Centralized database module
-│   ├── __init__.py            # Clean exports and imports
-│   ├── base_data.py           # Initial seed data with environment variables
-│   ├── config.py              # Database configuration and engine
-│   ├── lifecycle.py           # Database initialization and health checks
-│   ├── models.py              # SQLAlchemy models (User, Ship, etc.)
-│   ├── session.py             # Session management and dependency injection
-│   ├── setup.py               # Main command-line setup script
-│   └── scripts/               # Quick utility scripts
-│       ├── init_db.py         # Quick database initialization
-│       ├── reset_db.py        # Quick database reset
-│       └── seed_db.py         # Quick database seeding
+├── database/                           # Centralized database module
+│   ├── __init__.py                     # Clean exports and imports
+│   ├── base_data.py                    # Initial seed data with environment variables
+│   ├── config.py                       # Database configuration and engine
+│   ├── lifecycle.py                    # Database initialization and health checks
+│   ├── models.py                       # SQLAlchemy models (User, Ship, etc.)
+│   ├── session.py                      # Session management and dependency injection
+│   ├── setup.py                        # Main command-line setup script
+│   └── scripts/                        # Quick utility scripts
+│       ├── init_db.py                  # Quick database initialization
+│       ├── reset_db.py                 # Quick database reset
+│       └── seed_db.py                  # Quick database seeding
 │
 ├── frontend/
-│   ├── public/                # Static assets (logos, images, flags)
-│   ├── src/                   # React source code
-│   │   ├── assets/            # Static assets for React
-│   │   ├── components/        # Reusable React components
-│   │   ├── config/            # API client configuration
-│   │   ├── contexts/          # React context providers
-│   │   ├── locales/           # Localization and translations
-│   │   ├── pages/             # Main pages/routes
-│   │   ├── App.tsx            # Main App component
-│   │   ├── main.tsx           # React entry point
-│   │   ├── index.css          # Global styles
-│   │   └── vite-env.d.ts      # TypeScript definitions
-│   ├── package.json           # Frontend dependencies
-│   ├── tailwind.config.ts     # Tailwind CSS configuration
-│   ├── tsconfig.json          # TypeScript configuration
-│   └── vite.config.ts         # Vite configuration
+│   ├── public/                         # Static assets (logos, images, flags)
+│   ├── src/                            # React source code
+│   │   ├── assets/                     # Static assets for React
+│   │   ├── components/                 # Reusable React components
+│   │   ├── config/                     # API client configuration
+│   │   ├── contexts/                   # React context providers
+│   │   ├── locales/                    # Localization and translations
+│   │   ├── pages/                      # Main pages/routes
+│   │   ├── App.tsx                     # Main App component
+│   │   ├── main.tsx                    # React entry point
+│   │   ├── index.css                   # Global styles
+│   │   └── vite-env.d.ts               # TypeScript definitions
+│   ├── package.json                    # Frontend dependencies
+│   ├── tailwind.config.ts              # Tailwind CSS configuration
+│   ├── tsconfig.json                   # TypeScript configuration
+│   └── vite.config.ts                  # Vite configuration
 │
-├── .gitignore                 # Git ignore rules
-├── requirements.txt           # Main Python dependencies
-├── README.md                  # Project documentation
-└── CHANGELOG.md               # Version history and changes
+├── .gitignore                          # Git ignore rules
+├── LICENSE                             # MIT License
+├── requirements.txt                    # Main Python dependencies
+├── README.md                           # Project documentation
+└── CHANGELOG.md                        # Version history and changes
 ```
 
 ---
@@ -231,7 +248,7 @@ flowchart LR
     User["👤 User"]
     Frontend["🌐 Frontend (React/Vite)"]
     API["🚀 FastAPI API"]
-    DB["🗄️ PostgreSQL (Neon/Render)"]
+    DB["🗄️ PostgreSQL (Neon)"]
 
     User -->|"Interacts"| Frontend
     Frontend -->|"HTTP Requests (REST, JWT)"| API
@@ -245,7 +262,7 @@ flowchart LR
 - User: Game player (web interface)
 - Frontend: React app (Vite, Tailwind)
 - API: FastAPI backend (auth, business logic, REST endpoints)
-- DB: PostgreSQL database (Neon/Render)
+- DB: PostgreSQL database (Neon)
 
 - All authentication, business logic, and data persistence flow through this pipeline.
 - Logging, health checks, and admin tools interact directly with the API and database, but are not shown to the end user.
@@ -263,27 +280,64 @@ flowchart LR
 - `GET /api/v1/users/{user_id}` – Get specific user details
 
 ### Ships
-- `GET /api/v1/ships/` – List all ships
-- `GET /api/v1/ships/{ship_id}` – Get specific ship details
-
+- `GET /api/v1/ships/` – List all ship templates
+- `GET /api/v1/ships/{ship_id}` – Get specific ship template details
 
 ### Market System
 - `POST /api/v1/market/buy/{ship_id}` – Authenticated user buys a ship
 - `POST /api/v1/market/sell/{owned_ship_number}` – Authenticated user sells a ship
-
 
 ### Shipyard
 - `POST /api/v1/shipyard/repair` – Repair a ship (authenticated, with cooldown)
 
 ### Battle System
 - `POST /api/v1/battle/activate-ship/` – Activate a ship for battle
+- `POST /api/v1/battle/deactivate-ship/` – Deactivate a ship from battle
 - `POST /api/v1/battle/battle` – Battle between two users with rank bonuses and progression
+- `GET /api/v1/battle/ship-limits/` – Get user's ship activation limits based on rank
+
+### Work System (Recovery)
+- `POST /api/v1/work/perform` – Perform work to earn credits (rank-based income)
+- `GET /api/v1/work/status` – Check work availability and cooldown status
+- `GET /api/v1/work/history` – View work history and total earnings
+- `GET /api/v1/work/types` – Get available work types for current rank
 
 ### Logs
 - `POST /api/v1/logs/` – Create a new log entry
-- `GET /api/v1/logs/` – List all logs
+- `GET /api/v1/logs/` – List all logs with pagination and filtering
 - `GET /api/v1/logs/{log_id}` – Get log by ID
 - `DELETE /api/v1/logs/{log_id}` – Delete log by ID
+
+---
+
+## 💼 Work System (Recovery Mechanism)
+
+The work system provides a "soft reset" mechanism for players who have lost all their ships and money, ensuring no player gets permanently stuck.
+
+### 🎯 How It Works
+- **No Requirements**: Can work even with 0 credits and no ships
+- **Rank-Based Jobs**: Each rank has a specific work type (maintenance, patrol, trading, etc.)
+- **Progressive Income**: Higher ranks earn more credits per work session
+- **Cooldown System**: Must wait between work sessions (shorter for higher ranks)
+- **Quick Recovery**: Designed so RECRUIT players can buy a basic ship in 2-3 work sessions
+
+### 💰 Income by Rank
+| Rank | Work Type | Base Income | Cooldown | Time to Ship* |
+|------|-----------|-------------|----------|---------------|
+| RECRUIT | Maintenance | 700 | 2h | ~4h |
+| ENSIGN | Patrol | 1,400 | 1.75h | ~3.5h |
+| LIEUTENANT | Trading | 2,500 | 1.5h | ~1h |
+| ... | ... | ... | ... | ... |
+| FLEET_ADMIRAL | Strategy | 40,000 | 0.5h | ~1h |
+
+*Time to buy cheapest ship (1,500 credits)
+
+### 🔄 Recovery Process
+1. Player loses all ships/money in battles
+2. Use `/work/perform` to earn credits (no requirements)
+3. Wait for cooldown to complete
+4. Repeat until enough credits for a ship
+5. Buy ship from market and return to normal gameplay
 
 ---
 
@@ -371,23 +425,24 @@ gantt
 dateFormat  YYYY-MM-DD
 axisFormat  %d/%m
 section Project Timeline
-Initial commit & repo structure        :done,    des1, 2025-06-04, 1d
-Database schema & seeding             :done,    des2, 2025-06-04, 3d
-API endpoints for users/ships         :done,    des3, 2025-06-05, 2d
-Market & seeding endpoints            :done,    des4, 2025-06-07, 3d
-Battle system & statistics            :done,    des5, 2025-06-10, 2d
-Refactor & .gitignore improvements    :done,    des6, 2025-06-10, 1d
-Battle/activation routes & tests      :done,    des7, 2025-06-11, 4d
-Requirements & merges                 :done,    des8, 2025-06-15, 1d
-Register page & .gitignore update     :done,    des9, 2025-06-24, 1d
-JWT Authentication & Security         :done,    des10, 2025-06-26, 2d
-Complete Game Interface & Dashboard   :done,    des11, 2025-06-26, 3d
-Comprehensive Logging System          :done,    des12, 2025-07-01, 1d
-Centralized Database Module           :done,    des13, 2025-07-02, 1d
-Logs endpoints & modular schemas      :done,    des14, 2025-07-09, 1d
-Migration to PostgreSQL/Neon/Render   :done,    des15, 2025-07-09, 1d
-Shipyard system & GitHub automation   :done,    des16, 2025-07-12, 1d
-Progression System & NPC Mechanics    :done,    des17, 2025-07-12, 1d
+Initial commit & repo structure        :done,    des1, 2025-06-03, 2d
+Database schema & API refactor         :done,    des2, 2025-06-05, 2d
+Market system & seeding endpoints      :done,    des3, 2025-06-07, 3d
+Battle system & statistics             :done,    des4, 2025-06-10, 2d
+Battle routes & ship activation        :done,    des5, 2025-06-11, 4d
+Requirements & project structure       :done,    des6, 2025-06-15, 3d
+CHANGELOG & frontend foundation        :done,    des7, 2025-06-18, 6d
+Frontend components & navbar           :done,    des8, 2025-06-24, 2d
+JWT Authentication & Security          :done,    des9, 2025-06-26, 2d
+User dashboard & game interface        :done,    des10, 2025-06-28, 2d
+Enhanced logging & error handling      :done,    des11, 2025-07-01, 1d
+Centralized database module            :done,    des12, 2025-07-02, 1d
+README updates & flowchart             :done,    des13, 2025-07-03, 6d
+CRUD refactor & logging system         :done,    des14, 2025-07-09, 1d
+PostgreSQL migration & health checks   :done,    des15, 2025-07-09, 1d
+Shipyard system & GitHub automation    :done,    des16, 2025-07-12, 1d
+Work system & NPC progression          :done,    des17, 2025-07-12, 1d
+Multi-ship battles & formation system  :active,  des18, 2025-07-13, 1d
 ```
 
 ---
