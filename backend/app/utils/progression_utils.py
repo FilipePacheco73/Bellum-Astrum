@@ -88,7 +88,63 @@ def apply_rank_bonus_to_ship_stats(user, ship_stats: dict, db: Session) -> dict:
     if bonus_obj:
         for key in ['attack', 'shield', 'hp', 'evasion', 'fire_rate', 'value']:
             bonus = getattr(bonus_obj, key, 0)
-            # Se o bônus for zero, não altera
+            # if bonus is not None and bonus != 0:
             if bonus:
                 stats[key] = stats.get(key, 0) * (1 + bonus)
     return stats
+
+
+def get_max_active_ships_for_user(user, db: Session) -> int:
+    """
+    Get the maximum number of active ships allowed for a user based on their rank.
+    
+    Args:
+        user: User object with rank information
+        db: SQLAlchemy Session for database access
+        
+    Returns:
+        Maximum number of active ships allowed for this user's rank
+    """
+    bonus_obj = db.query(RankBonus).filter_by(rank=user.rank).first()
+    if bonus_obj:
+        return bonus_obj.max_active_ships
+    # Default fallback if rank bonus not found
+    return 1
+
+
+def count_active_ships_for_user(user_id: int, db: Session) -> int:
+    """
+    Count the number of currently active ships for a user.
+    
+    Args:
+        user_id: ID of the user
+        db: SQLAlchemy Session for database access
+        
+    Returns:
+        Number of ships with status 'active' for this user
+    """
+    from database.models import OwnedShips
+    return db.query(OwnedShips).filter(
+        OwnedShips.user_id == user_id,
+        OwnedShips.status == 'active'
+    ).count()
+
+
+def can_activate_ship(user, db: Session) -> tuple[bool, str]:
+    """
+    Check if a user can activate another ship based on their rank limits.
+    
+    Args:
+        user: User object with rank information
+        db: SQLAlchemy Session for database access
+        
+    Returns:
+        Tuple of (can_activate: bool, message: str)
+    """
+    max_allowed = get_max_active_ships_for_user(user, db)
+    current_active = count_active_ships_for_user(user.user_id, db)
+    
+    if current_active >= max_allowed:
+        return False, f"Maximum active ships limit reached ({current_active}/{max_allowed}) for rank {user.rank.value}"
+    
+    return True, f"Can activate ship ({current_active + 1}/{max_allowed})"

@@ -120,6 +120,10 @@ class User(Base):
         damage_taken: Cumulative damage received from enemies
         ships_destroyed_by_user: Total enemy ships destroyed
         ships_lost_by_user: Total own ships lost in battle
+        experience: Experience points for progression
+        level: Current player level
+        rank: Current player rank (enum)
+        default_formation: Default tactical formation ("DEFENSIVE", "AGGRESSIVE", "TACTICAL")
     """
 
     __tablename__ = 'users'
@@ -139,6 +143,7 @@ class User(Base):
     experience = Column(Integer, default=0, nullable=False)
     level = Column(Integer, default=1, nullable=False)
     rank = Column(Enum(UserRank), default=UserRank.RECRUIT, nullable=False)
+    default_formation = Column(String(20), default="AGGRESSIVE", nullable=False)
 
     # Database constraints to ensure valid values
     __table_args__ = (
@@ -152,16 +157,18 @@ class User(Base):
         CheckConstraint('ships_lost_by_user >= 0', name='check_ships_lost_positive'),
         CheckConstraint('experience >= 0', name='check_experience_positive'),
         CheckConstraint('level >= 1', name='check_level_positive'),
+        CheckConstraint("default_formation IN ('DEFENSIVE', 'AGGRESSIVE', 'TACTICAL')", name='check_formation_valid'),
         Index('idx_user_nickname', 'nickname'),
         Index('idx_user_email', 'email'),
         Index('idx_user_elo_rank', 'elo_rank'),
         Index('idx_user_currency', 'currency_value'),
         Index('idx_user_level', 'level'),
         Index('idx_user_rank', 'rank'),
+        Index('idx_user_formation', 'default_formation'),
     )
 
     def __repr__(self) -> str:
-        return f"<User(user_id={self.user_id}, nickname={self.nickname}, elo_rank={self.elo_rank}, currency_value={self.currency_value}, victories={self.victories}, defeats={self.defeats}, level={self.level}, rank={self.rank.name})>"
+        return f"<User(user_id={self.user_id}, nickname={self.nickname}, elo_rank={self.elo_rank}, currency_value={self.currency_value}, victories={self.victories}, defeats={self.defeats}, level={self.level}, rank={self.rank.name}, formation={self.default_formation})>"
         
 class OwnedShips(Base):
     """
@@ -376,6 +383,7 @@ class RankBonus(Base):
         evasion: Bonus evasion for this rank
         fire_rate: Bonus fire rate for this rank
         value: Additional value or multiplier for this rank
+        max_active_ships: Maximum number of ships that can be active simultaneously
     """
     __tablename__ = 'rank_bonus'
 
@@ -388,9 +396,61 @@ class RankBonus(Base):
     evasion = Column(Float, default=0, nullable=False)
     fire_rate = Column(Float, default=0, nullable=False)
     value = Column(Float, default=0, nullable=False)
+    max_active_ships = Column(Integer, default=1, nullable=False)
+    work_income = Column(Integer, default=100, nullable=False)
+    work_cooldown_hours = Column(Integer, default=4, nullable=False)
+
+    # Database constraints to ensure valid values
+    __table_args__ = (
+        CheckConstraint('max_active_ships >= 1', name='check_max_active_ships_positive'),
+        CheckConstraint('work_income >= 0', name='check_work_income_positive'),
+        CheckConstraint('work_cooldown_hours >= 1', name='check_work_cooldown_positive'),
+    )
 
     def __repr__(self) -> str:
         return (
             f"<RankBonus(rank={self.rank}, min_level={self.min_level}, attack={self.attack}, "
-            f"shield={self.shield}, hp={self.hp}, evasion={self.evasion}, fire_rate={self.fire_rate}, value={self.value})>"
+            f"shield={self.shield}, hp={self.hp}, evasion={self.evasion}, fire_rate={self.fire_rate}, "
+            f"value={self.value}, max_active_ships={self.max_active_ships}, "
+            f"work_income={self.work_income}, work_cooldown_hours={self.work_cooldown_hours})>"
         )
+
+
+class WorkLog(Base):
+    """
+    Work log model for tracking user work activities.
+
+    Records when users perform work tasks to earn currency, including
+    the type of work, income earned, and user rank at the time.
+    
+    Attributes:
+        id: Unique identifier for the work log entry
+        user_id: User who performed the work (foreign key to users)
+        work_type: Type of work performed (mining, trading, maintenance, etc.)
+        income_earned: Amount of currency earned from this work
+        performed_at: When the work was performed
+        rank_at_time: User's rank when the work was performed
+        cooldown_until: When the user can work again
+    """
+
+    __tablename__ = 'work_log'
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    work_type = Column(String(50), nullable=False)
+    income_earned = Column(Integer, nullable=False)
+    performed_at = Column(DateTime, default=utc_now, nullable=False)
+    rank_at_time = Column(Enum(UserRank), nullable=False)
+    cooldown_until = Column(DateTime, nullable=False)
+
+    # Database constraints and indexes
+    __table_args__ = (
+        CheckConstraint('income_earned >= 0', name='check_income_earned_positive'),
+        CheckConstraint("work_type IN ('mining', 'trading', 'maintenance', 'patrol', 'escort', 'reconnaissance', 'command', 'diplomacy', 'strategy')", name='check_work_type_valid'),
+        Index('idx_work_log_user', 'user_id'),
+        Index('idx_work_log_user_performed', 'user_id', 'performed_at'),
+        Index('idx_work_log_cooldown', 'user_id', 'cooldown_until'),
+    )
+
+    def __repr__(self) -> str:
+        return f"<WorkLog(id={self.id}, user_id={self.user_id}, work_type={self.work_type}, income_earned={self.income_earned}, rank_at_time={self.rank_at_time.name})>"

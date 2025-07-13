@@ -3,370 +3,565 @@ from database import User, OwnedShips, BattleHistory
 from datetime import datetime, UTC
 from backend.app.utils.progression_utils import apply_rank_bonus_to_ship_stats
 import random
+from typing import Union, List
+
+
+# --- Formation System Helper Functions ---
+def get_formation_evasion_modifier(formation: str) -> float:
+    """
+    Get evasion modifier based on formation type.
+    DEFENSIVE: +20% evasion (impacts enemy's hit chance)
+    AGGRESSIVE: Normal evasion (no modifier)
+    TACTICAL: -10% evasion (penalty for focusing on high-attack targets)
+    """
+    modifiers = {
+        "DEFENSIVE": 1.2,   # +20% evasion
+        "AGGRESSIVE": 1.0,  # Normal evasion
+        "TACTICAL": 0.9     # -10% evasion
+    }
+    return modifiers.get(formation, 1.0)
+
+
+def select_target_by_formation(formation: str, enemy_ships: List[dict]) -> dict:
+    """
+    Select target ship based on formation strategy.
+    DEFENSIVE: Target ship with lowest HP (finish weak enemies first)
+    AGGRESSIVE: Random target (spread damage)
+    TACTICAL: Target ship with highest attack (eliminate threats first)
+    """
+    if not enemy_ships:
+        return None
+    
+    if formation == "DEFENSIVE":
+        # Target ship with lowest current HP
+        return min(enemy_ships, key=lambda s: s['current_hp'])
+    elif formation == "TACTICAL":
+        # Target ship with highest attack value
+        return max(enemy_ships, key=lambda s: s['attack'])
+    else:  # AGGRESSIVE or default
+        # Random target
+        return random.choice(enemy_ships)
+
+
+def get_ships_by_numbers(db: Session, user_id: int, ship_numbers: Union[int, List[int]]) -> List[OwnedShips]:
+    """
+    Get ships by their numbers, ensuring they are active and belong to the user.
+    Handles both single ship (int) and multiple ships (List[int]) input.
+    """
+    # Convert single ship number to list for consistency
+    if isinstance(ship_numbers, int):
+        ship_numbers = [ship_numbers]
+    
+    # Query only active ships that belong to the user
+    ships = db.query(OwnedShips).filter(
+        OwnedShips.user_id == user_id,
+        OwnedShips.ship_number.in_(ship_numbers),
+        OwnedShips.status == 'active'  # Only active ships can battle
+    ).all()
+    
+    return ships
+
+
+def prepare_ship_stats(ship: OwnedShips, user: User, db: Session) -> dict:
+    """
+    Prepare ship stats dictionary with rank bonuses applied.
+    """
+    base_stats = {
+        'ship_number': ship.ship_number,
+        'ship_name': ship.ship_name,
+        'attack': ship.actual_attack,
+        'shield': ship.actual_shield,
+        'hp': ship.actual_hp,
+        'evasion': ship.actual_evasion,
+        'fire_rate': ship.actual_fire_rate,
+        'value': ship.actual_value,
+        'current_hp': ship.actual_hp,  # Track current HP during battle
+        'ship_obj': ship  # Keep reference to original ship object
+    }
+    
+    # Apply rank bonuses
+    enhanced_stats = apply_rank_bonus_to_ship_stats(user, base_stats, db)
+    enhanced_stats['current_hp'] = enhanced_stats['hp']  # Set initial current HP
+    enhanced_stats['ship_obj'] = ship  # Preserve ship object reference
+    
+    return enhanced_stats
+
 
 # --- Battle CRUD Operations ---
-def battle_between_users(db: Session, user1_id: int, user2_id: int, user1_ship_number: int, user2_ship_number: int):
+def battle_between_users(
+    db: Session,
+    user1_id: int,
+    user2_id: int,
+    user1_ship_numbers: Union[int, List[int]], 
+    user2_ship_numbers: Union[int, List[int]],
+    user1_formation: str = None,
+    user2_formation: str = None
+):
+    """
+    Unified battle system supporting 1v1 to 20v20 battles with tactical formations.
+    
+    Args:
+        db: Database session
+        user1_id, user2_id: User IDs of the combatants
+        user1_ship_numbers, user2_ship_numbers: Ship number(s) - int for single ship, List[int] for fleet
+        user1_formation, user2_formation: Formation strategy ("DEFENSIVE", "AGGRESSIVE", "TACTICAL")
+                                         If None, uses user's default_formation
+    
+    Formations:
+        - DEFENSIVE: +20% evasion, targets lowest HP ships (finish weak enemies)
+        - AGGRESSIVE: Normal evasion, random targeting (spread damage)
+        - TACTICAL: -10% evasion, targets highest attack ships (eliminate threats)
+    
+    Returns:
+        Tuple of (BattleHistory, message) or (None, error_message)
+    """
+    # Get users
     user1 = db.query(User).filter(User.user_id == user1_id).first()
     user2 = db.query(User).filter(User.user_id == user2_id).first()
-    ship1 = db.query(OwnedShips).filter(OwnedShips.ship_number == user1_ship_number, OwnedShips.user_id == user1_id, OwnedShips.status == 'active').first()
-    ship2 = db.query(OwnedShips).filter(OwnedShips.ship_number == user2_ship_number, OwnedShips.user_id == user2_id, OwnedShips.status == 'active').first()
     
-    if not user1 or not user2 or not ship1 or not ship2 or user1 == user2:
-        return None, "User or ship not found"
-
-    # Apply rank bonus to ship stats
-    ship1_stats = {
-        'attack': ship1.actual_attack,
-        'shield': ship1.actual_shield,
-        'hp': ship1.actual_hp,
-        'evasion': ship1.actual_evasion,
-        'fire_rate': ship1.actual_fire_rate,
-        'value': ship1.actual_value
-    }
-    ship2_stats = {
-        'attack': ship2.actual_attack,
-        'shield': ship2.actual_shield,
-        'hp': ship2.actual_hp,
-        'evasion': ship2.actual_evasion,
-        'fire_rate': ship2.actual_fire_rate,
-        'value': ship2.actual_value
-    }
-    ship1_stats = apply_rank_bonus_to_ship_stats(user1, ship1_stats, db)
-    ship2_stats = apply_rank_bonus_to_ship_stats(user2, ship2_stats, db)
-
-    hp1 = ship1_stats['hp']
-    hp2 = ship2_stats['hp']
+    if not user1 or not user2:
+        return None, "User not found"
+    
+    # Use user's default formation if not specified
+    if user1_formation is None:
+        user1_formation = user1.default_formation
+    if user2_formation is None:
+        user2_formation = user2.default_formation
+    
+    if user1 == user2:
+        return None, "Same user battle not allowed"
+    
+    # Get ships - only active ships are retrieved
+    user1_ships = get_ships_by_numbers(db, user1_id, user1_ship_numbers)
+    user2_ships = get_ships_by_numbers(db, user2_id, user2_ship_numbers)
+    
+    if not user1_ships or not user2_ships:
+        return None, "No active ships found for battle"
+    
+    # Prepare fleet stats with rank bonuses
+    user1_fleet = [prepare_ship_stats(ship, user1, db) for ship in user1_ships]
+    user2_fleet = [prepare_ship_stats(ship, user2, db) for ship in user2_ships]
+    
+    # Battle initialization
     total_damage1 = 0
     total_damage2 = 0
-
+    
+    # Determine battle type for logging
+    battle_type = "1v1" if len(user1_fleet) == 1 and len(user2_fleet) == 1 else "Fleet"
+    fleet_info = f"({len(user1_fleet)}v{len(user2_fleet)})"
+    
     battle_log = [
-        f"Battle started: {user1.nickname} ({ship1.ship_name}) vs {user2.nickname} ({ship2.ship_name})"
+        f"{battle_type} Battle {fleet_info} started: {user1.nickname} vs {user2.nickname}",
+        f"{user1.nickname} formation: {user1_formation} ({len(user1_fleet)} ships)",
+        f"{user2.nickname} formation: {user2_formation} ({len(user2_fleet)} ships)"
     ]
-
-
-    for round_num in range(1, 11):
-        if hp1 <= 0 or hp2 <= 0:
+    
+    # Battle loop - maximum 20 rounds to prevent infinite battles
+    for round_num in range(1, 21):
+        # Check if any fleet is completely destroyed
+        user1_active = [ship for ship in user1_fleet if ship['current_hp'] > 0]
+        user2_active = [ship for ship in user2_fleet if ship['current_hp'] > 0]
+        
+        if not user1_active or not user2_active:
             break
+        
         battle_log.append(f"--- Round {round_num} ---")
-
-        # User1 attacks User2
-        for _ in range(int(ship1_stats['fire_rate'])):
-            if hp2 <= 0:
+        battle_log.append(f"{user1.nickname}: {len(user1_active)} ships active, {user2.nickname}: {len(user2_active)} ships active")
+        
+        # User1 fleet attacks User2 fleet
+        for attacking_ship in user1_active:
+            if not user2_active:  # Check if enemy fleet still exists
                 break
-            if random.random() < (ship2_stats['evasion']):
-                battle_log.append(f"{user2.nickname} evaded an attack from {user1.nickname}!")
+            
+            # Select target based on formation strategy
+            target_ship = select_target_by_formation(user1_formation, user2_active)
+            if not target_ship:
                 continue
-            base_damage = ship1_stats['attack'] - (ship2_stats['shield'] * 0.5)
-            damage = base_damage * random.uniform(0.85, 1.15)
-            damage = max(1, damage)
-            hp2 -= damage
-            total_damage1 += damage
-            battle_log.append(f"{user1.nickname} hits {user2.nickname} for {damage:.1f} damage! ({user2.nickname} HP: {max(0, hp2):.1f})")
-
-        # User2 attacks User1
-        for _ in range(int(ship2_stats['fire_rate'])):
-            if hp1 <= 0:
+            
+            # Calculate evasion with formation modifier (DEFENSIVE impacts enemy evasion)
+            target_evasion = target_ship['evasion'] * get_formation_evasion_modifier(user2_formation)
+            
+            # Each ship attacks based on its fire rate
+            for _ in range(int(attacking_ship['fire_rate'])):
+                if target_ship['current_hp'] <= 0:
+                    break
+                
+                # Evasion check
+                if random.random() < target_evasion:
+                    battle_log.append(f"{target_ship['ship_name']} evaded attack from {attacking_ship['ship_name']}!")
+                    continue
+                
+                # Calculate damage
+                base_damage = attacking_ship['attack'] - (target_ship['shield'] * 0.5)
+                damage = base_damage * random.uniform(0.85, 1.15)
+                damage = max(1, damage)
+                
+                # Apply damage
+                target_ship['current_hp'] -= damage
+                total_damage1 += damage
+                
+                battle_log.append(
+                    f"{attacking_ship['ship_name']} hits {target_ship['ship_name']} for {damage:.1f} damage! "
+                    f"({target_ship['ship_name']} HP: {max(0, target_ship['current_hp']):.1f})"
+                )
+                
+                # Remove destroyed ship from active list
+                if target_ship['current_hp'] <= 0:
+                    battle_log.append(f"{target_ship['ship_name']} destroyed!")
+                    user2_active.remove(target_ship)
+                    break
+        
+        # Check if User2 fleet is destroyed
+        if not user2_active:
+            break
+        
+        # User2 fleet attacks User1 fleet
+        for attacking_ship in user2_active:
+            if not user1_active:  # Check if enemy fleet still exists
                 break
-            if random.random() < (ship1_stats['evasion']):
-                battle_log.append(f"{user1.nickname} evaded an attack from {user2.nickname}!")
+            
+            # Select target based on formation strategy
+            target_ship = select_target_by_formation(user2_formation, user1_active)
+            if not target_ship:
                 continue
-            base_damage = ship2_stats['attack'] - (ship1_stats['shield'] * 0.5)
-            damage = base_damage * random.uniform(0.85, 1.15)
-            damage = max(0, damage)
-            hp1 -= damage
-            total_damage2 += damage
-            battle_log.append(f"{user2.nickname} hits {user1.nickname} for {damage:.1f} damage! ({user1.nickname} HP: {max(0, hp1):.1f})")
-
-    # Check for destroyed ships and update status
-    destroyed_ships = []
-    if hp1 <= 0:
-        ship1.status = "destroyed"
-        ship1.actual_hp = 0
-        ship1.actual_attack = 0
-        ship1.actual_shield = 0
-        ship1.actual_evasion = 0
-        ship1.actual_fire_rate = 0
-        ship1.actual_value = 0
-        destroyed_ships.append(f"{user1.nickname}'s ship ({ship1.ship_name}) was destroyed.")
-    if hp2 <= 0:
-        ship2.status = "destroyed"
-        ship2.actual_hp = 0
-        ship2.actual_attack = 0
-        ship2.actual_shield = 0
-        ship2.actual_evasion = 0
-        ship2.actual_fire_rate = 0
-        ship2.actual_value = 0
-        destroyed_ships.append(f"{user2.nickname}'s ship ({ship2.ship_name}) was destroyed.")
-
-    if destroyed_ships:
-        db.commit()
-        for msg in destroyed_ships:
-            battle_log.append(msg)
-
-    # Determine winner
-    if hp1 <= 0 and hp2 <= 0:
-        if total_damage1 >= total_damage2:
-            winner = user1
-            loser = user2
-            winner_hp = 0
-            loser_hp = 0
-            battle_log.append(f"Both ships destroyed! {user1.nickname} wins by higher total damage.")
-        else:
-            winner = user2
-            loser = user1
-            winner_hp = 0
-            loser_hp = 0
-            battle_log.append(f"Both ships destroyed! {user2.nickname} wins by higher total damage.")
-    elif hp2 <= 0:
+            
+            # Calculate evasion with formation modifier (DEFENSIVE impacts enemy evasion)
+            target_evasion = target_ship['evasion'] * get_formation_evasion_modifier(user1_formation)
+            
+            # Each ship attacks based on its fire rate
+            for _ in range(int(attacking_ship['fire_rate'])):
+                if target_ship['current_hp'] <= 0:
+                    break
+                
+                # Evasion check
+                if random.random() < target_evasion:
+                    battle_log.append(f"{target_ship['ship_name']} evaded attack from {attacking_ship['ship_name']}!")
+                    continue
+                
+                # Calculate damage
+                base_damage = attacking_ship['attack'] - (target_ship['shield'] * 0.5)
+                damage = base_damage * random.uniform(0.85, 1.15)
+                damage = max(1, damage)
+                
+                # Apply damage
+                target_ship['current_hp'] -= damage
+                total_damage2 += damage
+                
+                battle_log.append(
+                    f"{attacking_ship['ship_name']} hits {target_ship['ship_name']} for {damage:.1f} damage! "
+                    f"({target_ship['ship_name']} HP: {max(0, target_ship['current_hp']):.1f})"
+                )
+                
+                # Remove destroyed ship from active list
+                if target_ship['current_hp'] <= 0:
+                    battle_log.append(f"{target_ship['ship_name']} destroyed!")
+                    user1_active.remove(target_ship)
+                    break
+    
+    # Determine winner based on remaining ships or total damage
+    user1_survivors = [ship for ship in user1_fleet if ship['current_hp'] > 0]
+    user2_survivors = [ship for ship in user2_fleet if ship['current_hp'] > 0]
+    
+    if user1_survivors and not user2_survivors:
         winner = user1
         loser = user2
-        winner_hp = hp1
-        loser_hp = 0
-        battle_log.append(f"{user1.nickname} destroyed {user2.nickname}'s ship!")
-    elif hp1 <= 0:
+        battle_log.append(f"{user1.nickname} wins! All enemy ships destroyed.")
+    elif user2_survivors and not user1_survivors:
         winner = user2
         loser = user1
-        winner_hp = hp2
-        loser_hp = 0
-        battle_log.append(f"{user2.nickname} destroyed {user1.nickname}'s ship!")
+        battle_log.append(f"{user2.nickname} wins! All enemy ships destroyed.")
+    elif total_damage1 > total_damage2:
+        winner = user1
+        loser = user2
+        battle_log.append(f"{user1.nickname} wins by total damage! ({total_damage1:.1f} vs {total_damage2:.1f})")
+    elif total_damage2 > total_damage1:
+        winner = user2
+        loser = user1
+        battle_log.append(f"{user2.nickname} wins by total damage! ({total_damage2:.1f} vs {total_damage1:.1f})")
     else:
-        if total_damage1 >= total_damage2:
+        # Tie-breaker: user with more surviving ships wins
+        if len(user1_survivors) > len(user2_survivors):
             winner = user1
             loser = user2
-            winner_hp = hp1
-            loser_hp = hp2
-            battle_log.append(f"No ship destroyed! {user1.nickname} wins by higher total damage.")
-        else:
+            battle_log.append(f"{user1.nickname} wins by more surviving ships!")
+        elif len(user2_survivors) > len(user1_survivors):
             winner = user2
             loser = user1
-            winner_hp = hp2
-            loser_hp = hp1
-            battle_log.append(f"No ship destroyed! {user2.nickname} wins by higher total damage.")
-
-    # Update stats and currency
+            battle_log.append(f"{user2.nickname} wins by more surviving ships!")
+        else:
+            # Final tie-breaker: random
+            winner = random.choice([user1, user2])
+            loser = user2 if winner == user1 else user1
+            battle_log.append(f"{winner.nickname} wins by chance in a perfect tie!")
+    
+    # Update ship statuses and stats in database
+    destroyed_ships = []
+    ships_destroyed_by_user1 = 0
+    ships_destroyed_by_user2 = 0
+    ships_lost_by_user1 = 0
+    ships_lost_by_user2 = 0
+    
+    # Process User1's ships
+    for ship_stats in user1_fleet:
+        ship_obj = ship_stats['ship_obj']
+        if ship_stats['current_hp'] <= 0:
+            ship_obj.status = "destroyed"
+            ship_obj.actual_hp = 0
+            ship_obj.actual_attack = 0
+            ship_obj.actual_shield = 0
+            ship_obj.actual_evasion = 0
+            ship_obj.actual_fire_rate = 0
+            ship_obj.actual_value = 0
+            destroyed_ships.append(f"{user1.nickname}'s {ship_obj.ship_name} was destroyed.")
+            ships_lost_by_user1 += 1
+            ships_destroyed_by_user2 += 1
+        else:
+            # Apply damage degradation for surviving ships (only for humans, not NPCs)
+            is_user1_npc = user1.nickname.startswith("NPC_")
+            if not is_user1_npc:
+                percent = max(0, ship_stats['current_hp'] / ship_stats['hp'])
+                ship_obj.actual_hp = max(0, ship_stats['current_hp'])
+                ship_obj.actual_attack = ship_obj.base_attack * percent
+                ship_obj.actual_shield = ship_obj.base_shield * percent
+                ship_obj.actual_evasion = ship_obj.base_evasion * percent
+                ship_obj.actual_fire_rate = ship_obj.base_fire_rate * percent
+                ship_obj.actual_value = int(ship_obj.base_value * percent)
+            else:
+                # NPC ships restore to full condition
+                ship_obj.actual_hp = ship_obj.base_hp
+                ship_obj.actual_attack = ship_obj.base_attack
+                ship_obj.actual_shield = ship_obj.base_shield
+                ship_obj.actual_evasion = ship_obj.base_evasion
+                ship_obj.actual_fire_rate = ship_obj.base_fire_rate
+                ship_obj.actual_value = ship_obj.base_value
+    
+    # Process User2's ships
+    for ship_stats in user2_fleet:
+        ship_obj = ship_stats['ship_obj']
+        if ship_stats['current_hp'] <= 0:
+            ship_obj.status = "destroyed"
+            ship_obj.actual_hp = 0
+            ship_obj.actual_attack = 0
+            ship_obj.actual_shield = 0
+            ship_obj.actual_evasion = 0
+            ship_obj.actual_fire_rate = 0
+            ship_obj.actual_value = 0
+            destroyed_ships.append(f"{user2.nickname}'s {ship_obj.ship_name} was destroyed.")
+            ships_lost_by_user2 += 1
+            ships_destroyed_by_user1 += 1
+        else:
+            # Apply damage degradation for surviving ships (only for humans, not NPCs)
+            is_user2_npc = user2.nickname.startswith("NPC_")
+            if not is_user2_npc:
+                percent = max(0, ship_stats['current_hp'] / ship_stats['hp'])
+                ship_obj.actual_hp = max(0, ship_stats['current_hp'])
+                ship_obj.actual_attack = ship_obj.base_attack * percent
+                ship_obj.actual_shield = ship_obj.base_shield * percent
+                ship_obj.actual_evasion = ship_obj.base_evasion * percent
+                ship_obj.actual_fire_rate = ship_obj.base_fire_rate * percent
+                ship_obj.actual_value = int(ship_obj.base_value * percent)
+            else:
+                # NPC ships restore to full condition
+                ship_obj.actual_hp = ship_obj.base_hp
+                ship_obj.actual_attack = ship_obj.base_attack
+                ship_obj.actual_shield = ship_obj.base_shield
+                ship_obj.actual_evasion = ship_obj.base_evasion
+                ship_obj.actual_fire_rate = ship_obj.base_fire_rate
+                ship_obj.actual_value = ship_obj.base_value
+    
+    # Special NPC restoration for destroyed ships
+    is_user1_npc = user1.nickname.startswith("NPC_")
+    is_user2_npc = user2.nickname.startswith("NPC_")
+    
+    if is_user1_npc:
+        for ship_stats in user1_fleet:
+            ship_obj = ship_stats['ship_obj']
+            if ship_obj.status == "destroyed":
+                ship_obj.status = "active"
+                ship_obj.actual_hp = ship_obj.base_hp
+                ship_obj.actual_attack = ship_obj.base_attack
+                ship_obj.actual_shield = ship_obj.base_shield
+                ship_obj.actual_evasion = ship_obj.base_evasion
+                ship_obj.actual_fire_rate = ship_obj.base_fire_rate
+                ship_obj.actual_value = ship_obj.base_value
+                battle_log.append(f"NPC {user1.nickname}'s {ship_obj.ship_name} restored and reactivated")
+    
+    if is_user2_npc:
+        for ship_stats in user2_fleet:
+            ship_obj = ship_stats['ship_obj']
+            if ship_obj.status == "destroyed":
+                ship_obj.status = "active"
+                ship_obj.actual_hp = ship_obj.base_hp
+                ship_obj.actual_attack = ship_obj.base_attack
+                ship_obj.actual_shield = ship_obj.base_shield
+                ship_obj.actual_evasion = ship_obj.base_evasion
+                ship_obj.actual_fire_rate = ship_obj.base_fire_rate
+                ship_obj.actual_value = ship_obj.base_value
+                battle_log.append(f"NPC {user2.nickname}'s {ship_obj.ship_name} restored and reactivated")
+    
+    # Log destroyed ships
+    for msg in destroyed_ships:
+        battle_log.append(msg)
+    
+    # Update user statistics
     winner.victories += 1
     loser.defeats += 1
-
+    
     user1.damage_dealt += total_damage1
     user1.damage_taken += total_damage2
     user2.damage_dealt += total_damage2
     user2.damage_taken += total_damage1
-
-    # Currency transfer - NPCs don't gain or lose money
-    is_loser_npc = loser.nickname.startswith("NPC_")
-    is_winner_npc = winner.nickname.startswith("NPC_")
-    percent = random.uniform(0.05, 0.15)
-    transfer = int(loser.currency_value * percent)
-    transfer = max(0, transfer)
     
-    if not is_loser_npc and not is_winner_npc:
-        # Human vs Human - normal currency transfer
-        loser.currency_value -= transfer
-        winner.currency_value += transfer
-        battle_log.append(f"{winner.nickname} wins and steals {transfer} credits from {loser.nickname}!")
-    elif not is_loser_npc and is_winner_npc:
-        # Human loses to NPC - human loses money, NPC doesn't gain
-        loser.currency_value -= transfer
-        battle_log.append(f"NPC {winner.nickname} wins! {loser.nickname} loses {transfer} credits!")
-    elif is_loser_npc and not is_winner_npc:
-        # Human beats NPC - human gains money, NPC doesn't lose
-        winner.currency_value += transfer
-        battle_log.append(f"{winner.nickname} wins and receives {transfer} credits for defeating NPC {loser.nickname}!")
-    else:
-        # NPC vs NPC - no currency transfer
-        battle_log.append(f"NPC {winner.nickname} defeats NPC {loser.nickname} - no currency transfer between NPCs")
+    user1.ships_destroyed_by_user += ships_destroyed_by_user1
+    user1.ships_lost_by_user += ships_lost_by_user1
+    user2.ships_destroyed_by_user += ships_destroyed_by_user2
+    user2.ships_lost_by_user += ships_lost_by_user2
     
-    winner_id = winner.user_id
-
-    # Update ships destroyed/lost stats
-    if hp1 <= 0:
-        user1.ships_lost_by_user += 1
-        user2.ships_destroyed_by_user += 1
-    if hp2 <= 0:
-        user2.ships_lost_by_user += 1
-        user1.ships_destroyed_by_user += 1
-
-    db.commit()
-
-    # ELO Rank update - NPCs get special handling
-    def calculate_elo(winner_elo, loser_elo, k=32):
-        expected_win = 1 / (1 + 10 ** ((loser_elo - winner_elo) / 400))
-        new_winner_elo = winner_elo + k * (1 - expected_win)
-        new_loser_elo = loser_elo + k * (0 - (1 - expected_win))
-        return new_winner_elo, new_loser_elo
-
-    is_winner_npc = winner.nickname.startswith("NPC_")
-    is_loser_npc = loser.nickname.startswith("NPC_")
+    # Award credits for victories
+    if winner.nickname.startswith("NPC_"):
+        # NPC winner doesn't get credits
+        pass
+    else:
+        loser_value = sum(ship_stats['value'] for ship_stats in 
+                         (user2_fleet if winner == user1 else user1_fleet))
+        credits_awarded = loser_value * 0.1
+        winner.currency_value += credits_awarded
+        battle_log.append(f"{winner.nickname} awarded {credits_awarded:.0f} credits!")
     
-    if not is_winner_npc and not is_loser_npc:
-        # Both are human players - normal ELO calculation
-        new_winner_elo, new_loser_elo = calculate_elo(winner.elo_rank, loser.elo_rank)
-        winner.elo_rank = new_winner_elo
-        loser.elo_rank = new_loser_elo
-        battle_log.append(f"Setting ELO - Winner after: {winner.elo_rank:.1f}")
-        battle_log.append(f"Setting ELO - Loser after: {loser.elo_rank:.1f}")
-    elif not is_winner_npc and is_loser_npc:
-        # Human beats NPC - only human gains ELO
-        new_winner_elo, _ = calculate_elo(winner.elo_rank, loser.elo_rank)
-        winner.elo_rank = new_winner_elo
-        battle_log.append(f"Setting ELO - {winner.nickname} after: {winner.elo_rank:.1f}")
-        battle_log.append(f"NPC {loser.nickname} ELO unchanged: {loser.elo_rank:.1f}")
-    elif is_winner_npc and not is_loser_npc:
-        # NPC beats Human - only human loses ELO
-        _, new_loser_elo = calculate_elo(winner.elo_rank, loser.elo_rank)
-        loser.elo_rank = new_loser_elo
-        battle_log.append(f"NPC {winner.nickname} ELO unchanged: {winner.elo_rank:.1f}")
-        battle_log.append(f"Setting ELO - {loser.nickname} after: {loser.elo_rank:.1f}")
-    else:
-        # Both NPCs - no ELO changes
-        battle_log.append(f"Both NPCs - ELO unchanged: {winner.nickname}: {winner.elo_rank:.1f}, {loser.nickname}: {loser.elo_rank:.1f}")
-
-    # XP Gain calculation - NPCs don't gain XP
-    def calculate_xp_gain(winner_level, loser_level, base_xp_winner=50, base_xp_loser=10):
-        """
-        Calculate XP gain for both winner and loser based on level difference.
-        Winner always gets more XP, but fighting higher level opponents gives more XP.
-        Fighting lower level opponents gives less XP.
-        """
-        level_diff = loser_level - winner_level
-        
-        # XP multiplier based on level difference
-        if level_diff > 0:  # Fighting higher level opponent
-            multiplier = 1 + (level_diff * 0.15)  # +15% per level difference
-        elif level_diff < 0:  # Fighting lower level opponent
-            multiplier = max(0.3, 1 + (level_diff * 0.1))  # -10% per level, minimum 30%
-        else:  # Same level
-            multiplier = 1.0
-        
-        winner_xp = int(base_xp_winner * multiplier)
-        loser_xp = int(base_xp_loser * multiplier)
-        
-        return winner_xp, loser_xp
-
-    # Apply XP gain - only for human players
-    if not is_winner_npc:
-        winner_xp_gain, _ = calculate_xp_gain(winner.level, loser.level)
-        winner.experience += winner_xp_gain
-        battle_log.append(f"{winner.nickname} gained {winner_xp_gain} XP! (Total: {winner.experience})")
-    else:
-        battle_log.append(f"NPC {winner.nickname} does not gain XP")
+    # Create and save battle history
+    final_user1_hp = sum(max(0, ship['current_hp']) for ship in user1_fleet)
+    final_user2_hp = sum(max(0, ship['current_hp']) for ship in user2_fleet)
     
-    if not is_loser_npc:
-        _, loser_xp_gain = calculate_xp_gain(winner.level, loser.level)
-        loser.experience += loser_xp_gain
-        battle_log.append(f"{loser.nickname} gained {loser_xp_gain} XP! (Total: {loser.experience})")
-    else:
-        battle_log.append(f"NPC {loser.nickname} does not gain XP")
-
-    # Check for level ups - only for human players
-    from backend.app.utils.progression_utils import get_level_for_experience, check_rank_promotion
-
-    # Check winner level up
-    if not is_winner_npc:
-        new_winner_level = get_level_for_experience(winner.experience)
-        if new_winner_level > winner.level:
-            winner.level = new_winner_level
-            battle_log.append(f"🎉 {winner.nickname} leveled up to level {new_winner_level}!")
-            
-            # Check for rank promotion
-            new_rank = check_rank_promotion(winner, db)
-            if new_rank and new_rank != winner.rank:
-                old_rank = winner.rank.value
-                winner.rank = new_rank
-                battle_log.append(f"🏆 {winner.nickname} promoted to {new_rank.value}!")
-
-    # Check loser level up
-    if not is_loser_npc:
-        new_loser_level = get_level_for_experience(loser.experience)
-        if new_loser_level > loser.level:
-            loser.level = new_loser_level
-            battle_log.append(f"🎉 {loser.nickname} leveled up to level {new_loser_level}!")
-            
-            # Check for rank promotion
-            new_rank = check_rank_promotion(loser, db)
-            if new_rank and new_rank != loser.rank:
-                old_rank = loser.rank.value
-                loser.rank = new_rank
-                battle_log.append(f"🏆 {loser.nickname} promoted to {new_rank.value}!")
-
-    db.commit()
-
-    # Save battle history
+    # Prepare ship data for battle history
+    user1_ship_data = []
+    user2_ship_data = []
+    
+    for ship_stats in user1_fleet:
+        ship_obj = ship_stats['ship_obj']
+        user1_ship_data.append({
+            "user_id": user1.user_id, 
+            "nickname": user1.nickname, 
+            "ship_number": ship_obj.ship_number,
+            "ship_name": ship_obj.ship_name, 
+            "attack": ship_stats['attack'], 
+            "shield": ship_stats['shield'],
+            "evasion": ship_stats['evasion'], 
+            "fire_rate": ship_stats['fire_rate'], 
+            "hp": ship_stats['hp'], 
+            "value": ship_stats['value']
+        })
+    
+    for ship_stats in user2_fleet:
+        ship_obj = ship_stats['ship_obj']
+        user2_ship_data.append({
+            "user_id": user2.user_id, 
+            "nickname": user2.nickname, 
+            "ship_number": ship_obj.ship_number,
+            "ship_name": ship_obj.ship_name, 
+            "attack": ship_stats['attack'], 
+            "shield": ship_stats['shield'],
+            "evasion": ship_stats['evasion'], 
+            "fire_rate": ship_stats['fire_rate'], 
+            "hp": ship_stats['hp'], 
+            "value": ship_stats['value']
+        })
+    
     battle_history = BattleHistory(
-        timestamp=datetime.now(UTC),
-        participants=[
-            {
-                "user_id": user1.user_id, "nickname": user1.nickname, "ship_number": ship1.ship_number,
-                "ship_name": ship1.ship_name, "attack": ship1.actual_attack, "shield": ship1.actual_shield,
-                "evasion": ship1.actual_evasion, "fire_rate": ship1.actual_fire_rate, "hp": ship1.actual_hp, "value": ship1.actual_value
-            },
-            {
-                "user_id": user2.user_id, "nickname": user2.nickname, "ship_number": ship2.ship_number,
-                "ship_name": ship2.ship_name, "attack": ship2.actual_attack, "shield": ship2.actual_shield,
-                "evasion": ship2.actual_evasion, "fire_rate": ship2.actual_fire_rate, "hp": ship2.actual_hp, "value": ship2.actual_value
-            }
-        ],
-        winner_user_id=winner_id,
+        participants=user1_ship_data + user2_ship_data,
         battle_log=battle_log,
+        winner_user_id=winner.user_id,
         extra={
-            "final_hp": {user1.nickname: max(0, hp1), user2.nickname: max(0, hp2)},
-            "total_damage": {user1.nickname: total_damage1, user2.nickname: total_damage2}
+            "formations": {"user1": user1_formation, "user2": user2_formation},
+            "final_hp": {user1.nickname: final_user1_hp, user2.nickname: final_user2_hp},
+            "total_damage": {user1.nickname: total_damage1, user2.nickname: total_damage2},
+            "winner": winner.nickname,
+            "battle_type": f"{battle_type} {fleet_info}",
+            "ships_destroyed": {"user1": ships_lost_by_user1, "user2": ships_lost_by_user2}
         }
     )
+    
     db.add(battle_history)
     db.commit()
-    db.refresh(battle_history)
-
-    # Update ships' 'actual_' attributes after battle - NPCs don't degrade
-    for ship, hp, user in [(ship1, hp1, user1), (ship2, hp2, user2)]:
-        is_ship_owner_npc = user.nickname.startswith("NPC_")
-        
-        if ship.status != "destroyed":
-            if not is_ship_owner_npc:
-                # Human player ship - normal degradation based on damage
-                percent = max(0, hp / ship.base_hp)
-                ship.actual_hp = max(0, hp)
-                ship.actual_attack = ship.base_attack * percent
-                ship.actual_shield = ship.base_shield * percent
-                ship.actual_evasion = ship.base_evasion * percent
-                ship.actual_fire_rate = ship.base_fire_rate * percent
-                ship.actual_value = int(ship.base_value * percent)
-            else:
-                # NPC ship - restore to full stats for next battle
-                ship.actual_hp = ship.base_hp
-                ship.actual_attack = ship.base_attack
-                ship.actual_shield = ship.base_shield
-                ship.actual_evasion = ship.base_evasion
-                ship.actual_fire_rate = ship.base_fire_rate
-                ship.actual_value = ship.base_value
-                battle_log.append(f"NPC {user.nickname}'s ship {ship.ship_name} restored to full condition")
-        elif is_ship_owner_npc:
-            # NPC ship was destroyed - restore it completely
-            ship.status = "active"
-            ship.actual_hp = ship.base_hp
-            ship.actual_attack = ship.base_attack
-            ship.actual_shield = ship.base_shield
-            ship.actual_evasion = ship.base_evasion
-            ship.actual_fire_rate = ship.base_fire_rate
-            ship.actual_value = ship.base_value
-            battle_log.append(f"NPC {user.nickname}'s destroyed ship {ship.ship_name} has been restored and reactivated")
     
-    db.commit()
+    return battle_history, f"{winner.nickname} wins the {battle_type.lower()} battle {fleet_info}!"
 
-    return battle_history, "Battle finished"
 
 def activate_owned_ship(db: Session, user_id: int, ship_number: int):
     """
     Set the status of a user's owned ship to 'active'.
+    Now includes validation of maximum active ships based on user rank.
     """
+    from backend.app.utils.progression_utils import can_activate_ship
+    
+    # Get the user to check rank limits
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        return None, "User not found"
+    
+    # Check if user can activate another ship based on rank limits
+    can_activate, limit_message = can_activate_ship(user, db)
+    if not can_activate:
+        return None, limit_message
+    
+    # Find the ship to activate
     owned_ship = db.query(OwnedShips).filter(
         OwnedShips.user_id == user_id,
         OwnedShips.ship_number == ship_number,
         OwnedShips.status == 'owned'
     ).first()
+    
     if not owned_ship:
         return None, "Owned ship not found or not available to activate"
+    
+    # Activate the ship
     owned_ship.status = 'active'
     db.commit()
     db.refresh(owned_ship)
-    return owned_ship, "Ship activated successfully"
+    
+    return owned_ship, f"Ship activated successfully! {limit_message}"
+
+
+def deactivate_owned_ship(db: Session, user_id: int, ship_number: int):
+    """
+    Set the status of a user's owned ship from 'active' to 'owned'.
+    Allows users to free up active ship slots.
+    """
+    owned_ship = db.query(OwnedShips).filter(
+        OwnedShips.user_id == user_id,
+        OwnedShips.ship_number == ship_number,
+        OwnedShips.status == 'active'
+    ).first()
+    
+    if not owned_ship:
+        return None, "Active ship not found or not available to deactivate"
+    
+    # Deactivate the ship
+    owned_ship.status = 'owned'
+    db.commit()
+    db.refresh(owned_ship)
+    
+    return owned_ship, "Ship deactivated successfully"
+
+
+def get_user_ship_limits_info(db: Session, user_id: int):
+    """
+    Get information about a user's ship limits and current usage.
+    Useful for frontend display.
+    """
+    from backend.app.utils.progression_utils import get_max_active_ships_for_user, count_active_ships_for_user
+    
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        return None
+    
+    max_allowed = get_max_active_ships_for_user(user, db)
+    current_active = count_active_ships_for_user(user_id, db)
+    
+    return {
+        "user_rank": user.rank.value,
+        "user_level": user.level,
+        "max_active_ships": max_allowed,
+        "current_active_ships": current_active,
+        "can_activate_more": current_active < max_allowed,
+        "slots_remaining": max_allowed - current_active
+    }

@@ -7,7 +7,7 @@ and initial data seeding. Centralizes all database lifecycle concerns.
 
 from .config import engine, Base
 from .session import create_session
-from .models import User, Ship, OwnedShips, SystemLogs, ShipyardLog, RankBonus, UserRank
+from .models import User, Ship, OwnedShips, SystemLogs, ShipyardLog, RankBonus, UserRank, WorkLog
 from .base_data import get_ships_data, get_users_data, get_npc_users, get_rank_bonuses_data, get_owned_ships_assignments
 from sqlalchemy import func, text
 import logging
@@ -531,6 +531,7 @@ def clear_all_data() -> None:
             users_count = session.query(User).count()
             ships_count = session.query(Ship).count()
             owned_ships_count = session.query(OwnedShips).count()
+            work_logs_count = session.query(WorkLog).count()
             
             # Log the start of data clearing
             log_system_event(
@@ -540,13 +541,15 @@ def clear_all_data() -> None:
                     "message": "Starting database data clearing",
                     "users_to_delete": users_count,
                     "ships_to_delete": ships_count,
-                    "owned_ships_to_delete": owned_ships_count
+                    "owned_ships_to_delete": owned_ships_count,
+                    "work_logs_to_delete": work_logs_count
                 },
                 log_level="WARNING",
                 category="SYSTEM"
             )
             
             # Delete in order to respect foreign key constraints
+            session.query(WorkLog).delete()
             session.query(OwnedShips).delete()
             session.query(User).delete()
             session.query(Ship).delete()
@@ -562,7 +565,8 @@ def clear_all_data() -> None:
                     "users_deleted": users_count,
                     "ships_deleted": ships_count,
                     "owned_ships_deleted": owned_ships_count,
-                    "total_records_deleted": users_count + ships_count + owned_ships_count
+                    "work_logs_deleted": work_logs_count,
+                    "total_records_deleted": users_count + ships_count + owned_ships_count + work_logs_count
                 },
                 log_level="WARNING",
                 category="SYSTEM",

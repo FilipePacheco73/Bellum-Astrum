@@ -1,6 +1,27 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
+
+
+class BattleRequest(BaseModel):
+    """
+    Request model for battles with formation strategies.
+    
+    Attributes:
+        opponent_user_id (int): ID of the opponent user
+        user_ship_numbers (Union[int, List[int]]): Ship number(s) for current user
+        opponent_ship_numbers (Union[int, List[int]]): Ship number(s) for opponent
+        user_formation (Optional[str]): Formation strategy for current user ("DEFENSIVE", "AGGRESSIVE", "TACTICAL")
+                                       If None, uses user's default_formation
+        opponent_formation (Optional[str]): Formation strategy for opponent ("DEFENSIVE", "AGGRESSIVE", "TACTICAL")
+                                           If None, uses opponent's default_formation
+    """
+    opponent_user_id: int
+    user_ship_numbers: Union[int, List[int]]
+    opponent_ship_numbers: Union[int, List[int]]
+    user_formation: Optional[str] = None
+    opponent_formation: Optional[str] = None
+
 
 class BattleParticipant(BaseModel):
     """
@@ -36,15 +57,16 @@ class BattleHistoryResponse(BaseModel):
     Atributos:
         battle_id (int): ID único da batalha.
         timestamp (datetime): Data e hora da batalha.
-        participants (List[BattleParticipant]): Lista de participantes.
+        participants (List[BattleParticipant]): Lista de participantes com suas naves.
         winner_user_id (Optional[int]): ID do usuário vencedor (ou None para empate).
         battle_log (List[str]): Log detalhado dos eventos da batalha.
-        extra (Optional[Dict[str, Any]]): Campo extra para informações adicionais.
+        extra (Optional[Dict[str, Any]]): Informações adicionais (formações, danos, etc.).
     """
     battle_id: int
     timestamp: datetime
     participants: List[BattleParticipant]
-    winner_user_id: Optional[int]
+    winner_user_id: Optional[int] = None
     battle_log: List[str]
-    extra: Optional[Dict[str, Any]]
+    extra: Optional[Dict[str, Any]] = None
+    
     model_config = ConfigDict(from_attributes=True)

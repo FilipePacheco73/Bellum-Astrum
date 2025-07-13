@@ -107,15 +107,20 @@ def test_activate_ships(ship_numbers):
 # Test battle between two users
 def test_battle_between_two_users(ship_numbers):
     (user1_id, token1, ship_number1), (user2_id, token2, ship_number2) = ship_numbers
+    battle_request = {
+        "opponent_user_id": user2_id,
+        "user_ship_numbers": ship_number1,
+        "opponent_ship_numbers": ship_number2,
+        "user_formation": "AGGRESSIVE",
+        "opponent_formation": "DEFENSIVE"
+    }
     battle = client.post(
         "/api/v1/battle/battle",
-        params={
-            "opponent_user_id": user2_id,
-            "user_ship_number": ship_number1,
-            "opponent_ship_number": ship_number2
-        },
+        json=battle_request,
         headers={"Authorization": f"Bearer {token1}"}
     )
+    print(f"DEBUG: Battle response status: {battle.status_code}")
+    print(f"DEBUG: Battle response text: {battle.text}")
     assert battle.status_code == 200
     data = battle.json()
     assert "battle_id" in data
@@ -135,13 +140,16 @@ def test_battle_against_npc(ship_numbers):
     print(f"\nDEBUG: user1_id={user1_id}, npc_astro_id={npc_astro_id}")
     print(f"DEBUG: ship_number1={ship_number1}, npc_ship_number={npc_ship_number}")
     
+    battle_request = {
+        "opponent_user_id": npc_astro_id,
+        "user_ship_numbers": ship_number1,
+        "opponent_ship_numbers": npc_ship_number
+        # Não especifica formações, deve usar as padrões dos usuários
+    }
+    
     battle = client.post(
         "/api/v1/battle/battle",
-        params={
-            "opponent_user_id": npc_astro_id,
-            "user_ship_number": ship_number1,
-            "opponent_ship_number": npc_ship_number
-        },
+        json=battle_request,
         headers={"Authorization": f"Bearer {token1}"}
     )
     print(f"DEBUG: Battle response status: {battle.status_code}")
@@ -200,6 +208,97 @@ def test_sell_ships(ship_numbers):
     assert "value_received" in sell_response2.json()
 
 created_log_id = None
+
+# Test work system status check
+def test_work_status(user_ids):
+    (user1_id, token1), (user2_id, token2) = user_ids
+    response = client.get(
+        "/api/v1/work/status",
+        headers={"Authorization": f"Bearer {token1}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "can_work" in data
+    assert "work_type" in data
+    assert "current_rank" in data
+    assert "estimated_income" in data
+    assert "work_cooldown_hours" in data
+    print(f"DEBUG: Work status - {data}")
+
+# Test work types for user rank
+def test_work_types(user_ids):
+    (user1_id, token1), (user2_id, token2) = user_ids
+    response = client.get(
+        "/api/v1/work/types",
+        headers={"Authorization": f"Bearer {token1}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "user_rank" in data
+    assert "work_type" in data
+    assert "estimated_income_range" in data
+    assert "cooldown_hours" in data
+    print(f"DEBUG: Available work type - {data}")
+
+# Test performing work
+def test_perform_work(user_ids):
+    (user1_id, token1), (user2_id, token2) = user_ids
+    response = client.post(
+        "/api/v1/work/perform",
+        headers={"Authorization": f"Bearer {token1}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "success" in data
+    assert data["success"] is True
+    assert "work_type" in data
+    assert "income_earned" in data
+    assert "new_currency_balance" in data
+    assert "cooldown_until" in data
+    print(f"DEBUG: Work performed - Income: {data['income_earned']}, Type: {data['work_type']}")
+
+# Test work history
+def test_work_history(user_ids):
+    (user1_id, token1), (user2_id, token2) = user_ids
+    response = client.get(
+        "/api/v1/work/history",
+        headers={"Authorization": f"Bearer {token1}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "work_history" in data
+    assert "total_income_earned" in data
+    assert "total_work_sessions" in data
+    # Should have at least 1 work session from previous test
+    assert data["total_work_sessions"] >= 1
+    print(f"DEBUG: Work history - Sessions: {data['total_work_sessions']}, Total income: {data['total_income_earned']}")
+
+# Test work cooldown (should fail if trying to work again immediately)
+def test_work_cooldown(user_ids):
+    (user1_id, token1), (user2_id, token2) = user_ids
+    # Try to work again immediately after previous work
+    response = client.post(
+        "/api/v1/work/perform",
+        headers={"Authorization": f"Bearer {token1}"}
+    )
+    # Should fail due to cooldown
+    assert response.status_code == 400
+    assert "cooldown" in response.json()["detail"].lower() or "wait" in response.json()["detail"].lower()
+    print(f"DEBUG: Cooldown test passed - {response.json()['detail']}")
+
+# Test work status after performing work (should show cooldown)
+def test_work_status_after_work(user_ids):
+    (user1_id, token1), (user2_id, token2) = user_ids
+    response = client.get(
+        "/api/v1/work/status",
+        headers={"Authorization": f"Bearer {token1}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["can_work"] is False  # Should be false due to cooldown
+    assert "time_until_available" in data
+    assert data["time_until_available"] > 0  # Should have time remaining
+    print(f"DEBUG: Work status after work - Can work: {data['can_work']}, Time until available: {data['time_until_available']:.2f} hours")
 
 # Test log creation
 def test_create_log():

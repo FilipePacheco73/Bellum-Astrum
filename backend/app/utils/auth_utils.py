@@ -113,8 +113,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     """
     FastAPI dependency to get the current authenticated user from the JWT token.
     Raises HTTPException if credentials are invalid.
-    Returns a user-like object with user_id and email.
+    Returns the full User object from the database.
     """
+    from database.models import User
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -123,8 +125,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user_data = verify_token(token, db_session=db)
     if not user_data or not user_data.get("user_id"):
         raise credentials_exception
-    class UserObj:
-        def __init__(self, user_id, email):
-            self.user_id = user_id
-            self.email = email
-    return UserObj(user_data["user_id"], user_data["email"])
+    
+    # Get the full user object from database
+    user = db.query(User).filter(User.user_id == user_data["user_id"]).first()
+    if not user:
+        raise credentials_exception
+        
+    return user

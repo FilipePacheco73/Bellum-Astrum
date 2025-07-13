@@ -5,6 +5,128 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-07-13
+
+### Added
+- **Complete Work System**: Full soft recovery system for players who lose all ships and money
+  - New `WorkLog` table to track all work activities and cooldowns
+  - Rank-based work types: each rank has a specific job (maintenance, patrol, trading, escort, reconnaissance, command, strategy)
+  - Progressive income system: higher ranks earn more credits (700-17500 range) with 20% variance
+  - Rank-based cooldown system: balanced cooldowns from 2h (RECRUIT) to 12h (FLEET_ADMIRAL)
+  - Work utility functions for income calculation, type management, and variance
+  - Complete CRUD operations for work performance, status, and history with proper timezone handling
+  - New API endpoints: `/work/perform`, `/work/status`, `/work/history`, `/work/types`
+  - Comprehensive work schemas for request/response validation
+  - Integrated logging system for all work activities
+- **Enhanced Multi-Ship Battle System**: Advanced battle mechanics with formation strategies
+  - Support for 1v1 to 20v20 battles with multiple ships per side
+  - Formation strategies: DEFENSIVE, AGGRESSIVE, TACTICAL with auto-defaults
+  - Enhanced `BattleRequest` schema supporting arrays of ship numbers and formations
+  - Ship activation limits based on user rank (1-20 ships depending on rank)
+  - New ship deactivation endpoint `/battle/deactivate-ship` with proper validation
+  - Ship limits information endpoint `/battle/ship-limits` for UI integration
+  - Enhanced battle logging with formation and multi-ship details
+- **Extended User System**: Enhanced user capabilities and tactical features
+  - Added `default_formation` field to User model for tactical preferences
+  - Updated authentication system to return full User objects instead of limited UserObj
+  - Enhanced user schemas with `UserShipLimitsResponse` for ship management
+  - Improved rank-based ship activation limits with progression utils
+  - Formation preferences integrated into NPC and user profiles
+- **Enhanced RankBonus System**: Extended rank bonuses for multiple game mechanics
+  - Added `work_income` field to RankBonus table for rank-based earnings (700-17500 range)
+  - Added `work_cooldown_hours` field for rank-specific work intervals (2-12h)
+  - Added `max_active_ships` field for rank-based ship activation limits (1-20)
+  - Updated base data seeding with comprehensive work and combat configurations
+  - Automatic seeding of work income, cooldown, and ship limit values for all ranks
+- **Expanded NPC Fleet System**: Enhanced NPC ship assignments and diversity
+  - NPCs now have multiple ships based on their rank (up to 20 ships for Fleet Admiral)
+  - Rank-appropriate ship distributions across all tiers (Tier 1-6)
+  - Enhanced NPC battle capabilities with formation preferences per character
+  - Improved ship seeding with proper rank-based assignments and formations
+  - Each NPC has a unique formation strategy (Admin: TACTICAL, Astro: AGGRESSIVE, etc.)
+- **Enhanced Database Models and Lifecycle**: Improved data integrity and functionality
+  - WorkLog model with comprehensive work tracking and timezone support
+  - User model enhanced with default formation preferences
+  - RankBonus model extended with work income, cooldown, and ship limits
+  - Updated lifecycle.py to handle WorkLog table creation and cleanup
+  - Improved clear_all_data function to include WorkLog entries
+  - Enhanced models with proper constraints and indexes for new fields
+
+### Changed
+- **Authentication System**: Enhanced user authentication for work system
+  - Updated `get_current_user` to return full User object instead of UserObj
+  - Fixed timezone handling in datetime comparisons for work cooldowns
+  - Improved error handling and user validation in work operations
+- **Battle System Architecture**: Major refactoring for multi-ship battles
+  - Updated battle routes to use `BattleRequest` schema instead of query parameters
+  - Enhanced battle system to support formation strategies and multiple ships
+  - Improved ship activation/deactivation system with proper limits validation
+  - Enhanced error handling with detailed error messages across all routes
+- **Database Schema**: Extended existing models for work functionality
+  - RankBonus model now includes work-related and ship limit fields
+  - User model now includes `default_formation` field for tactical preferences
+  - Enhanced base data with comprehensive work system configuration
+  - Updated lifecycle management to handle new work tables and constraints
+- **Test Coverage**: Comprehensive testing for work and battle systems
+  - Added 6 new tests covering all work system functionality
+  - Updated battle tests to use new `BattleRequest` schema format
+  - Tests for work status, types, performance, history, and cooldown validation
+  - Enhanced test suite with work system and multi-ship battle integration tests
+  - All tests now passing with full system coverage including new features
+- **NPC System**: Enhanced NPC data and capabilities
+  - NPCs now have formation preferences and multiple ships
+  - Rank-appropriate ship distributions for realistic fleet compositions
+  - Enhanced battle capabilities with formation strategies
+
+### Fixed
+- **Timezone Issues**: Resolved datetime comparison problems in work system
+  - Fixed offset-naive vs offset-aware datetime comparison errors
+  - Properly handled timezone conversion for cooldown calculations
+  - Enhanced datetime handling across all work-related operations
+- **Import Errors**: Fixed SQLAlchemy function imports in work CRUD
+  - Added proper `func` import from SQLAlchemy for aggregation functions
+  - Fixed work history calculation issues with income totals
+  - Resolved work statistics calculation errors
+- **Authentication Bugs**: Corrected user object handling in work routes
+  - Fixed 'UserObj' has no attribute 'rank' error
+  - Enhanced user authentication to provide complete user data
+  - Improved work system integration with authentication layer
+- **Error Message Improvements**: Enhanced error reporting across all endpoints
+  - Updated exception handling to include specific error details
+  - Improved error messages in battle, market, and ship routes
+  - Better debugging information for failed operations
+
+### Technical Details
+- **Work Income Formula**: Rank-based income system with 20% variance for randomization
+  - RECRUIT: 700 credits base, 2h cooldown
+  - ENSIGN: 1000 credits base, 3h cooldown
+  - LIEUTENANT: 1400 credits base, 3h cooldown
+  - LIEUTENANT_COMMANDER: 1900 credits base, 4h cooldown
+  - COMMANDER: 2600 credits base, 4h cooldown
+  - CAPTAIN: 3500 credits base, 5h cooldown
+  - COMMODORE: 4750 credits base, 6h cooldown
+  - REAR_ADMIRAL: 6500 credits base, 7h cooldown
+  - VICE_ADMIRAL: 8750 credits base, 8h cooldown
+  - ADMIRAL: 12500 credits base, 10h cooldown
+  - FLEET_ADMIRAL: 17500 credits base, 12h cooldown
+- **Recovery System**: Designed to allow quick ship purchase for basic players
+  - RECRUIT can buy cheapest ship (1500 credits) in approximately 2-3 work sessions
+  - Higher ranks can recover faster with better income but longer cooldowns for balance
+  - No currency or ship requirements - works as true "soft reset" system
+- **Ship Activation Limits**: Progressive system based on rank
+  - RECRUIT: 1 ship, ENSIGN: 2 ships, LIEUTENANT: 3 ships
+  - LIEUTENANT_COMMANDER: 4 ships, COMMANDER: 5 ships, CAPTAIN: 6 ships
+  - COMMODORE: 8 ships, REAR_ADMIRAL: 10 ships, VICE_ADMIRAL: 12 ships
+  - ADMIRAL: 15 ships, FLEET_ADMIRAL: 20 ships maximum
+- **Formation Strategies**: Three tactical approaches for battles
+  - DEFENSIVE: Focus on shield and damage mitigation
+  - AGGRESSIVE: Emphasis on attack power and first strike
+  - TACTICAL: Balanced approach with strategic positioning
+- **Database Integration**: Seamless integration with existing progression system
+  - Work types align with military rank progression theme
+  - Cooldowns and income scale appropriately with rank advancement
+  - Full audit trail of all work activities for game balance monitoring
+
 ## [0.4.0] - 2025-07-12
 
 ### Added

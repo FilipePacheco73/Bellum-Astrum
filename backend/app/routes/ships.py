@@ -74,4 +74,4 @@ def get_ship_route(ship_id: int, request: Request, db: Session = Depends(get_db)
                 "exception_type": type(e).__name__
             }
         )
-        raise HTTPException(status_code=500, detail="Ship lookup failed")
+        raise HTTPException(status_code=500, detail=f"Ship lookup failed: {str(e)}")

@@ -68,7 +68,7 @@ def buy_ship_route(
                 "exception_type": type(e).__name__
             }
         )
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=f"Buy ship failed: {str(e)}")
 
 @router.post("/sell/{owned_ship_number}")
 def sell_ship_route(
@@ -129,4 +129,4 @@ def sell_ship_route(
                 "exception_type": type(e).__name__
             }
         )
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=f"Sell ship failed: {str(e)}")

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from backend.app.routes import ships, users, market, battle, logs, shipyard
+from backend.app.routes import ships, users, market, battle, logs, shipyard, work
 from database import shutdown_database, check_database_health
 
 @asynccontextmanager
@@ -36,6 +36,7 @@ app.include_router(market.router, prefix="/api/v1") # Using market.router as def
 app.include_router(battle.router, prefix="/api/v1")  # Using battle.router as defined in battle.py
 app.include_router(shipyard.router, prefix="/api/v1")  # Using shipyard.router as defined in shipyard.py
 app.include_router(logs.router, prefix="/api/v1")  # Using logs.router as defined in logs.py
+app.include_router(work.router, prefix="/api/v1")  # Using work.router as defined in work.py
 
 
 @app.get("/")
