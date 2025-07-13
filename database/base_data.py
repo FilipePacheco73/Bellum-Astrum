@@ -102,20 +102,20 @@ SHIPS_DATA: List[Dict[str, Any]] = [
 # USER DATA
 # =============================================================================
 
-# Format: (nickname, email_var, elo, currency, experience, level, rank_name)
+# Format: (nickname, email_var, elo, currency, experience, level, rank_name, formation)
 _USER_TEMPLATES = [
-    ("Admin", ADMIN_EMAIL, 1000, 9999999, 0, 1, "RECRUIT"),                                 # Admin especial
-    ("NPC_Astro", NPC_ASTRO_EMAIL, 800, 2500, 0, 1, "RECRUIT"),                             # Level 1 - Recruit
-    ("NPC_Cyber", NPC_CYBER_EMAIL, 950, 4000, 250, 3, "ENSIGN"),                            # Level 3 - Ensign
-    ("NPC_Orion", NPC_ORION_EMAIL, 1100, 8000, 625, 5, "LIEUTENANT"),                       # Level 5 - Lieutenant
-    ("NPC_Vega", NPC_VEGA_EMAIL, 1250, 20000, 1562, 8, "LIEUTENANT_COMMANDER"),             # Level 8
-    ("NPC_Nebula", NPC_NEBULA_EMAIL, 1400, 35000, 5859, 13, "COMMANDER"),                   # Level 13
-    ("NPC_Pulsar", NPC_PULSAR_EMAIL, 1550, 60000, 28515, 21, "CAPTAIN"),                    # Level 21
-    ("NPC_Quasar", NPC_QUASAR_EMAIL, 1700, 100000, 185937, 35, "COMMODORE"),                # Level 35
-    ("NPC_Titan", NPC_TITAN_EMAIL, 1850, 180000, 1532031, 55, "REAR_ADMIRAL"),              # Level 55
-    ("NPC_Solaris", NPC_SOLARIS_EMAIL, 2000, 300000, 13672265, 89, "VICE_ADMIRAL"),         # Level 89
-    ("NPC_Andromeda", NPC_ANDROMEDA_EMAIL, 2150, 500000, 125000000, 144, "ADMIRAL"),        # Level 144
-    ("NPC_Centauri", NPC_CENTAURI_EMAIL, 2500, 1000000, 500000000, 250, "FLEET_ADMIRAL"),   # Level 250
+    ("Admin", ADMIN_EMAIL, 1000, 9999999, 0, 1, "RECRUIT", "TACTICAL"),                                 # Admin especial - Tactical
+    ("NPC_Astro", NPC_ASTRO_EMAIL, 800, 2500, 0, 1, "RECRUIT", "AGGRESSIVE"),                           # Level 1 - Recruit - Aggressive novato
+    ("NPC_Cyber", NPC_CYBER_EMAIL, 950, 4000, 250, 3, "ENSIGN", "TACTICAL"),                            # Level 3 - Ensign - Tactical tech
+    ("NPC_Orion", NPC_ORION_EMAIL, 1100, 8000, 625, 5, "LIEUTENANT", "DEFENSIVE"),                      # Level 5 - Lieutenant - Defensive hunter
+    ("NPC_Vega", NPC_VEGA_EMAIL, 1250, 20000, 1562, 8, "LIEUTENANT_COMMANDER", "AGGRESSIVE"),           # Level 8 - Aggressive star
+    ("NPC_Nebula", NPC_NEBULA_EMAIL, 1400, 35000, 5859, 13, "COMMANDER", "DEFENSIVE"),                  # Level 13 - Defensive cloud
+    ("NPC_Pulsar", NPC_PULSAR_EMAIL, 1550, 60000, 28515, 21, "CAPTAIN", "AGGRESSIVE"),                  # Level 21 - Aggressive pulse
+    ("NPC_Quasar", NPC_QUASAR_EMAIL, 1700, 100000, 185937, 35, "COMMODORE", "TACTICAL"),                # Level 35 - Tactical energy
+    ("NPC_Titan", NPC_TITAN_EMAIL, 1850, 180000, 1532031, 55, "REAR_ADMIRAL", "DEFENSIVE"),             # Level 55 - Defensive giant
+    ("NPC_Solaris", NPC_SOLARIS_EMAIL, 2000, 300000, 13672265, 89, "VICE_ADMIRAL", "AGGRESSIVE"),       # Level 89 - Aggressive solar
+    ("NPC_Andromeda", NPC_ANDROMEDA_EMAIL, 2150, 500000, 125000000, 144, "ADMIRAL", "TACTICAL"),        # Level 144 - Tactical galaxy
+    ("NPC_Centauri", NPC_CENTAURI_EMAIL, 2500, 1000000, 500000000, 250, "FLEET_ADMIRAL", "TACTICAL"),   # Level 250 - Master Tactical
 ]
 
 # Convert tuples to dictionaries with common defaults
@@ -135,6 +135,7 @@ USERS_DATA: List[Dict[str, Any]] = [
         "experience": int(experience),
         "level": int(level),
         "rank": get_rank_enum(rank_name),
+        "default_formation": formation,
         "victories": 0,
         "defeats": 0,
         "damage_dealt": 0.0,
@@ -142,27 +143,28 @@ USERS_DATA: List[Dict[str, Any]] = [
         "ships_destroyed_by_user": 0,
         "ships_lost_by_user": 0
     }
-    for nickname, email, elo, currency, experience, level, rank_name in _USER_TEMPLATES
+    for nickname, email, elo, currency, experience, level, rank_name, formation in _USER_TEMPLATES
 ]
 
 # =============================================================================
 # RANK BONUS DATA
 # =============================================================================
 
-# Format: (rank, min_level, attack_mult%, shield_mult%, hp_mult%, evasion_bonus, fire_rate_mult%, value_mult%)
+# Format: (rank, min_level, attack_mult%, shield_mult%, hp_mult%, evasion_bonus, fire_rate_mult%, value_mult%, max_active_ships)
 
+# Format: (rank, min_level, attack, shield, hp, evasion, fire_rate, value, max_active_ships, work_income, work_cooldown_hours)
 _RANK_BONUS_TEMPLATES = [
-    (UserRank.RECRUIT, 1, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00),
-    (UserRank.ENSIGN, 3, 0.05, 0.05, 0.05, 0.01, 0.05, 0.10),
-    (UserRank.LIEUTENANT, 5, 0.10, 0.10, 0.10, 0.02, 0.10, 0.20),
-    (UserRank.LIEUTENANT_COMMANDER, 8, 0.15, 0.15, 0.15, 0.03, 0.15, 0.30),
-    (UserRank.COMMANDER, 13, 0.20, 0.20, 0.20, 0.04, 0.20, 0.40),
-    (UserRank.CAPTAIN, 21, 0.25, 0.25, 0.25, 0.05, 0.25, 0.50),
-    (UserRank.COMMODORE, 35, 0.30, 0.30, 0.30, 0.06, 0.30, 0.60),
-    (UserRank.REAR_ADMIRAL, 55, 0.35, 0.35, 0.35, 0.07, 0.35, 0.70),
-    (UserRank.VICE_ADMIRAL, 89, 0.40, 0.40, 0.40, 0.08, 0.40, 0.80),
-    (UserRank.ADMIRAL, 144, 0.50, 0.50, 0.50, 0.10, 0.50, 1.00),
-    (UserRank.FLEET_ADMIRAL, 233, 0.60, 0.60, 0.60, 0.12, 0.60, 1.20),
+    (UserRank.RECRUIT, 1, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1, 700, 2),
+    (UserRank.ENSIGN, 3, 0.05, 0.05, 0.05, 0.01, 0.05, 0.10, 2, 1000, 3),
+    (UserRank.LIEUTENANT, 5, 0.10, 0.10, 0.10, 0.02, 0.10, 0.20, 3, 1400, 3),
+    (UserRank.LIEUTENANT_COMMANDER, 8, 0.15, 0.15, 0.15, 0.03, 0.15, 0.30, 4, 1900, 4),
+    (UserRank.COMMANDER, 13, 0.20, 0.20, 0.20, 0.04, 0.20, 0.40, 5, 2600, 4),
+    (UserRank.CAPTAIN, 21, 0.25, 0.25, 0.25, 0.05, 0.25, 0.50, 6, 3500, 5),
+    (UserRank.COMMODORE, 35, 0.30, 0.30, 0.30, 0.06, 0.30, 0.60, 8, 4750, 6),
+    (UserRank.REAR_ADMIRAL, 55, 0.35, 0.35, 0.35, 0.07, 0.35, 0.70, 10, 6500, 7),
+    (UserRank.VICE_ADMIRAL, 89, 0.40, 0.40, 0.40, 0.08, 0.40, 0.80, 12, 8750, 8),
+    (UserRank.ADMIRAL, 144, 0.50, 0.50, 0.50, 0.10, 0.50, 1.00, 15, 12500, 10),
+    (UserRank.FLEET_ADMIRAL, 233, 0.60, 0.60, 0.60, 0.12, 0.60, 1.20, 20, 17500, 12),
 ]
 
 RANK_BONUSES_DATA: List[Dict[str, Any]] = [
@@ -175,8 +177,11 @@ RANK_BONUSES_DATA: List[Dict[str, Any]] = [
         "evasion": float(evasion),
         "fire_rate": float(fire_rate),
         "value": float(value),
+        "max_active_ships": int(max_active_ships),
+        "work_income": int(work_income),
+        "work_cooldown_hours": int(work_cooldown_hours),
     }
-    for rank, min_level, attack, shield, hp, evasion, fire_rate, value in _RANK_BONUS_TEMPLATES
+    for rank, min_level, attack, shield, hp, evasion, fire_rate, value, max_active_ships, work_income, work_cooldown_hours in _RANK_BONUS_TEMPLATES
 ]
 
 
@@ -184,24 +189,119 @@ RANK_BONUSES_DATA: List[Dict[str, Any]] = [
 # OWNED SHIPS DATA (Hardcoded assignments based on rank)
 # =============================================================================
 
-# Ship assignments based on rank - each user gets a specific ship based on their rank
+# Ship assignments based on rank - users get ships according to their rank limits
 # Format: (nickname, ship_name)
 _OWNED_SHIPS_ASSIGNMENTS = [
-    # Admin gets a balanced mid-tier ship (Storm series)
+    # Admin gets a balanced mid-tier ship (Storm series) - RECRUIT rank = 1 ship
     ("Admin", "Breeze"),
     
-    # NPCs get ships appropriate to their rank
-    ("NPC_Astro", "Falcon"),        # RECRUIT - Tier 1 Balanced
-    ("NPC_Cyber", "Sparrow"),       # ENSIGN - Tier 2 Balanced
-    ("NPC_Orion", "Kestrel"),       # LIEUTENANT - Tier 2 Glass Cannon
-    ("NPC_Vega", "Breeze"),         # LIEUTENANT_COMMANDER - Tier 3 Balanced
-    ("NPC_Nebula", "Lightning"),    # COMMANDER - Tier 3 Glass Cannon
-    ("NPC_Pulsar", "Comet"),        # CAPTAIN - Tier 4 Balanced
-    ("NPC_Quasar", "Nova"),         # COMMODORE - Tier 4 Glass Cannon
-    ("NPC_Titan", "Galaxy"),        # REAR_ADMIRAL - Tier 5 Balanced
-    ("NPC_Solaris", "Quasar"),      # VICE_ADMIRAL - Tier 5 Glass Cannon
-    ("NPC_Andromeda", "Orion"),     # ADMIRAL - Tier 6 Balanced
-    ("NPC_Centauri", "Phoenix"),    # FLEET_ADMIRAL - Tier 6 Glass Cannon
+    # RECRUIT (1 ship max) - Tier 1
+    ("NPC_Astro", "Falcon"),
+    
+    # ENSIGN (2 ships max) - Tier 1-2
+    ("NPC_Cyber", "Sparrow"),
+    ("NPC_Cyber", "Hawk"),
+    
+    # LIEUTENANT (3 ships max) - Tier 1-2
+    ("NPC_Orion", "Kestrel"),
+    ("NPC_Orion", "Eagle"),
+    ("NPC_Orion", "Swift"),
+    
+    # LIEUTENANT_COMMANDER (4 ships max) - Tier 2-3
+    ("NPC_Vega", "Breeze"),
+    ("NPC_Vega", "Osprey"),
+    ("NPC_Vega", "Harrier"),
+    ("NPC_Vega", "Raven"),
+    
+    # COMMANDER (5 ships max) - Tier 2-3
+    ("NPC_Nebula", "Lightning"),
+    ("NPC_Nebula", "Thunder"),
+    ("NPC_Nebula", "Tempest"),
+    ("NPC_Nebula", "Storm"),
+    ("NPC_Nebula", "Sparrow"),
+    
+    # CAPTAIN (6 ships max) - Tier 3-4
+    ("NPC_Pulsar", "Comet"),
+    ("NPC_Pulsar", "Breeze"),
+    ("NPC_Pulsar", "Nova"),
+    ("NPC_Pulsar", "Meteor"),
+    ("NPC_Pulsar", "Pulsar"),
+    ("NPC_Pulsar", "Asteroid"),
+    
+    # COMMODORE (8 ships max) - Tier 3-4
+    ("NPC_Quasar", "Nova"),
+    ("NPC_Quasar", "Lightning"),
+    ("NPC_Quasar", "Thunder"),
+    ("NPC_Quasar", "Tempest"),
+    ("NPC_Quasar", "Comet"),
+    ("NPC_Quasar", "Meteor"),
+    ("NPC_Quasar", "Pulsar"),
+    ("NPC_Quasar", "Asteroid"),
+    
+    # REAR_ADMIRAL (10 ships max) - Tier 4-5
+    ("NPC_Titan", "Galaxy"),
+    ("NPC_Titan", "Comet"),
+    ("NPC_Titan", "Nova"),
+    ("NPC_Titan", "Meteor"),
+    ("NPC_Titan", "Pulsar"),
+    ("NPC_Titan", "Asteroid"),
+    ("NPC_Titan", "Quasar"),
+    ("NPC_Titan", "Nebula"),
+    ("NPC_Titan", "Vortex"),
+    ("NPC_Titan", "Supernova"),
+    
+    # VICE_ADMIRAL (12 ships max) - Tier 4-5
+    ("NPC_Solaris", "Quasar"),
+    ("NPC_Solaris", "Galaxy"),
+    ("NPC_Solaris", "Nebula"),
+    ("NPC_Solaris", "Vortex"),
+    ("NPC_Solaris", "Supernova"),
+    ("NPC_Solaris", "Comet"),
+    ("NPC_Solaris", "Nova"),
+    ("NPC_Solaris", "Meteor"),
+    ("NPC_Solaris", "Pulsar"),
+    ("NPC_Solaris", "Asteroid"),
+    ("NPC_Solaris", "Lightning"),
+    ("NPC_Solaris", "Thunder"),
+    
+    # ADMIRAL (15 ships max) - Tier 5-6
+    ("NPC_Andromeda", "Orion"),
+    ("NPC_Andromeda", "Galaxy"),
+    ("NPC_Andromeda", "Quasar"),
+    ("NPC_Andromeda", "Nebula"),
+    ("NPC_Andromeda", "Vortex"),
+    ("NPC_Andromeda", "Supernova"),
+    ("NPC_Andromeda", "Phoenix"),
+    ("NPC_Andromeda", "Titan"),
+    ("NPC_Andromeda", "Seraph"),
+    ("NPC_Andromeda", "Leviathan"),
+    ("NPC_Andromeda", "Comet"),
+    ("NPC_Andromeda", "Nova"),
+    ("NPC_Andromeda", "Meteor"),
+    ("NPC_Andromeda", "Pulsar"),
+    ("NPC_Andromeda", "Asteroid"),
+    
+    # FLEET_ADMIRAL (20 ships max) - Tier 4-6 (Full arsenal)
+    ("NPC_Centauri", "Phoenix"),
+    ("NPC_Centauri", "Orion"),
+    ("NPC_Centauri", "Titan"),
+    ("NPC_Centauri", "Seraph"),
+    ("NPC_Centauri", "Leviathan"),
+    ("NPC_Centauri", "Galaxy"),
+    ("NPC_Centauri", "Quasar"),
+    ("NPC_Centauri", "Nebula"),
+    ("NPC_Centauri", "Vortex"),
+    ("NPC_Centauri", "Supernova"),
+    ("NPC_Centauri", "Comet"),
+    ("NPC_Centauri", "Nova"),
+    ("NPC_Centauri", "Meteor"),
+    ("NPC_Centauri", "Pulsar"),
+    ("NPC_Centauri", "Asteroid"),
+    ("NPC_Centauri", "Lightning"),
+    ("NPC_Centauri", "Thunder"),
+    ("NPC_Centauri", "Tempest"),
+    ("NPC_Centauri", "Storm"),
+    ("NPC_Centauri", "Breeze"),
 ]
 
 OWNED_SHIPS_ASSIGNMENTS: List[Dict[str, Any]] = [

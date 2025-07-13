@@ -46,6 +46,10 @@ class GameAction(Enum):
     CURRENCY_EARNED = "CURRENCY_EARNED"
     CURRENCY_SPENT = "CURRENCY_SPENT"
     
+    # Work actions
+    WORK_PERFORM = "WORK_PERFORM"
+    WORK_STATUS_CHECK = "WORK_STATUS_CHECK"
+    
     # System actions
     DATABASE_ERROR = "DATABASE_ERROR"
     API_ERROR = "API_ERROR"

@@ -80,7 +80,7 @@ def register_user(user: UserCreate, request: Request, db: Session = Depends(get_
                 "exception_type": type(e).__name__
             }
         )
-        raise HTTPException(status_code=500, detail="Registration failed")
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 @router.post("/login")
 def login_user(user: UserLogin, request: Request, db: Session = Depends(get_db)):
@@ -138,7 +138,7 @@ def login_user(user: UserLogin, request: Request, db: Session = Depends(get_db))
                 "exception_type": type(e).__name__
             }
         )
-        raise HTTPException(status_code=500, detail="Login failed")
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
 @router.get("/", response_model=list[UserResponse])
 def list_users_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
