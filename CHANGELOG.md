@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-07-15
+
+### Added
+- **Constants Update**: Added `SELL_VALUE_MULTIPLIER` and `ELO_BASE_CHANGE` constants for ship sell value and Elo rating calculations.
+- **Battle System Enhancements**: Integrated constants for damage calculation, XP gain, and Elo updates.
+  - Damage now considers `SHIELD_DAMAGE_REDUCTION` and `DAMAGE_VARIATION_RANGE`.
+  - XP gain uses `DIFFICULTY_MULTIPLIERS` for level-based scaling.
+  - Elo updates leverage `ELO_BASE_CHANGE` and `ELO_EXPECTED_SCORE_DIVISOR`.
+- **Market System Update**: Ship sell value now calculated using `SELL_VALUE_MULTIPLIER`.
+- **Documentation Improvements**: Updated `README.md` to reflect the latest features and technical details.
+
+### Fixed
+- **Changelog Consistency**: Ensured all recent changes are properly documented.
+- **Code Refactoring**: Replaced hardcoded values in `progression_utils.py` with constants from `constants.py` for better maintainability.
+
 ## [0.5.0] - 2025-07-13
 
 ### Added
@@ -428,7 +443,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated all pages to use consistent GameLayout instead of PageLayout
 - **UI/UX Improvements**:
   - Dashboard now displays ELO rank and damage statistics instead of level/experience system
-  - Updated stats cards to show relevant game metrics: victories, currency, damage dealt, and defeats
+  - Updated stats cards to show relevant game metrics: victories, currency, damage, and defeats
   - Improved user info display with ELO rating and total damage caused
   - Modern glass-morphism design with backdrop blur effects
 - **Navigation System**: Complete sidebar navigation with game-themed icons and descriptions
