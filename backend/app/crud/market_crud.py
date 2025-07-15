@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from database import User, Ship, OwnedShips
+from backend.app.utils.constants import SELL_VALUE_MULTIPLIER
 
 # --- Market CRUD Operations ---
 def buy_ship(db: Session, user_id: int, ship_id: int):
@@ -48,7 +49,7 @@ def sell_ship(db: Session, user_id: int, owned_ship_id: int):
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         return None, "User not found"
-    sell_value = int(owned_ship.actual_value * 0.4)
+    sell_value = int(owned_ship.actual_value * SELL_VALUE_MULTIPLIER)
     user.currency_value += sell_value
     owned_ship.status = 'sold'
     db.commit()
