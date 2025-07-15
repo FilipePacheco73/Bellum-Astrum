@@ -4,6 +4,9 @@ from datetime import datetime, UTC
 from backend.app.utils.progression_utils import apply_rank_bonus_to_ship_stats
 import random
 from typing import Union, List
+from backend.app.utils.constants import BASE_XP_WIN, BASE_XP_LOSS, DIFFICULTY_MULTIPLIERS
+from backend.app.utils.constants import FORMATION_MODIFIERS, SHIELD_DAMAGE_REDUCTION, DAMAGE_VARIATION_RANGE, CREDITS_AWARDED_MULTIPLIER
+from backend.app.utils.constants import ELO_BASE_CHANGE, ELO_EXPECTED_SCORE_DIVISOR
 
 
 # --- Formation System Helper Functions ---
@@ -14,12 +17,7 @@ def get_formation_evasion_modifier(formation: str) -> float:
     AGGRESSIVE: Normal evasion (no modifier)
     TACTICAL: -10% evasion (penalty for focusing on high-attack targets)
     """
-    modifiers = {
-        "DEFENSIVE": 1.2,   # +20% evasion
-        "AGGRESSIVE": 1.0,  # Normal evasion
-        "TACTICAL": 0.9     # -10% evasion
-    }
-    return modifiers.get(formation, 1.0)
+    return FORMATION_MODIFIERS.get(formation, 1.0)
 
 
 def select_target_by_formation(formation: str, enemy_ships: List[dict]) -> dict:
@@ -85,6 +83,48 @@ def prepare_ship_stats(ship: OwnedShips, user: User, db: Session) -> dict:
     enhanced_stats['ship_obj'] = ship  # Preserve ship object reference
     
     return enhanced_stats
+
+
+def calculate_elo_change(winner_elo: float, loser_elo: float) -> tuple[float, float]:
+    """
+    Calculate the Elo rating change for the winner and loser of a match.
+
+    Args:
+        winner_elo (float): Current Elo rating of the winner.
+        loser_elo (float): Current Elo rating of the loser.
+
+    Returns:
+        tuple[float, float]: Updated Elo ratings for the winner and loser.
+    """
+    expected_winner_score = 1 / (1 + 10 ** ((loser_elo - winner_elo) / ELO_EXPECTED_SCORE_DIVISOR))
+    expected_loser_score = 1 / (1 + 10 ** ((winner_elo - loser_elo) / ELO_EXPECTED_SCORE_DIVISOR))
+
+    winner_elo_change = ELO_BASE_CHANGE * (1 - expected_winner_score)
+    loser_elo_change = ELO_BASE_CHANGE * (0 - expected_loser_score)
+
+    return winner_elo + winner_elo_change, loser_elo + loser_elo_change
+
+
+def calculate_xp_gain(winner_level, loser_level, base_xp_winner=BASE_XP_WIN, base_xp_loser=BASE_XP_LOSS):
+    """
+    Calculate XP gain for both winner and loser based on level difference.
+    Winner always gets more XP, but fighting higher level opponents gives more XP.
+    Fighting lower level opponents gives less XP.
+    """
+    level_diff = loser_level - winner_level
+
+    # XP multiplier based on level difference
+    if level_diff > 0:  # Fighting higher level opponent
+        multiplier = 1 + (level_diff * DIFFICULTY_MULTIPLIERS['higher_level'])  # +15% per level difference
+    elif level_diff < 0:  # Fighting lower level opponent
+        multiplier = max(DIFFICULTY_MULTIPLIERS['min_multiplier'], 1 + (level_diff * DIFFICULTY_MULTIPLIERS['lower_level']))  # -10% per level, minimum 30%
+    else:  # Same level
+        multiplier = 1.0
+
+    winner_xp = int(base_xp_winner * multiplier)
+    loser_xp = int(base_xp_loser * multiplier)
+
+    return winner_xp, loser_xp
 
 
 # --- Battle CRUD Operations ---
@@ -192,8 +232,8 @@ def battle_between_users(
                     continue
                 
                 # Calculate damage
-                base_damage = attacking_ship['attack'] - (target_ship['shield'] * 0.5)
-                damage = base_damage * random.uniform(0.85, 1.15)
+                base_damage = attacking_ship['attack'] - (target_ship['shield'] * SHIELD_DAMAGE_REDUCTION)
+                damage = base_damage * random.uniform(*DAMAGE_VARIATION_RANGE)
                 damage = max(1, damage)
                 
                 # Apply damage
@@ -239,19 +279,19 @@ def battle_between_users(
                     continue
                 
                 # Calculate damage
-                base_damage = attacking_ship['attack'] - (target_ship['shield'] * 0.5)
-                damage = base_damage * random.uniform(0.85, 1.15)
+                base_damage = attacking_ship['attack'] - (target_ship['shield'] * SHIELD_DAMAGE_REDUCTION)
+                damage = base_damage * random.uniform(*DAMAGE_VARIATION_RANGE)
                 damage = max(1, damage)
-                
+
                 # Apply damage
                 target_ship['current_hp'] -= damage
                 total_damage2 += damage
-                
+
                 battle_log.append(
                     f"{attacking_ship['ship_name']} hits {target_ship['ship_name']} for {damage:.1f} damage! "
                     f"({target_ship['ship_name']} HP: {max(0, target_ship['current_hp']):.1f})"
                 )
-                
+
                 # Remove destroyed ship from active list
                 if target_ship['current_hp'] <= 0:
                     battle_log.append(f"{target_ship['ship_name']} destroyed!")
@@ -424,9 +464,23 @@ def battle_between_users(
     else:
         loser_value = sum(ship_stats['value'] for ship_stats in 
                          (user2_fleet if winner == user1 else user1_fleet))
-        credits_awarded = loser_value * 0.1
+        credits_awarded = loser_value * CREDITS_AWARDED_MULTIPLIER
         winner.currency_value += credits_awarded
         battle_log.append(f"{winner.nickname} awarded {credits_awarded:.0f} credits!")
+    
+    # Calculate and update Elo ratings
+    winner.elo_rank, loser.elo_rank = calculate_elo_change(winner.elo_rank, loser.elo_rank)
+    
+    # Calculate XP gain for winner and loser
+    if not winner.nickname.startswith("NPC_"):
+        winner_xp, _ = calculate_xp_gain(winner.level, loser.level)
+        winner.experience += winner_xp
+        battle_log.append(f"{winner.nickname} gains {winner_xp} XP!")
+
+    if not loser.nickname.startswith("NPC_"):
+        _, loser_xp = calculate_xp_gain(winner.level, loser.level)
+        loser.experience += loser_xp
+        battle_log.append(f"{loser.nickname} gains {loser_xp} XP!")
     
     # Create and save battle history
     final_user1_hp = sum(max(0, ship['current_hp']) for ship in user1_fleet)

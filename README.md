@@ -442,7 +442,8 @@ CRUD refactor & logging system         :done,    des14, 2025-07-09, 1d
 PostgreSQL migration & health checks   :done,    des15, 2025-07-09, 1d
 Shipyard system & GitHub automation    :done,    des16, 2025-07-12, 1d
 Work system & NPC progression          :done,    des17, 2025-07-12, 1d
-Multi-ship battles & formation system  :active,  des18, 2025-07-13, 1d
+Multi-ship battles & formation system  :done,    des18, 2025-07-13, 1d
+Constants refactor & changelog updates      :done,    des19, 2025-07-14, 1d
 ```
 
 ---

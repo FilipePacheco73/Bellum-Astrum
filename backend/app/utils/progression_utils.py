@@ -4,11 +4,7 @@ and for applying rank bonuses to ships during battles.
 """
 from database.models import UserRank, RankBonus
 from sqlalchemy.orm import Session
-
-# Exponential XP growth: XP required for each level increases exponentially
-# Example: XP for next level = base_xp * (growth_factor ** (level-1))
-BASE_XP = 100
-GROWTH_FACTOR = 1.5
+from backend.app.utils.constants import BASE_XP, GROWTH_FACTOR
 
 def get_level_for_experience(experience: int) -> int:
     """
