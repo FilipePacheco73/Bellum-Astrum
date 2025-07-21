@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
+from backend.app.database import get_db
 from backend.app.crud.log_crud import create_log, get_log, get_logs, delete_log
 from backend.app.schemas.log_schemas import SystemLogCreate, SystemLogResponse, LogQueryRequest, LogQueryResponse
 from typing import List

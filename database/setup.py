@@ -20,11 +20,6 @@ Usage:
 import argparse
 import sys
 import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-env_file = os.getenv("ENV_FILE", ".env")
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), env_file))
 
 # Add the current directory to Python path so we can import the database module
 current_dir = os.path.dirname(__file__)
