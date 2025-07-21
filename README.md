@@ -172,20 +172,20 @@ DATABASE_URL_PROD=postgresql://username:password@prod-host:5432/bellum_astrum_pr
 DB_ECHO=False
 
 # User seeding (for initial data)
-ADMIN_EMAIL=admin@bellumastrum.com
-ADMIN_PASSWORD=admin123
-NPC_PASSWORD=npc123
-NPC_ASTRO_EMAIL=astro@npc.com
-NPC_CYBER_EMAIL=cyber@npc.com
-NPC_ORION_EMAIL=orion@npc.com
-NPC_VEGA_EMAIL=vega@npc.com
-NPC_NEBULA_EMAIL=nebula@npc.com
-NPC_PULSAR_EMAIL=pulsar@npc.com
-NPC_QUASAR_EMAIL=quasar@npc.com
-NPC_TITAN_EMAIL=titan@npc.com
-NPC_SOLARIS_EMAIL=solaris@npc.com
-NPC_ANDROMEDA_EMAIL=andromeda@npc.com
-NPC_CENTAURI_EMAIL=centauri@npc.com
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=your-admin-password-here
+NPC_PASSWORD=your-npc-password-here
+NPC_ASTRO_EMAIL=astro@example.com
+NPC_CYBER_EMAIL=cyber@example.com
+NPC_ORION_EMAIL=orion@example.com
+NPC_VEGA_EMAIL=vega@example.com
+NPC_NEBULA_EMAIL=nebula@example.com
+NPC_PULSAR_EMAIL=pulsar@example.com
+NPC_QUASAR_EMAIL=quasar@example.com
+NPC_TITAN_EMAIL=titan@example.com
+NPC_SOLARIS_EMAIL=solaris@example.com
+NPC_ANDROMEDA_EMAIL=andromeda@example.com
+NPC_CENTAURI_EMAIL=centauri@example.com
 ```
 
 **`backend/.env`** (Backend configuration):
@@ -280,21 +280,22 @@ DATABASE_URL_LOCAL=postgresql://username:password@ep-example-123456.us-east-1.aw
 
 #### Using Local PostgreSQL
 ```env
-DATABASE_URL_LOCAL=postgresql://postgres:password@localhost:5432/bellum_astrum
+DATABASE_URL_LOCAL=postgresql://postgres:your-password@localhost:5432/bellum_astrum
 ```
 
 #### Using Docker PostgreSQL
 ```bash
 # Start PostgreSQL container
-docker run --name bellum-postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=bellum_astrum -p 5432:5432 -d postgres:15
+docker run --name bellum-postgres -e POSTGRES_PASSWORD=your-secure-password -e POSTGRES_DB=bellum_astrum -p 5432:5432 -d postgres:15
 
 # Use this URL
-DATABASE_URL_LOCAL=postgresql://postgres:password@localhost:5432/bellum_astrum
+DATABASE_URL_LOCAL=postgresql://postgres:your-secure-password@localhost:5432/bellum_astrum
 ```
 
 ### 🚨 Important Notes
 
-- **Security**: Change `JWT_SECRET_KEY` in production environments
+- **Security**: Always change default passwords and JWT keys in production environments
+- **Credentials**: Never use default passwords like 'admin123' or 'password' in production
 - **Database**: Ensure your PostgreSQL database exists before running setup commands
 - **Environment**: The system automatically uses the appropriate environment based on `ENVIRONMENT` variable
 - **NPCs**: Sample data includes 11 NPCs with different ranks and ships for testing battles
