@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from database import User, OwnedShips, BattleHistory
+from database.models import User, OwnedShips, BattleHistory
 from datetime import datetime, UTC
 from backend.app.utils.progression_utils import apply_rank_bonus_to_ship_stats
 import random

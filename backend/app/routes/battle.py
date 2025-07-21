@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from backend.app.utils.auth_utils import get_current_user
 from sqlalchemy.orm import Session
-from database import get_db
+from backend.app.database import get_db
 from backend.app.crud.battle_crud import battle_between_users, activate_owned_ship, deactivate_owned_ship, get_user_ship_limits_info
 from backend.app.schemas.battle_schemas import BattleHistoryResponse, BattleRequest
 from backend.app.schemas.owned_ship_schemas import ActivateShipResponse

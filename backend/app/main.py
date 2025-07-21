@@ -2,15 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from backend.app.routes import ships, users, market, battle, logs, shipyard, work
-from database import shutdown_database, check_database_health
+from backend.app.database import shutdown_database, check_database_health, init_database
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Lifespan event handler for FastAPI application.
-    Manages database cleanup on shutdown.
+    Manages database initialization and cleanup.
     """
-    # Startup - database is managed separately via setup.py scripts
+    # Startup - initialize database tables
+    init_database()
     yield
     # Shutdown
     shutdown_database()
@@ -46,9 +47,9 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint to verify API and database status"""
-    db_healthy = check_database_health()
+    db_health = check_database_health()
     return {
-        "status": "healthy" if db_healthy else "unhealthy",
+        "status": "healthy" if db_health["status"] == "healthy" else "unhealthy",
         "api": "running",
-        "database": "connected" if db_healthy else "disconnected"
+        "database": db_health
     }

@@ -5,6 +5,69 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2025-07-21
+
+### Added
+- **Backend Configuration Module**: New dedicated configuration management for backend
+  - Created `backend/app/config.py` for centralized backend configuration
+  - Environment-based configuration with support for local, dev, and prod environments
+  - JWT secret key validation and database URL management
+- **Backend Database Module**: Separate database session management for backend
+  - Created `backend/app/database.py` with backend-specific database configuration
+  - Improved database health check with detailed status information
+  - Enhanced session management and connection handling
+- **Multi-Environment Support**: Enhanced environment configuration system
+  - Frontend API configuration now supports multiple environments via `VITE_ENVIRONMENT`
+  - Database configuration supports environment-specific URLs (`DATABASE_URL_LOCAL`, `DATABASE_URL_DEV`, `DATABASE_URL_PROD`)
+  - Centralized environment variable management in database config
+
+### Changed
+- **Import Structure Refactoring**: Major cleanup of import paths throughout the application
+  - Updated all CRUD modules to use `database.models` instead of `database` for model imports
+  - All routes now import database session from `backend.app.database` instead of `database`
+  - Authentication utilities updated to use backend configuration
+  - Consistent import patterns across all backend modules
+- **Configuration Architecture**: Improved separation of concerns
+  - Database module configuration separated from backend configuration
+  - Environment variables now loaded from appropriate locations
+  - Removed redundant environment loading in database setup script
+- **Health Check Enhancement**: Improved API health check endpoint
+  - Health check now returns detailed database status information
+  - Better error handling and status reporting
+  - Enhanced debugging information for database connectivity
+- **Frontend API Configuration**: Enhanced API URL management
+  - Dynamic API base URL selection based on environment
+  - Support for multiple deployment environments
+  - Improved configuration flexibility for different stages
+
+### Fixed
+- **Import Resolution Issues**: Resolved all import conflicts and circular dependencies
+  - Fixed database model imports across all CRUD operations
+  - Corrected session dependency imports in all route modules
+  - Resolved authentication utility import paths
+- **Configuration Consistency**: Standardized configuration loading
+  - Fixed environment variable loading in database and backend modules
+  - Resolved configuration conflicts between modules
+  - Ensured consistent environment handling across the application
+- **Test Compatibility**: Updated test suite for new architecture
+  - Fixed health check test to match new response format
+  - Updated database engine imports in test modules
+  - Ensured test compatibility with refactored import structure
+
+### Technical Improvements
+- **Modular Architecture**: Better separation between database and backend concerns
+  - Database module handles pure data layer operations
+  - Backend module manages API-specific configuration and sessions
+  - Clear boundaries between different architectural layers
+- **Environment Management**: Robust multi-environment support
+  - Local development with automatic database initialization
+  - Staging and production environment configuration
+  - Flexible deployment options with environment-specific settings
+- **Code Organization**: Improved maintainability and structure
+  - Consistent import patterns and module organization
+  - Better configuration management and validation
+  - Enhanced error handling and debugging capabilities
+
 ## [0.5.1] - 2025-07-15
 
 ### Added

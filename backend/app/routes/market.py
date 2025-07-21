@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from backend.app.utils.auth_utils import get_current_user
 from sqlalchemy.orm import Session
-from database import get_db
+from backend.app.database import get_db
 from backend.app.crud.market_crud import buy_ship, sell_ship
 from backend.app.schemas.market_schemas import MarketBuyRequest, MarketBuyResponse, MarketSellRequest, MarketSellResponse
 from backend.app.utils import log_user_action, log_error, GameAction

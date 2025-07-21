@@ -1,7 +1,8 @@
 # app/routes/users.py
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from database import get_db, User
+from backend.app.database import get_db
+from database.models import User
 from backend.app.schemas.user_schemas import UserCreate, UserLogin, UserResponse
 from backend.app.crud import user_crud
 from backend.app.utils import create_access_token, log_user_action, log_security_event, log_error, GameAction

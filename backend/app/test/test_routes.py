@@ -4,7 +4,7 @@ from backend.app.main import app
 import random
 import string
 from sqlalchemy import text
-from database import engine
+from backend.app.database import engine
 
 client = TestClient(app)
 
@@ -15,7 +15,7 @@ def test_health_check():
     data = response.json()
     assert data["api"] == "running"
     assert data["status"] == "healthy"
-    assert data["database"] == "connected"
+    assert data["database"]["status"] == "healthy"
 
 # Utility function to generate random strings
 def random_string(length=8):
