@@ -1,6 +1,22 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+// Function to determine API base URL based on environment
+const getApiBaseUrl = (): string => {
+  const environment = import.meta.env.VITE_ENVIRONMENT;
+  
+  switch (environment) {
+    case 'local':
+      return import.meta.env.VITE_API_BASE_URL_LOCAL;
+    case 'dev':
+      return import.meta.env.VITE_API_BASE_URL_DEV;
+    case 'prod':
+      return import.meta.env.VITE_API_BASE_URL_PROD;
+    default:
+      return import.meta.env.VITE_API_BASE_URL_LOCAL;
+  }
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,7 +25,7 @@ const api = axios.create({
   },
 });
 
-// Interceptor para adicionar o token de autenticação
+// Interceptor to add authentication token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
@@ -23,7 +39,7 @@ api.interceptors.request.use(
   }
 );
 
-// Tipos para os dados do usuário
+// User data types
 export interface UserData {
   id: number;
   email: string;
@@ -37,7 +53,7 @@ export interface UserData {
   created_at: string;
 }
 
-// Função para buscar dados do usuário
+// Function to fetch user data
 export const getUserData = async (userId: number): Promise<UserData> => {
   const response = await api.get(`/users/${userId}`);
   return response.data;

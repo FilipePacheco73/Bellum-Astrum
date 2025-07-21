@@ -7,7 +7,7 @@ including work performance, status checks, and history.
 
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from database import get_db
+from backend.app.database import get_db
 from backend.app.utils.auth_utils import get_current_user
 from backend.app.crud.work_crud import (
     perform_work,

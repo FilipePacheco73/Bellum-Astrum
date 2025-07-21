@@ -1,22 +1,18 @@
 
-import os
-from dotenv import load_dotenv
 import bcrypt
 from datetime import datetime, timedelta, UTC
 from jose import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from database.session import get_db
+from backend.app.database import get_db
+from backend.app.config import JWT_SECRET_KEY
 
 # OAuth2 scheme for FastAPI authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
 
-# Loads the .env file from the backend folder
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
-
 # JWT configuration variables
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+SECRET_KEY = JWT_SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 

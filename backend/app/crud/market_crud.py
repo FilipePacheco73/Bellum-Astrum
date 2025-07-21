@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from database import User, Ship, OwnedShips
+from database.models import User, Ship, OwnedShips
 from backend.app.utils.constants import SELL_VALUE_MULTIPLIER
 
 # --- Market CRUD Operations ---

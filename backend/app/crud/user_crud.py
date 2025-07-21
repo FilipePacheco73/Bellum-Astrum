@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from backend.app.schemas.user_schemas import UserCreate
-from database import User
+from database.models import User
 from backend.app.utils import get_password_hash, verify_password
 
 # --- User CRUD Operations ---

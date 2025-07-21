@@ -5,7 +5,7 @@ from database.models import OwnedShips
 from backend.app.schemas.shipyard_schemas import ShipRepairResponse
 from backend.app.utils.auth_utils import get_current_user
 from backend.app.utils import log_user_action, log_error, GameAction
-from database.session import get_db
+from backend.app.database import get_db
 
 router = APIRouter(
     prefix="/shipyard",

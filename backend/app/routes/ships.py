@@ -1,7 +1,8 @@
 # app/routes/ships.py
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from database import get_db, Ship
+from backend.app.database import get_db
+from database.models import Ship
 from backend.app.schemas.ship_schemas import ShipResponse
 from backend.app.crud import ship_crud
 from backend.app.utils import log_user_action, log_error, log_event, GameAction, LogCategory, LogLevel

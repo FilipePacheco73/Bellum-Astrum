@@ -24,12 +24,12 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 - 📡 Modular and extensible REST API
 
 ### 🎯 Progression & Economy
-- 🎯 **Progression System**: Experience, levels, and military ranks (Recruit to Fleet Admiral)
-- ⭐ **Rank Bonuses**: Multiplicative stat bonuses based on user rank
-- 💰 **Work System**: Rank-based jobs with progressive income (700-40,000 credits)
-- ⏰ **Cooldown System**: Shorter work intervals for higher ranks (2h to 30min)
-- 🤖 **Smart NPC System**: Balanced AI opponents with special battle mechanics
-- 📈 **Dynamic XP Gains**: Experience scales based on opponent difficulty
+- 🎯 **Progression System**: Experience, levels, and military ranks (11 ranks: Recruit to Fleet Admiral)
+- ⭐ **Rank Bonuses**: Multiplicative stat bonuses (0% to 60%) based on user rank
+- 💰 **Work System**: Rank-based recovery jobs with progressive income (700-40,000 credits)
+- ⏰ **Smart Cooldowns**: Balanced work intervals (2h for Recruit, 30min for Fleet Admiral)
+- 🤖 **NPC System**: 11 balanced AI opponents with special battle mechanics
+- 📈 **Dynamic XP**: Experience scales based on opponent difficulty and level difference
 
 ### 🖥️ Frontend & UI
 - 🖥️ Modern web interface (React + Vite + Tailwind)
@@ -92,35 +92,32 @@ database/
 
 ### Database Management
 
-You can manage the database using the provided command-line scripts. These commands allow you to initialize, seed, reset, clear, and check the health of your PostgreSQL database.
+You can manage the database using the provided command-line scripts:
 
 ```bash
-# Initialize database with sample data
+# Check database connection
+python database/setup.py health
+
+# Initialize database with sample data (includes ships, NPCs, etc.)
 python database/setup.py init --seed
 
-# Add sample data to existing database  
+# Add sample data to existing database
 python database/setup.py seed
 
-# Reset database (drop + recreate)
+# Reset database (drop + recreate + seed)
 python database/setup.py reset --seed
 
 # Clear all data (keep structure)
 python database/setup.py clear
-
-# Check database health
-python database/setup.py health
 ```
 
-> **Note:**
-> - Make sure your `DATABASE_URL` environment variable is set to your PostgreSQL connection string before running these commands.
+> **Note:** Make sure your environment variables are properly configured before running these commands.
 
 ### Clean Imports
 ```python
 # Simple imports for common use cases
 from database import get_db, User, Ship, OwnedShips
 from database import initialize_database, check_database_health
-
-# All database functionality accessible through clean interface
 ```
 
 ---
@@ -130,11 +127,12 @@ from database import initialize_database, check_database_health
 ### Prerequisites
 
 - Python 3.12+
-- Node.js 18+
-- PostgreSQL database (Neon,, etc.)
+- Node.js 18+ (for frontend)
+- PostgreSQL database (Neon, local PostgreSQL, etc.)
+- Git
 - (Recommended) Virtual environment: `python -m venv venv`
 
-### Quick Start
+### 1. 📥 Clone and Setup
 
 ```bash
 # Clone the repository
@@ -143,40 +141,164 @@ cd Bellum-Astrum
 
 # Create and activate virtual environment
 python -m venv venv
+
 # On Windows:
 venv\Scripts\activate
+
 # On Linux/macOS:
-# source venv/bin/activate
+source venv/bin/activate
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
-
-# Set your PostgreSQL connection string (Neon,, etc.)
-# Example (Windows):
-$env:DATABASE_URL="postgresql://user:password@host:port/dbname"
-# Example (Linux/macOS):
-export DATABASE_URL="postgresql://user:password@host:port/dbname"
-
-# Initialize database with sample data
-python database/setup.py init --seed
-
-# Start the API server
-uvicorn backend.app.main:app --reload
 ```
 
-The API will be available at: [http://localhost:8000](http://localhost:8000)  
-Interactive docs at: [http://localhost:8000/docs](http://localhost:8000/docs)  
-Health check at: [http://localhost:8000/health](http://localhost:8000/health)
+### 2. 🗄️ Database Setup
 
-### Frontend Setup (Optional)
+#### Required Environment Variables
+
+Create environment files with the following variables:
+
+**`database/.env`** (Database configuration):
+```env
+# Environment (local, dev, prod)
+ENVIRONMENT=local
+
+# Database URLs for different environments
+DATABASE_URL_LOCAL=postgresql://username:password@localhost:5432/bellum_astrum_local
+DATABASE_URL_DEV=postgresql://username:password@dev-host:5432/bellum_astrum_dev
+DATABASE_URL_PROD=postgresql://username:password@prod-host:5432/bellum_astrum_prod
+
+# Database settings
+DB_ECHO=False
+
+# User seeding (for initial data)
+ADMIN_EMAIL=admin@bellumastrum.com
+ADMIN_PASSWORD=admin123
+NPC_PASSWORD=npc123
+NPC_ASTRO_EMAIL=astro@npc.com
+NPC_CYBER_EMAIL=cyber@npc.com
+NPC_ORION_EMAIL=orion@npc.com
+NPC_VEGA_EMAIL=vega@npc.com
+NPC_NEBULA_EMAIL=nebula@npc.com
+NPC_PULSAR_EMAIL=pulsar@npc.com
+NPC_QUASAR_EMAIL=quasar@npc.com
+NPC_TITAN_EMAIL=titan@npc.com
+NPC_SOLARIS_EMAIL=solaris@npc.com
+NPC_ANDROMEDA_EMAIL=andromeda@npc.com
+NPC_CENTAURI_EMAIL=centauri@npc.com
+```
+
+**`backend/.env`** (Backend configuration):
+```env
+# Environment
+ENVIRONMENT=local
+
+# Database URLs (same as database/.env)
+DATABASE_URL_LOCAL=postgresql://username:password@localhost:5432/bellum_astrum_local
+DATABASE_URL_DEV=postgresql://username:password@dev-host:5432/bellum_astrum_dev
+DATABASE_URL_PROD=postgresql://username:password@prod-host:5432/bellum_astrum_prod
+
+# Database settings
+DB_ECHO=False
+
+# JWT Configuration - Different keys for each environment (generate secure secret keys)
+JWT_SECRET_KEY_LOCAL=your-local-jwt-secret-key-here
+JWT_SECRET_KEY_DEV=your-dev-jwt-secret-key-here-change-this-in-production
+JWT_SECRET_KEY_PROD=your-prod-jwt-secret-key-here-change-this-in-production
+
+# Logging
+LOG_LEVEL=INFO
+
+# Python path
+PYTHONPATH=.
+```
+
+#### Database Initialization
 
 ```bash
+# Check database connection
+python database/setup.py health
+
+# Initialize database with sample data (includes ships, NPCs, etc.)
+python database/setup.py init --seed
+
+# Verify setup by checking health again
+python database/setup.py health
+```
+
+### 3. 🚀 Backend Setup
+
+```bash
+# Start the FastAPI server
+uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The API will be available at:
+- **Main API**: [http://localhost:8000](http://localhost:8000)
+- **Interactive docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Health check**: [http://localhost:8000/health](http://localhost:8000/health)
+
+### 4. 🌐 Frontend Setup (Optional)
+
+**`frontend/.env`** (Frontend configuration):
+```env
+# Environment
+VITE_ENVIRONMENT=local
+
+# API URLs for different environments
+VITE_API_BASE_URL_LOCAL=http://localhost:8000/api/v1
+VITE_API_BASE_URL_DEV=https://your-dev-api.com/api/v1
+VITE_API_BASE_URL_PROD=https://your-prod-api.com/api/v1
+```
+
+```bash
+# Navigate to frontend directory
 cd frontend
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 
 Frontend will be available at: [http://localhost:5173](http://localhost:5173)
+
+### 5. ✅ Verification
+
+1. **Database Health**: Visit [http://localhost:8000/health](http://localhost:8000/health)
+2. **API Documentation**: Visit [http://localhost:8000/docs](http://localhost:8000/docs)
+3. **Test Registration**: Create a user account via API or frontend
+4. **Run Tests**: `pytest backend/app/test/` (optional)
+
+### 🔧 Environment Examples
+
+#### Using Neon (Recommended)
+```env
+DATABASE_URL_LOCAL=postgresql://username:password@ep-example-123456.us-east-1.aws.neon.tech/neondb?sslmode=require
+```
+
+#### Using Local PostgreSQL
+```env
+DATABASE_URL_LOCAL=postgresql://postgres:password@localhost:5432/bellum_astrum
+```
+
+#### Using Docker PostgreSQL
+```bash
+# Start PostgreSQL container
+docker run --name bellum-postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=bellum_astrum -p 5432:5432 -d postgres:15
+
+# Use this URL
+DATABASE_URL_LOCAL=postgresql://postgres:password@localhost:5432/bellum_astrum
+```
+
+### 🚨 Important Notes
+
+- **Security**: Change `JWT_SECRET_KEY` in production environments
+- **Database**: Ensure your PostgreSQL database exists before running setup commands
+- **Environment**: The system automatically uses the appropriate environment based on `ENVIRONMENT` variable
+- **NPCs**: Sample data includes 11 NPCs with different ranks and ships for testing battles
+- **Work System**: Users can earn credits through the work system if they lose all ships/money
 
 ---
 
@@ -247,7 +369,7 @@ Frontend will be available at: [http://localhost:5173](http://localhost:5173)
 flowchart LR
     User["👤 User"]
     Frontend["🌐 Frontend (React/Vite)"]
-    API["🚀 FastAPI API"]
+    API["🚀 FastAPI (Render)"]
     DB["🗄️ PostgreSQL (Neon)"]
 
     User -->|"Interacts"| Frontend
@@ -396,28 +518,6 @@ Releases are now created automatically on every push to `main`, using the latest
 
 Custom Copilot instructions for this project are available in `.github/instructions/copilot-instructions.md`.
 
-## 🏆 Next Steps
-
-- [ ] User profile and settings page
-- [ ] Responsive/mobile-friendly frontend
-- [ ] Real-time multiplayer features
-- [ ] Enhanced battle system with animations
-- [ ] Ship customization and upgrades beyond rank bonuses
-- [ ] Guild/Alliance system for team battles
-- [ ] Leaderboards and tournaments with rank-based brackets
-- [ ] Mission/Campaign system with story progression
-- [ ] Advanced NPC AI behaviors and personalities
-- [ ] Ship crafting and blueprint system
-- [ ] API documentation improvements (OpenAPI, examples)
-- [ ] Enhanced error handling and user feedback
-- [ ] CI/CD pipeline (tests, lint, deploy)
-- [ ] Docker support (dev/prod)
-- [ ] Admin dashboard for managing users/ships/NPCs
-- [ ] Unit and integration tests for frontend
-- [ ] Interface for AI agents
-
----
-
 ## 📊 Timeline (Commit History)
 
 ```mermaid
@@ -443,7 +543,8 @@ PostgreSQL migration & health checks   :done,    des15, 2025-07-09, 1d
 Shipyard system & GitHub automation    :done,    des16, 2025-07-12, 1d
 Work system & NPC progression          :done,    des17, 2025-07-12, 1d
 Multi-ship battles & formation system  :done,    des18, 2025-07-13, 1d
-Constants refactor & changelog updates      :done,    des19, 2025-07-14, 1d
+Constants refactor & changelog updates :done,    des19, 2025-07-15, 1d
+Import refactor & multi-env config     :done,    des20, 2025-07-21, 1d
 ```
 
 ---
