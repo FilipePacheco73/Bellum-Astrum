@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
-import translations from '../locales/translations';
-import { useLanguage } from '../contexts/LanguageContext';
 import GameLayout from '../components/GameLayout';
 
 const Market: React.FC = () => {
-  const { language } = useLanguage();
-  const t = translations[language].market;
   const [activeTab, setActiveTab] = useState<'ships' | 'upgrades' | 'resources'>('ships');
 
   const marketShips = [
