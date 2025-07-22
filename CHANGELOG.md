@@ -2,8 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.5.3] - 2025-07-22
+
+### Fixed
+- **Frontend Build Errors**: Resolved TypeScript compilation errors preventing deployment
+  - Removed unused translation imports and variables from Battle, Market, Ships, and Users pages
+  - Fixed `'t' is declared but its value is never read` TypeScript errors
+  - All frontend pages now compile successfully without TypeScript warnings
+- **Security Vulnerabilities**: Updated frontend dependencies to address security issues
+  - Fixed critical severity vulnerability in form-data package (4.0.0 - 4.0.3)
+  - Updated package-lock.json with secure dependency versions
+  - Frontend now passes `npm audit` without critical vulnerabilities
+- **Render Deployment**: Corrected build configuration for successful cloud deployment
+  - Fixed Build Command from `npm build` to `npm run build` 
+  - Added environment variables for production deployment
+  - Enhanced package.json with `build-simple` script as fallback option
+
+### Changed
+- **Code Cleanup**: Removed unused internationalization imports in page components
+  - Streamlined import statements for better tree-shaking
+  - Removed unused `useLanguage` hook and translation objects
+  - Cleaner component code without unnecessary dependencies
+- **Deployment Configuration**: Added comprehensive deployment configuration
+  - New `render.yaml` with proper build commands and environment variables
+  - Production-ready configuration for Render cloud platform
+  - Environment-specific API URL configuration for different deployment stages
+
+### Technical Improvements
+- **TypeScript Compliance**: All frontend code now passes TypeScript strict compilation
+- **Build Optimization**: Faster build times with removed unused imports
+- **Security Hardening**: Updated dependencies to latest secure versions
+- **Cloud Deployment**: Ready for production deployment on Render platform
 
 ## [0.5.2] - 2025-07-21
 

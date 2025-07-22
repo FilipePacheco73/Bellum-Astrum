@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
-import translations from '../locales/translations';
-import { useLanguage } from '../contexts/LanguageContext';
 import GameLayout from '../components/GameLayout';
 
 const Users: React.FC = () => {
-  const { language } = useLanguage();
-  const t = translations[language].users;
   const [activeTab, setActiveTab] = useState<'leaderboard' | 'online'>('leaderboard');
 
   const leaderboard = [
