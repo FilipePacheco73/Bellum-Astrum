@@ -1,11 +1,7 @@
 import React from 'react';
-import translations from '../locales/translations';
-import { useLanguage } from '../contexts/LanguageContext';
 import GameLayout from '../components/GameLayout';
 
 const Ships: React.FC = () => {
-  const { language } = useLanguage();
-  const t = translations[language].ships;
 
   const ships = [
     {
