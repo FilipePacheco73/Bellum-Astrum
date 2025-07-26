@@ -286,10 +286,10 @@ DATABASE_URL_LOCAL=postgresql://postgres:your-password@localhost:5432/bellum_ast
 #### Using Docker PostgreSQL
 ```bash
 # Start PostgreSQL container
-docker run --name bellum-postgres -e POSTGRES_PASSWORD=your-secure-password -e POSTGRES_DB=bellum_astrum -p 5432:5432 -d postgres:15
+docker run --name bellum-postgres -e POSTGRES_PASSWORD=your-postgres-password-here -e POSTGRES_DB=bellum_astrum -p 5432:5432 -d postgres:15
 
 # Use this URL
-DATABASE_URL_LOCAL=postgresql://postgres:your-secure-password@localhost:5432/bellum_astrum
+DATABASE_URL_LOCAL=postgresql://postgres:your-postgres-password-here@localhost:5432/bellum_astrum
 ```
 
 ### 🚨 Important Notes
