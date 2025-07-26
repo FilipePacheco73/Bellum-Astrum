@@ -546,6 +546,7 @@ Work system & NPC progression          :done,    des17, 2025-07-12, 1d
 Multi-ship battles & formation system  :done,    des18, 2025-07-13, 1d
 Constants refactor & changelog updates :done,    des19, 2025-07-15, 1d
 Import refactor & multi-env config     :done,    des20, 2025-07-21, 1d
+Backend/Frontend refactor, i18n, changelog & security       :done,    des21, 2025-07-26, 4d
 ```
 
 ---
