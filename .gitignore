@@ -1,5 +1,43 @@
+# === PYTHON / BACKEND ===
+# Virtual environments
 *venv
 .env
-*__pycache__/
+.env.prod
+
+# Cache and bytecode
+__pycache__/
+**/__pycache__/
 *.pyc
+.pytest_cache/
+
+# Database files
 *.db
+database/*.db
+
+# === FRONTEND (Node/Vite/React) ===
+/frontend/node_modules/
+node_modules/
+frontend/dist/
+dist/
+dist-ssr/
+*.local
+
+# === LOG FILES ===
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === IDE AND SYSTEM FILES ===
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
