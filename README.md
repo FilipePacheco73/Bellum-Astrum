@@ -172,20 +172,21 @@ DATABASE_URL_PROD=postgresql://username:password@prod-host:5432/bellum_astrum_pr
 DB_ECHO=False
 
 # User seeding (for initial data)
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=your-admin-password-here
-NPC_PASSWORD=your-npc-password-here
-NPC_ASTRO_EMAIL=astro@example.com
-NPC_CYBER_EMAIL=cyber@example.com
-NPC_ORION_EMAIL=orion@example.com
-NPC_VEGA_EMAIL=vega@example.com
-NPC_NEBULA_EMAIL=nebula@example.com
-NPC_PULSAR_EMAIL=pulsar@example.com
-NPC_QUASAR_EMAIL=quasar@example.com
-NPC_TITAN_EMAIL=titan@example.com
-NPC_SOLARIS_EMAIL=solaris@example.com
-NPC_ANDROMEDA_EMAIL=andromeda@example.com
-NPC_CENTAURI_EMAIL=centauri@example.com
+ADMIN_EMAIL=your-admin-email@example.com
+ADMIN_PASSWORD=your-secure-admin-password
+NPC_PASSWORD=your-secure-npc-password
+NPC_ASTRO_EMAIL=npc1@example.com
+NPC_CYBER_EMAIL=npc2@example.com
+NPC_ORION_EMAIL=npc3@example.com
+NPC_VEGA_EMAIL=npc4@example.com
+NPC_NEBULA_EMAIL=npc5@example.com
+NPC_PULSAR_EMAIL=np6@example.com
+NPC_QUASAR_EMAIL=npc7@example.com
+NPC_TITAN_EMAIL=npc8@example.com
+NPC_SOLARIS_EMAIL=npc9@example.com
+NPC_ANDROMEDA_EMAIL=npc10@example.com
+NPC_CENTAURI_EMAIL=npc11@example.com
+
 ```
 
 **`backend/.env`** (Backend configuration):
