@@ -86,3 +86,64 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Home box responsive styles */
+.home-box {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Language dropdown specific styles */
+.language-dropdown button {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0.75rem 1rem !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+}
+
+.language-dropdown button:hover {
+  background-color: #374151 !important;
+  border-color: transparent !important;
+}
+
+/* Page layout adjustments */
+.page-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .home-box {
+    min-width: 90vw !important;
+    width: 90vw !important;
+    max-width: 600px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-box {
+    min-width: 95vw !important;
+    width: 95vw !important;
+    min-height: 400px !important;
+    padding: 1.5rem !important;
+  }
+}
+
+/* Language dropdown z-index fix */
+.language-dropdown {
+  z-index: 99999 !important;
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+}
+
+/* Ensure navbar has high z-index but lower than dropdown */
+nav {
+  z-index: 1000 !important;
+  position: relative !important;
+}

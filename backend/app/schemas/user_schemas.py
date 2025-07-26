@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional
+from pydantic import BaseModel, EmailStr, ConfigDict, field_serializer
+from typing import Optional, Any
 
 class UserBase(BaseModel):
     """
@@ -82,6 +82,9 @@ class UserResponse(BaseModel):
         damage_taken (float): Total damage taken.
         ships_destroyed_by_user (int): Ships destroyed by the user.
         ships_lost_by_user (int): Ships lost by the user.
+        experience (int): User experience points.
+        level (int): User level.
+        rank (Any): User rank.
     """
     user_id: int
     nickname: str
@@ -94,6 +97,17 @@ class UserResponse(BaseModel):
     damage_taken: float
     ships_destroyed_by_user: int
     ships_lost_by_user: int
+    experience: int
+    level: int
+    rank: Any
+    
+    @field_serializer('rank')
+    def serialize_rank(self, rank: Any) -> str:
+        """Convert UserRank enum to string value."""
+        if hasattr(rank, 'value'):
+            return rank.value
+        return str(rank)
+    
     model_config = ConfigDict(from_attributes=True)
 
 

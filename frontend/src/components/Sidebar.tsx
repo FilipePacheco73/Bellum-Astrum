@@ -4,16 +4,24 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import translations from '../locales/translations';
 
+import type { UserData } from '../config/api';
+
 interface SidebarProps {
-  // Removido props de colapso
+  userData?: UserData | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = () => {
+const Sidebar: React.FC<SidebarProps> = ({ userData }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, userNickname } = useAuth();
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   const { language } = useLanguage();
   const t = translations[language];
+  const sidebarT = t.sidebar;
 
   const menuItems = [
     {
@@ -21,35 +29,35 @@ const Sidebar: React.FC<SidebarProps> = () => {
       label: t.dashboard?.title || 'Dashboard',
       path: '/dashboard',
       icon: '🏠',
-      description: 'Base de operações'
+      description: sidebarT?.menu_descriptions?.dashboard || 'Base de operações'
     },
     {
       id: 'ships',
       label: t.ships?.title || 'Ships',
       path: '/ships',
       icon: '🚀',
-      description: 'Gerenciar frota'
+      description: sidebarT?.menu_descriptions?.ships || 'Gerenciar frota'
     },
     {
       id: 'battle',
       label: t.battle?.title || 'Battle',
       path: '/battle',
       icon: '⚔️',
-      description: 'Arena de combate'
+      description: sidebarT?.menu_descriptions?.battle || 'Arena de combate'
     },
     {
       id: 'market',
       label: t.market?.title || 'Market',
       path: '/market',
       icon: '🏪',
-      description: 'Comprar e vender'
+      description: sidebarT?.menu_descriptions?.market || 'Comprar e vender'
     },
     {
       id: 'users',
-      label: 'Players',
+      label: t.users?.title || 'Players',
       path: '/users',
       icon: '👥',
-      description: 'Outros jogadores'
+      description: sidebarT?.menu_descriptions?.users || 'Outros jogadores'
     }
   ];
 
@@ -61,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
   return (
     <div
-      className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-slate-900/95 backdrop-blur-lg border-r border-slate-700/50 transition-all duration-300 ease-in-out z-40"
+      className="w-64 bg-slate-900/95 backdrop-blur-lg border-r border-slate-700/50 transition-all duration-300 ease-in-out z-40 min-h-[calc(100vh-4rem)]"
       style={{
         boxShadow: '2px 0 10px rgba(0,0,0,0.3)'
       }}
@@ -70,11 +78,11 @@ const Sidebar: React.FC<SidebarProps> = () => {
       <div className="p-4 border-b border-slate-700/50">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-            P
+            {(userData?.nickname || userNickname || 'Player').charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white font-medium truncate">Player</p>
-            <p className="text-slate-400 text-sm">Level 1</p>
+            <p className="text-white font-medium truncate">{userData?.nickname || userNickname || 'Player'}</p>
+            <p className="text-slate-400 text-sm">{sidebarT?.level || 'Level'} {userData?.level || 1}</p>
           </div>
         </div>
       </div>
@@ -86,11 +94,15 @@ const Sidebar: React.FC<SidebarProps> = () => {
             <li key={item.id}>
               <button
                 onClick={() => handleNavigation(item.path)}
-                className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                className={`sidebar-button w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
                   isActive(item.path)
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'text-slate-400 hover:bg-slate-700/50 hover:text-white hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-600'
+                    ? '!bg-slate-700 !border-slate-600 text-white shadow-md'
+                    : 'text-white border border-transparent hover:!bg-slate-800 hover:!border-slate-600'
                 }`}
+                style={{
+                  backgroundColor: isActive(item.path) ? '#334155' : 'transparent',
+                  borderColor: isActive(item.path) ? '#475569' : 'transparent'
+                }}
                 title={item.description}
               >
                 <span className="text-xl flex-shrink-0">{item.icon}</span>
@@ -110,12 +122,16 @@ const Sidebar: React.FC<SidebarProps> = () => {
       {/* Bottom Actions */}
       <div className="p-4 border-t border-slate-700/50">
         <button
-          onClick={logout}
-          className="w-full flex items-center space-x-3 p-3 rounded-lg text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
-          title="Sair do jogo"
+          onClick={handleLogout}
+          className="w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 border border-transparent text-red-400 hover:!bg-red-900/30 hover:!border-red-700 hover:text-red-300"
+          title={sidebarT?.logout_description || 'Sair do jogo'}
+          style={{
+            backgroundColor: 'transparent',
+            borderColor: 'transparent'
+          }}
         >
           <span className="text-xl flex-shrink-0">🚪</span>
-          <span className="font-medium">Logout</span>
+          <span className="font-medium">{sidebarT?.logout || 'Logout'}</span>
         </button>
       </div>
     </div>

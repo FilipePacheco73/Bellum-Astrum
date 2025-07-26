@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2025-07-26
+
+### Added
+- **Frontend UI/UX**: New session-expired modal, global ErrorBoundary, and a modern Footer with dynamic version display.
+- **Internationalization**: Expanded translations for dashboard, sidebar, error messages, and ranks; new utility for translating ranks.
+- **Dashboard**: Detailed statistics, experience progress, account and ship info, quick actions, and improved layout.
+- **Responsiveness**: Layout and style adjustments for smaller screens and core components (Home, Login, Register).
+- **Backend User API Schema**: `UserResponse` schema now includes `experience`, `level`, and `rank` fields, providing the frontend with all user progression data.
+
+### Changed
+- **Navbar & Sidebar**: Unified Navbar, global language dropdown, Sidebar now receives user data and dynamic descriptions.
+- **Layouts**: Refactored `GameLayout` and `PageLayout` components for better reuse and consistent visuals.
+- **Contexts**: `AuthContext` now stores nickname and controls session-expired modal; `LanguageContext` persists language in localStorage.
+- **Styles**: Global CSS and component styles improved for better visual experience and accessibility.
+
+### Fixed
+- **Authentication**: Fixed login/logout flow, session expiration handling, and automatic user state updates.
+- **TypeScript Errors**: Adjusted types and interfaces to match backend and avoid TypeScript warnings.
+- **Translations**: Fixed fallback logic and ensured dynamic text updates across all components.
+- **Backend API Consistency**: Aligned backend user data and types with frontend requirements for seamless integration and type safety.
+
+### Technical Improvements
+- **Componentization**: New utilities for ranks and version, modularized translations, and improved code organization.
+- **User Experience**: Enhanced visual feedback for errors, loading states, and quick actions.
+- **Backend Authentication & Error Logging**: Improved JWT error logging in `auth_utils.py` for better debugging and security event tracking.
+
 ## [0.5.3] - 2025-07-22
 
 ### Fixed
