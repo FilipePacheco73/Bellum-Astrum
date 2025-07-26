@@ -1,5 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Users from './pages/Users';
 import Ships from './pages/Ships';
@@ -8,22 +7,36 @@ import Battle from './pages/Battle';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SidebarProvider } from './contexts/SidebarContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import PrivateRoute from './components/PrivateRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+import SessionExpiredModal from './components/SessionExpiredModal';
 import './App.css';
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { showSessionExpired, setShowSessionExpired } = useAuth();
   
   // Routes that use the sidebar layout (game pages)
   const sidebarRoutes = ['/dashboard', '/users', '/ships', '/market', '/battle'];
   const useSidebar = sidebarRoutes.includes(location.pathname);
 
+  const handleSessionExpiredClose = () => {
+    setShowSessionExpired(false);
+    navigate('/');
+  };
+
+  const handleSessionExpiredLogin = () => {
+    setShowSessionExpired(false);
+    navigate('/login');
+  };
+
   return (
-    <>
-      {!useSidebar && <Navbar />}
-      <div className={useSidebar ? "text-slate-50" : "max-w-4xl mx-auto pt-20 text-slate-50"}>
+    <div className="w-full min-h-screen">
+      <div className={useSidebar ? "text-slate-50" : "w-full text-slate-50"}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Navigate to="/" replace />} />
@@ -31,7 +44,9 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={
             <PrivateRoute>
-              <Dashboard />
+              <ErrorBoundary>
+                <Dashboard />
+              </ErrorBoundary>
             </PrivateRoute>
           } />
           <Route path="/users" element={<Users />} />
@@ -41,18 +56,27 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-    </>
+      
+      {/* Session Expired Modal */}
+      <SessionExpiredModal 
+        isOpen={showSessionExpired}
+        onClose={handleSessionExpiredClose}
+        onLogin={handleSessionExpiredLogin}
+      />
+    </div>
   );
 }
 
 function App() {
   return (
     <AuthProvider>
-      <SidebarProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </SidebarProvider>
+      <LanguageProvider>
+        <SidebarProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </SidebarProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

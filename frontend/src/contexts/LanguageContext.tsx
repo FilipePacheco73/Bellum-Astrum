@@ -10,7 +10,18 @@ interface LanguageContextProps {
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>('pt-BR');
+  // Initialize language from localStorage or default to 'pt-BR'
+  const [language, setLanguageState] = useState<Language>(() => {
+    const savedLanguage = localStorage.getItem('language') as Language;
+    return savedLanguage || 'pt-BR';
+  });
+
+  // Custom setLanguage function that also saves to localStorage
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('language', lang);
+  };
+
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>
       {children}

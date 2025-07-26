@@ -16,7 +16,7 @@ const Register: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Limpa erro quando usuário começa a digitar
+    // Clear error when user starts typing
     if (error) {
       setError(null);
     }
@@ -100,17 +100,25 @@ const Register: React.FC = () => {
   return (
     <PageLayout backgroundImage="/home_img.png">
       <div
-        className="mb-12 px-2 sm:px-4 py-6 sm:py-8 rounded-2xl shadow-2xl border-4 border-white/30 bg-black/70 backdrop-blur-xl flex flex-col items-center justify-center mt-4 w-full max-w-md min-h-[220px] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-[20px]"
+        className="home-box mt-10 px-10 py-8 rounded-2xl shadow-2xl border-4 border-white/30 bg-black/60 backdrop-blur-lg transition-all duration-300 ease-in-out"
+        style={{ 
+          display: 'inline-block', 
+          boxShadow: '0 8px 32px 0 rgba(0,0,0,0.37)', 
+          WebkitBackdropFilter: 'blur(16px)', 
+          backdropFilter: 'blur(16px)',
+          minWidth: '800px',
+          width: '800px',
+          minHeight: '500px'
+        }}
       >
-        {/* Avatar/Icon */}
-        <div className="flex justify-center w-full my-4">
-          <img src="/bellum-astrum-logo-3d.svg" alt="Bellum Astrum Logo" className="w-12 h-12 sm:w-14 sm:h-14" />
+        <div className="flex justify-center w-full my-8">
+          <img src="/bellum-astrum-logo-3d.svg" alt="Bellum Astrum Logo" className="w-16 h-16 sm:w-20 sm:h-20" />
         </div>
         <form
           onSubmit={handleSubmit}
           className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto"
         >
-          <h2 className="text-2xl font-bold text-white mb-2 text-center drop-shadow-lg">
+          <h2 className="text-3xl font-bold text-white mb-4 text-center drop-shadow-lg transition-all duration-300 ease-in-out">
             {t.register.title}
           </h2>
           {error && (
@@ -118,7 +126,7 @@ const Register: React.FC = () => {
               {error}
             </div>
           )}
-          <div className="flex flex-col gap-4 w-full">
+          <div className="flex flex-col gap-4 w-full" style={{ minHeight: '180px' }}>
             <input
               type="text"
               name="name"
@@ -169,18 +177,20 @@ const Register: React.FC = () => {
               )}
             </div>
           </div>
-          <Button type="submit" disabled={isLoading || !isFormValid()}>
-            {isLoading 
-              ? t.register.registering
-              : t.register.register_button
-            }
-          </Button>
-          <Button
-            type="button"
-            onClick={() => navigate('/')}
-          >
-            {t.register.back_to_home}
-          </Button>
+          <div className="flex flex-col items-center gap-4 w-full" style={{ minHeight: '120px' }}>
+            <Button type="submit" disabled={isLoading || !isFormValid()}>
+              {isLoading 
+                ? t.register.registering
+                : t.register.register_button
+              }
+            </Button>
+            <Button
+              type="button"
+              onClick={() => navigate('/')}
+            >
+              {t.register.back_to_home}
+            </Button>
+          </div>
         </form>
       </div>
     </PageLayout>

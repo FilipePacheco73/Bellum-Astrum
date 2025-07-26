@@ -78,7 +78,7 @@ def verify_token(token: str, db_session=None, ip_address: str = None):
                     "success": False
                 }
             )
-    except jwt.JWTError:
+    except jwt.JWTError as e:
         if db_session:
             from backend.app.utils.logging_utils import log_security_event, GameAction
             log_security_event(
@@ -87,7 +87,7 @@ def verify_token(token: str, db_session=None, ip_address: str = None):
                 ip_address=ip_address,
                 details={
                     "token_verification": "failed",
-                    "reason": "Invalid token",
+                    "reason": f"Invalid token: {str(e)}",
                     "success": False
                 }
             )
@@ -118,12 +118,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
     user_data = verify_token(token, db_session=db)
     if not user_data or not user_data.get("user_id"):
         raise credentials_exception
     
     # Get the full user object from database
-    user = db.query(User).filter(User.user_id == user_data["user_id"]).first()
+    user_id = user_data["user_id"]
+    user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise credentials_exception
         
