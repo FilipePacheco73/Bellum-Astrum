@@ -2,10 +2,9 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 from backend.app.database import get_db
-from database.models import Ship
-from backend.app.schemas.ship_schemas import ShipResponse
+from backend.app.schemas.ship_schemas import ShipResponse, OwnedShipResponse
 from backend.app.crud import ship_crud
-from backend.app.utils import log_user_action, log_error, log_event, GameAction, LogCategory, LogLevel
+from backend.app.utils import log_error, log_event, GameAction, LogCategory, LogLevel
 import time
 
 router = APIRouter(
@@ -76,3 +75,9 @@ def get_ship_route(ship_id: int, request: Request, db: Session = Depends(get_db)
             }
         )
         raise HTTPException(status_code=500, detail=f"Ship lookup failed: {str(e)}")
+
+@router.get("/user/{user_id}/ships", response_model=list[OwnedShipResponse])
+def get_user_ships_route(user_id: int, db: Session = Depends(get_db)):
+    """Get all owned ships for a specific user"""
+    ships = ship_crud.get_user_owned_ships(db=db, user_id=user_id)
+    return ships

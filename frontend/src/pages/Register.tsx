@@ -27,12 +27,20 @@ const Register: React.FC = () => {
     return emailRegex.test(email);
   };
 
+  const isValidNickname = (nickname: string) => {
+    const nicknameLower = nickname.toLowerCase();
+    return !nicknameLower.includes('admin') && 
+           !nicknameLower.includes('test_user') && 
+           !nicknameLower.includes('npc');
+  };
+
   const isFormValid = () => {
     return form.name.trim() !== '' && 
            form.email.trim() !== '' && 
            form.password.trim() !== '' && 
            isValidEmail(form.email) &&
-           form.password.length >= 6;
+           form.password.length >= 6 &&
+           isValidNickname(form.name);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,15 +135,26 @@ const Register: React.FC = () => {
             </div>
           )}
           <div className="flex flex-col gap-4 w-full" style={{ minHeight: '180px' }}>
-            <input
-              type="text"
-              name="name"
-              placeholder={t.register.name}
-              value={form.name}
-              onChange={handleChange}
-              className="text-base w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 shadow-sm hover:bg-white/20 placeholder-white/60"
-              required
-            />
+            <div>
+              <input
+                type="text"
+                name="name"
+                placeholder={t.register.name}
+                value={form.name}
+                onChange={handleChange}
+                className={`text-base w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 text-white border transition-all duration-200 shadow-sm hover:bg-white/20 placeholder-white/60 focus:outline-none focus:ring-2 ${
+                  form.name && !isValidNickname(form.name)
+                    ? 'border-red-400 focus:ring-red-500 focus:border-red-400'
+                    : 'border-white/30 focus:ring-blue-500 focus:border-blue-400'
+                }`}
+                required
+              />
+              {form.name && !isValidNickname(form.name) && (
+                <p className="text-red-400 text-sm mt-1">
+                  Nickname cannot contain 'Admin', 'test_user', or 'NPC'
+                </p>
+              )}
+            </div>
             <div>
               <input
                 type="email"

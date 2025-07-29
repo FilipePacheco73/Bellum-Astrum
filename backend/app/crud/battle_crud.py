@@ -1,12 +1,13 @@
 from sqlalchemy.orm import Session
 from database.models import User, OwnedShips, BattleHistory
 from datetime import datetime, UTC
-from backend.app.utils.progression_utils import apply_rank_bonus_to_ship_stats
+from backend.app.utils.progression_utils import apply_rank_bonus_to_ship_stats, update_user_progression
 import random
 from typing import Union, List
 from backend.app.utils.constants import BASE_XP_WIN, BASE_XP_LOSS, DIFFICULTY_MULTIPLIERS
 from backend.app.utils.constants import FORMATION_MODIFIERS, SHIELD_DAMAGE_REDUCTION, DAMAGE_VARIATION_RANGE, CREDITS_AWARDED_MULTIPLIER
 from backend.app.utils.constants import ELO_BASE_CHANGE, ELO_EXPECTED_SCORE_DIVISOR
+from backend.app.utils.progression_utils import get_max_active_ships_for_user, count_active_ships_for_user
 
 
 # --- Formation System Helper Functions ---
@@ -476,11 +477,21 @@ def battle_between_users(
         winner_xp, _ = calculate_xp_gain(winner.level, loser.level)
         winner.experience += winner_xp
         battle_log.append(f"{winner.nickname} gains {winner_xp} XP!")
+        
+        # Update winner's level and rank based on new experience
+        level_changed = update_user_progression(winner, winner_xp)
+        if level_changed:
+            battle_log.append(f"{winner.nickname} leveled up to level {winner.level}!")
 
     if not loser.nickname.startswith("NPC_"):
         _, loser_xp = calculate_xp_gain(winner.level, loser.level)
         loser.experience += loser_xp
         battle_log.append(f"{loser.nickname} gains {loser_xp} XP!")
+        
+        # Update loser's level and rank based on new experience
+        level_changed = update_user_progression(loser, loser_xp)
+        if level_changed:
+            battle_log.append(f"{loser.nickname} leveled up to level {loser.level}!")
     
     # Create and save battle history
     final_user1_hp = sum(max(0, ship['current_hp']) for ship in user1_fleet)
@@ -602,7 +613,6 @@ def get_user_ship_limits_info(db: Session, user_id: int):
     Get information about a user's ship limits and current usage.
     Useful for frontend display.
     """
-    from backend.app.utils.progression_utils import get_max_active_ships_for_user, count_active_ships_for_user
     
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:

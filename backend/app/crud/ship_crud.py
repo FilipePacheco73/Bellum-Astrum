@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from backend.app.schemas.ship_schemas import ShipCreate
 from database import Ship
+from database.models import OwnedShips
+from typing import List
 
 # --- Ship CRUD Operations ---
 def get_ship(db: Session, ship_id: int):
@@ -32,3 +34,15 @@ def delete_ship(db: Session, ship_id: int):
         db.commit()
         return True
     return False
+
+def get_user_owned_ships(db: Session, user_id: int) -> List[OwnedShips]:
+    """
+    Get all owned ships for a user (both active and owned status).
+    Used for displaying user's ship collection.
+    """
+    ships = db.query(OwnedShips).filter(
+        OwnedShips.user_id == user_id,
+        OwnedShips.status.in_(['active', 'owned'])  # Exclude destroyed ships
+    ).all()
+    
+    return ships

@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2025-01-28
+
+### Added
+- **Market System Overhaul**: Complete redesign of the Market page with real-time functionality
+  - Real-time ship data loading from backend API (/ships/ endpoint)
+  - User authentication and currency display integration
+  - Purchase functionality with /market/buy/{ship_id} endpoint
+  - Dynamic ship icons based on ship names and comprehensive ship statistics display
+  - Credit validation before purchases with loading states and user feedback
+- **Ships Page Enhancement**: Major improvements to "Minhas Naves" (My Ships) page
+  - Real backend integration with /users/{user_id}/ships endpoint
+  - Ship statistics now display "Current / Base" format with proper rounding
+  - Rank bonus system implementation showing detailed bonus calculations
+  - Fleet overview with rank-based bonus explanations
+  - User rank and level integration with dynamic bonus calculations
+- **Security Improvements**: Enhanced user validation and PvP filtering
+  - Validation to prevent "Admin" and "test_user" nicknames in registration
+  - PvP battle filtering to exclude administrative and test accounts
+  - Client-side and server-side validation with visual feedback
+- **Battle System Updates**: Improved NPC and user management
+  - NPCs now use real database users with "NPC" in nickname
+  - Dynamic filtering between NPC battles and PvP modes
+  - Real statistics and progression for NPC opponents
+
+### Changed
+- **Backend Schema Organization**: Consolidated ship-related schemas
+  - Moved all ship schemas to single `ship_schemas.py` file
+  - Updated imports across ships.py, users.py, and battle.py modules
+  - Removed redundant `owned_ship_schemas.py` file
+- **Dashboard Improvements**: Removed duplicate information display
+  - Eliminated duplicate "Naves Perdidas" and "Naves Destruídas" statistics
+  - Cleaner information hierarchy with battle stats in dedicated section
+  - Improved user experience with organized data presentation
+- **Translation System**: Expanded internationalization support
+  - Market-specific translations for Portuguese (pt-BR) and English (en-US)
+  - Ship statistics labels, actions, and error messages
+  - Rank bonus system translations and explanations
+
+### Fixed
+- **Ships Page White Screen**: Resolved critical display issue
+  - Created proper backend endpoint `/users/{user_id}/ships`
+  - Fixed API integration with real data instead of placeholders
+  - Proper error handling and loading states
+- **User Interface Consistency**: Improved visual feedback and user experience
+  - Fixed ship statistics formatting and display
+  - Proper loading states during purchases and data fetching
+  - Enhanced error messages and user guidance
+
+### Technical Improvements
+- **API Integration**: Enhanced backend-frontend communication
+  - Parallel API calls for ships and user data
+  - JWT token decoding for user identification
+  - Real-time currency updates after transactions
+- **Code Organization**: Better structure and maintainability
+  - Consolidated schemas and reduced file redundancy
+  - Improved import structure and dependency management
+  - Enhanced error boundaries and retry functionality
+- **Database Operations**: Optimized queries and data handling
+  - Efficient filtering of owned ships by status
+  - Proper user data retrieval with rank and level information
+  - Enhanced security logging for administrative actions
+
 ## [0.5.4] - 2025-07-26
 
 ### Added

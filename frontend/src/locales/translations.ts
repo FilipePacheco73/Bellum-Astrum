@@ -161,12 +161,131 @@ const translations = {
       subtitle: 'Lista de jogadores do Bellum Astrum.'
     },
     ships: {
-      title: 'Naves',
-      subtitle: 'Veja todas as naves disponíveis no jogo.'
+      title: 'Minhas Naves',
+      subtitle: 'Gerencie sua frota e ative naves para batalha',
+      fleet_overview: 'Visão Geral da Frota',
+      stats: {
+        active: 'Ativas',
+        owned: 'Possuídas',
+        total: 'Total',
+        available_slots: 'Slots Disponíveis'
+      },
+      status: {
+        active: 'Ativa',
+        owned: 'Possuída',
+        destroyed: 'Destruída',
+        sold: 'Vendida'
+      },
+      actions: {
+        activate: 'Ativar',
+        deactivate: 'Desativar',
+        activating: 'Ativando...',
+        deactivating: 'Desativando...',
+        repair: 'Reparar',
+        sell: 'Vender'
+      },
+      labels: {
+        ship_number: 'Número da Nave',
+        attack: 'Ataque',
+        shield: 'Escudo',
+        hp: 'HP',
+        fire_rate: 'Taxa de Tiro',
+        evasion: 'Evasão',
+        value: 'Valor',
+        status: 'Status',
+        statistics: 'Estatísticas',
+        actual: 'Atual',
+        base: 'Base',
+        rank_bonuses: 'Bônus de Rank',
+        current_rank: 'Rank Atual',
+        level: 'Nível',
+        how_it_works: 'Como funciona',
+        bonus_explanation: 'Os bônus são aplicados às estatísticas base das suas naves. Cada nível concede +2% (ataque, escudo, HP) e +1% (taxa de tiro, evasão). Seu rank {rank} multiplica esses bônus, resultando nos valores "Atual" exibidos nas estatísticas das naves.',
+        loading_rank_info: 'Carregando informações de rank...'
+      },
+      messages: {
+        loading: 'Carregando suas naves...',
+        error_loading: 'Erro ao carregar naves',
+        no_ships: 'Você não possui nenhuma nave',
+        activation_success: 'Nave ativada com sucesso!',
+        activation_error: 'Erro ao ativar nave',
+        deactivation_success: 'Nave desativada com sucesso!',
+        deactivation_error: 'Erro ao desativar nave',
+        max_active_reached: 'Limite máximo de naves ativas atingido',
+        try_again: 'Tentar novamente'
+      }
     },
     market: {
       title: 'Mercado',
-      subtitle: 'Compre e venda naves espaciais.'
+      subtitle: 'Compre e venda naves espaciais.',
+      your_credits: 'Seus Créditos',
+      tabs: {
+        ships: 'Naves',
+        upgrades: 'Upgrades',
+        resources: 'Recursos'
+      },
+      ship_types: {
+        Fighter: 'Caça',
+        Bomber: 'Bombardeiro',
+        Scout: 'Explorador',
+        Cruiser: 'Cruzador',
+        Destroyer: 'Destruidor',
+        Battleship: 'Couraçado'
+      },
+      tiers: {
+        tier_1: {
+          name: 'Série Aves de Rapina',
+          description: 'Nível Inicial - Naves iniciantes'
+        },
+        tier_2: {
+          name: 'Série Raptor',
+          description: 'Caças Leves - Progressão inicial'
+        },
+        tier_3: {
+          name: 'Série Tempestade',
+          description: 'Caças Médios - Potência de meio de jogo'
+        },
+        tier_4: {
+          name: 'Série Cósmica',
+          description: 'Caças Pesados - Combate de alto nível'
+        },
+        tier_5: {
+          name: 'Série Galáctica',
+          description: 'Naves Elite - Guerra de elite'
+        },
+        tier_6: {
+          name: 'Série Lendária',
+          description: 'Naves Supremas - Dominação final'
+        }
+      },
+      actions: {
+        buy: 'Comprar',
+        sell: 'Vender',
+        buying: 'Comprando...',
+        selling: 'Vendendo...'
+      },
+      labels: {
+        price: 'Preço',
+        attack: 'Ataque',
+        shield: 'Escudo',
+        hp: 'Vida',
+        fire_rate: 'Cadência',
+        evasion: 'Evasão',
+        quantity: 'Quantidade',
+        available: 'Disponível',
+        unit_price: 'Preço unitário'
+      },
+      messages: {
+        loading: 'Carregando mercado...',
+        error_loading: 'Erro ao carregar dados do mercado',
+        purchase_success: 'Compra realizada com sucesso!',
+        purchase_error: 'Erro ao realizar compra',
+        sale_success: 'Venda realizada com sucesso!',
+        sale_error: 'Erro ao realizar venda',
+        insufficient_credits: 'Créditos insuficientes',
+        no_ships_available: 'Nenhuma nave disponível no momento',
+        try_again: 'Tentar novamente'
+      }
     },
     battle: {
       title: 'Batalha',
@@ -348,17 +467,132 @@ const translations = {
       title: 'Users',
       subtitle: 'List of Bellum Astrum players.'
     },
-    ships: {
-      title: 'Ships',
-      subtitle: 'See all ships available in the game.'
-    },
     market: {
       title: 'Market',
-      subtitle: 'Buy and sell spaceships.'
+      subtitle: 'Buy and sell spaceships.',
+      your_credits: 'Your Credits',
+      tabs: {
+        ships: 'Ships',
+        upgrades: 'Upgrades',
+        resources: 'Resources'
+      },
+      ship_types: {
+        Fighter: 'Fighter',
+        Bomber: 'Bomber',
+        Scout: 'Scout',
+        Cruiser: 'Cruiser',
+        Destroyer: 'Destroyer',
+        Battleship: 'Battleship'
+      },
+      tiers: {
+        tier_1: {
+          name: 'Birds of Prey Series',
+          description: 'Entry Level - Starter ships'
+        },
+        tier_2: {
+          name: 'Raptor Series',
+          description: 'Light Fighters - Early game progression'
+        },
+        tier_3: {
+          name: 'Storm Series',
+          description: 'Medium Fighters - Mid game powerhouse'
+        },
+        tier_4: {
+          name: 'Cosmic Series',
+          description: 'Heavy Fighters - High-end combat'
+        },
+        tier_5: {
+          name: 'Galactic Series',
+          description: 'Elite Ships - Elite warfare'
+        },
+        tier_6: {
+          name: 'Legendary Series',
+          description: 'Ultimate Ships - Endgame dominance'
+        }
+      },
+      actions: {
+        buy: 'Buy',
+        sell: 'Sell',
+        buying: 'Buying...',
+        selling: 'Selling...'
+      },
+      labels: {
+        price: 'Price',
+        attack: 'Attack',
+        shield: 'Shield',
+        hp: 'HP',
+        fire_rate: 'Fire Rate',
+        evasion: 'Evasion',
+        quantity: 'Quantity',
+        available: 'Available',
+        unit_price: 'Unit Price'
+      },
+      messages: {
+        loading: 'Loading market...',
+        error_loading: 'Error loading market data',
+        purchase_success: 'Purchase successful!',
+        purchase_error: 'Error making purchase',
+        sale_success: 'Sale successful!',
+        sale_error: 'Error making sale',
+        insufficient_credits: 'Insufficient credits',
+        no_ships_available: 'No ships available at the moment',
+        try_again: 'Try again'
+      }
     },
-    battle: {
-      title: 'Battle',
-      subtitle: 'Start epic battles between ships!'
+    ships: {
+      title: 'My Ships',
+      subtitle: 'Manage your fleet and activate ships for battle',
+      fleet_overview: 'Fleet Overview',
+      stats: {
+        active: 'Active',
+        owned: 'Owned',
+        total: 'Total',
+        available_slots: 'Available Slots'
+      },
+      status: {
+        active: 'Active',
+        owned: 'Owned',
+        destroyed: 'Destroyed',
+        sold: 'Sold'
+      },
+      actions: {
+        activate: 'Activate',
+        deactivate: 'Deactivate',
+        activating: 'Activating...',
+        deactivating: 'Deactivating...',
+        repair: 'Repair',
+        sell: 'Sell'
+      },
+      labels: {
+        ship_number: 'Ship Number',
+        attack: 'Attack',
+        shield: 'Shield',
+        hp: 'HP',
+        fire_rate: 'Fire Rate',
+        evasion: 'Evasion',
+        value: 'Value',
+        status: 'Status',
+        statistics: 'Statistics',
+        actual: 'Actual',
+        base: 'Base',
+        rank_bonuses: 'Rank Bonuses',
+        current_rank: 'Current Rank',
+        level: 'Level',
+        how_it_works: 'How it works',
+        bonus_explanation: 'Bonuses are applied to your ships\' base statistics. Each level grants +2% (attack, shield, HP) and +1% (fire rate, evasion). Your {rank} rank multiplies these bonuses, resulting in the "Actual" values displayed in ship statistics.',
+        loading_rank_info: 'Loading rank information...'
+      },
+      messages: {
+        loading: 'Loading your ships...',
+        error_loading: 'Error loading ships',
+        no_ships: 'You don\'t own any ships',
+        activation_success: 'Ship activated successfully!',
+        activation_error: 'Error activating ship',
+        deactivation_success: 'Ship deactivated successfully!',
+        deactivation_error: 'Error deactivating ship',
+        max_active_reached: 'Maximum active ships limit reached',
+        try_again: 'Try again'
+      }
     },
     navbar: {
       home: 'Home',
