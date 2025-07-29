@@ -99,6 +99,17 @@ export const getUserData = async (userId: number): Promise<UserData> => {
   }
 };
 
+// Function to fetch all users (for PvP battles)
+export const getUsers = async (): Promise<UserData[]> => {
+  try {
+    const response = await api.get('/users/');
+    return response.data;
+  } catch (error) {
+    console.error('API: Error fetching users');
+    throw error;
+  }
+};
+
 // Function to fetch user ship limits (requires authentication)
 export const getUserShipLimits = async (): Promise<UserShipLimits> => {
   try {
@@ -109,6 +120,139 @@ export const getUserShipLimits = async (): Promise<UserShipLimits> => {
     console.error('API: Error fetching ship limits');
     throw error;
   }
+};
+
+// Ship data types based on backend ShipResponse schema
+export interface Ship {
+  ship_id: number;
+  ship_name: string;
+  attack?: number;
+  shield?: number;
+  evasion?: number;
+  fire_rate?: number;
+  hp?: number;
+  value?: number;
+}
+
+// Market API functions
+export const getShips = async (): Promise<Ship[]> => {
+  try {
+    const response = await api.get('/ships/');
+    return response.data;
+  } catch (error) {
+    console.error('API: Error fetching ships');
+    throw error;
+  }
+};
+
+export const buyShip = async (shipId: number): Promise<{ message: string; ship_number: number }> => {
+  try {
+    const response = await api.post(`/market/buy/${shipId}`);
+    return response.data;
+  } catch (error) {
+    console.error('API: Error buying ship');
+    throw error;
+  }
+};
+
+export const sellShip = async (ownedShipNumber: number): Promise<{ message: string; value_received: number }> => {
+  try {
+    const response = await api.post(`/market/sell/${ownedShipNumber}`);
+    return response.data;
+  } catch (error) {
+    console.error('API: Error selling ship');
+    throw error;
+  }
+};
+
+// Owned Ships interfaces
+export interface OwnedShip {
+  ship_number: number;
+  user_id: string;
+  status: string;
+  ship_id: string;
+  ship_name: string;
+  base_attack: number;
+  base_shield: number;
+  base_evasion: number;
+  base_fire_rate: number;
+  base_hp: number;
+  base_value: number;
+  actual_attack: number;
+  actual_shield: number;
+  actual_evasion: number;
+  actual_fire_rate: number;
+  actual_hp: number;
+  actual_value: number;
+}
+
+export interface ActivateShipResponse {
+  ship_number: number;
+  user_id: number;
+  status: string;
+  ship_id?: number;
+  ship_name?: string;
+}
+
+// Get user's owned ships
+export const getUserOwnedShips = async (userId: number): Promise<OwnedShip[]> => {
+  const response = await api.get(`/ships/user/${userId}/ships`);
+  return response.data;
+};
+
+
+
+// Activate a ship for battle
+export const activateShip = async (shipNumber: number): Promise<ActivateShipResponse> => {
+  const response = await api.post(`/battle/activate-ship/`, null, {
+    params: { ship_number: shipNumber }
+  });
+  return response.data;
+};
+
+// Deactivate a ship
+export const deactivateShip = async (shipNumber: number): Promise<ActivateShipResponse> => {
+  const response = await api.post(`/battle/deactivate-ship/`, null, {
+    params: { ship_number: shipNumber }
+  });
+  return response.data;
+};
+
+// Battle interfaces
+export interface BattleParticipant {
+  user_id: number;
+  nickname: string;
+  ship_number: number;
+  ship_name: string;
+  attack: number;
+  shield: number;
+  evasion: number;
+  fire_rate: number;
+  hp: number;
+  value: number;
+}
+
+export interface BattleResult {
+  battle_id: number;
+  timestamp: string;
+  participants: BattleParticipant[];
+  winner_user_id: number | null;
+  battle_log: string[];
+  extra?: Record<string, any>;
+}
+
+export interface BattleRequest {
+  opponent_user_id: number;
+  user_ship_numbers: number | number[];
+  opponent_ship_numbers: number | number[];
+  user_formation?: string;
+  opponent_formation?: string;
+}
+
+// Start a battle
+export const startBattle = async (battleRequest: BattleRequest): Promise<BattleResult> => {
+  const response = await api.post('/battle/battle', battleRequest);
+  return response.data;
 };
 
 export default api;

@@ -47,7 +47,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     elo_rank: Optional[float] = 1000
-    currency_value: Optional[int] = 2000
+    currency_value: Optional[int] = 20000
     victories: Optional[int] = 0
     defeats: Optional[int] = 0
     damage_dealt: Optional[float] = 0
