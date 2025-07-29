@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userData }) => {
     },
     {
       id: 'battle',
-      label: t.battle?.title || 'Battle',
+      label: t.navbar?.battle || 'Battle',
       path: '/battle',
       icon: '⚔️',
       description: sidebarT?.menu_descriptions?.battle || 'Arena de combate'

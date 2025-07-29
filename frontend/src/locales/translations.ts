@@ -467,10 +467,6 @@ const translations = {
       title: 'Users',
       subtitle: 'List of Bellum Astrum players.'
     },
-    ships: {
-      title: 'Ships',
-      subtitle: 'See all ships available in the game.'
-    },
     market: {
       title: 'Market',
       subtitle: 'Buy and sell spaceships.',

@@ -59,7 +59,7 @@ const Battle: React.FC = () => {
 
 
 
-  const handleBattleStart = async (opponentId: number, isNPC: boolean = true) => {
+  const handleBattleStart = async (opponentId: number) => {
     if (userShips.length === 0) {
       alert('Você precisa ter pelo menos uma nave ativa para batalhar! Vá para "Minhas Naves" para ativar uma nave.');
       return;
@@ -195,7 +195,7 @@ const Battle: React.FC = () => {
                         </div>
                       </div>
                       <button 
-                        onClick={() => handleBattleStart(npc.user_id, true)}
+                        onClick={() => handleBattleStart(npc.user_id)}
                         className="w-full mt-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={battleLoading}
                       >
@@ -238,7 +238,7 @@ const Battle: React.FC = () => {
                       </div>
                     </div>
                     <button 
-                      onClick={() => handleBattleStart(opponent.user_id, false)}
+                      onClick={() => handleBattleStart(opponent.user_id)}
                       className="w-full mt-4 bg-gradient-to-r from-slate-600 to-blue-600 text-white py-2 px-4 rounded-lg hover:from-slate-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={battleLoading}
                     >
@@ -298,7 +298,7 @@ const Battle: React.FC = () => {
 
               {/* Participants */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {battleResult.participants.map((participant, index) => (
+                {battleResult.participants.map((participant) => (
                   <div key={participant.user_id} className={`p-4 rounded-lg border ${
                     participant.user_id === userId 
                       ? 'bg-blue-900/20 border-blue-500/30' 
