@@ -23,12 +23,14 @@ jobs:
         run: |
           export LC_ALL=C.UTF-8
           export LANG=C.UTF-8
-          VERSION=$(grep -m1 '^## ' $CHANGELOG_FILE | sed -E 's/^## \[([0-9.]+)\].*/v\1/')
-          BODY=$(awk '/^## /{i++}i==2{exit}i==1' $CHANGELOG_FILE | tail -n +2)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$BODY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          VERSION=$(grep -m1 '^## ' "$CHANGELOG_FILE" | sed -E 's/^## \[([0-9.]+)\].*/v\1/')
+          BODY=$(awk '/^## /{i++}i==2{exit}i==1' "$CHANGELOG_FILE" | tail -n +2)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          {
+            echo "body<<EOF"
+            echo "$BODY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         env:
