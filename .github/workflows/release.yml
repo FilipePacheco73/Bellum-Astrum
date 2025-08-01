@@ -23,14 +23,17 @@ jobs:
         run: |
           export LC_ALL=C.UTF-8
           export LANG=C.UTF-8
-          VERSION=$(grep -m1 '^## ' "$CHANGELOG_FILE" | sed -E 's/^## \[([0-9.]+)\].*/v\1/')
-          BODY=$(awk '/^## /{i++}i==2{exit}i==1' "$CHANGELOG_FILE" | tail -n +2)
+          
+          # Get version from first 10 lines only
+          VERSION=$(head -10 "$CHANGELOG_FILE" | grep -m1 '^## ' | sed -E 's/^## \[([0-9.]+)\].*/v\1/')
+          
+          # Get changelog body, limiting to reasonable size and escaping special chars
+          BODY=$(awk '/^## /{i++}i==2{exit}i==1' "$CHANGELOG_FILE" | tail -n +2 | head -100)
+          
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          {
-            echo "body<<EOF"
-            echo "$BODY"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          
+          # Use printf to safely handle special characters
+          printf 'body<<EOF\n%s\nEOF\n' "$BODY" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         env:
