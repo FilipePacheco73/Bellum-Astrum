@@ -75,6 +75,7 @@ export interface UserData {
   experience: number;
   level: number;
   rank: string;
+  default_formation: string;
 }
 
 // User ship limits data type based on backend UserShipLimitsResponse schema
@@ -194,9 +195,16 @@ export interface ActivateShipResponse {
   ship_name?: string;
 }
 
-// Get user's owned ships
-export const getUserOwnedShips = async (userId: number): Promise<OwnedShip[]> => {
-  const response = await api.get(`/ships/user/${userId}/ships`);
+// Get user's owned ships with optional status filtering
+export const getUserOwnedShips = async (userId: number, status?: string): Promise<OwnedShip[]> => {
+  const params = status ? { status } : {};
+  const response = await api.get(`/ships/user/${userId}/ships`, { params });
+  return response.data;
+};
+
+// Get ship data by ship_number (for battle log purposes)
+export const getShipByNumber = async (shipNumber: number): Promise<OwnedShip> => {
+  const response = await api.get(`/ships/owned/${shipNumber}`);
   return response.data;
 };
 
@@ -224,12 +232,20 @@ export interface BattleParticipant {
   nickname: string;
   ship_number: number;
   ship_name: string;
+  // Final values (after battle damage/degradation)
   attack: number;
   shield: number;
   evasion: number;
   fire_rate: number;
   hp: number;
   value: number;
+  // Base values (original ship stats for progress bars)
+  base_attack: number;
+  base_shield: number;
+  base_evasion: number;
+  base_fire_rate: number;
+  base_hp: number;
+  base_value: number;
 }
 
 export interface BattleResult {
@@ -252,6 +268,51 @@ export interface BattleRequest {
 // Start a battle
 export const startBattle = async (battleRequest: BattleRequest): Promise<BattleResult> => {
   const response = await api.post('/battle/battle', battleRequest);
+  return response.data;
+};
+
+// Update user's default formation
+export const updateUserFormation = async (userId: number, formation: string): Promise<UserData> => {
+  const response = await api.put(`/users/${userId}/formation`, {
+    default_formation: formation
+  });
+  return response.data;
+};
+
+// Shipyard repair interfaces
+export interface ShipRepairResponse {
+  success: boolean;
+  message: string;
+  ship_number: number;
+  user_id: number;
+  ship_id: number;
+}
+
+export interface ShipCooldownStatus {
+  ship_number: number;
+  can_repair: boolean;
+  cooldown_seconds: number;
+  needs_repair: boolean;
+}
+
+export interface ShipyardStatusResponse {
+  ships: ShipCooldownStatus[];
+  total_ships: number;
+  ships_needing_repair: number;
+  ships_in_cooldown: number;
+}
+
+// Get shipyard status with cooldown information
+export const getShipyardStatus = async (): Promise<ShipyardStatusResponse> => {
+  const response = await api.get('/shipyard/status');
+  return response.data;
+};
+
+// Repair a ship in the shipyard
+export const repairShip = async (shipNumber: number): Promise<ShipRepairResponse> => {
+  const response = await api.post('/shipyard/repair', null, {
+    params: { ship_number: shipNumber }
+  });
   return response.data;
 };
 

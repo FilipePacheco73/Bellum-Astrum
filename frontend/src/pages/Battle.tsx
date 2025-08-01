@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import GameLayout from '../components/GameLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useNotification } from '../contexts/NotificationContext';
+import BattleLogModal from '../components/BattleLogModal';
+import { translateRank } from '../utils/rankUtils';
 import { getUsers, getUserOwnedShips, startBattle, type UserData, type OwnedShip, type BattleResult, type BattleRequest } from '../config/api';
 
 type BattleMode = 'npc' | 'pvp';
@@ -11,11 +15,15 @@ const Battle: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [battleLoading, setBattleLoading] = useState(false);
   const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
+  const [showBattleLogModal, setShowBattleLogModal] = useState(false);
   const [userShips, setUserShips] = useState<OwnedShip[]>([]);
   const { userId } = useAuth();
+  const { t, language } = useLanguage();
+  const { showSuccess, showError, showWarning } = useNotification();
 
   // NPC users will be loaded from database (users with "NPC" in their names)
   const [npcUsers, setNpcUsers] = useState<UserData[]>([]);
+  const [npcShipsData, setNpcShipsData] = useState<Record<number, OwnedShip[]>>({});
 
   useEffect(() => {
     const loadBattleData = async () => {
@@ -37,6 +45,24 @@ const Battle: React.FC = () => {
             u.nickname.toLowerCase().includes('npc') && u.user_id !== userId
           );
           setNpcUsers(npcs);
+          
+          // Load ships data for each NPC
+          const npcShipsPromises = npcs.map(async (npc) => {
+            try {
+              const ships = await getUserOwnedShips(npc.user_id);
+              return { userId: npc.user_id, ships: ships.filter(ship => ship.status === 'active') };
+            } catch (error) {
+              console.error(`Failed to load ships for NPC ${npc.nickname}:`, error);
+              return { userId: npc.user_id, ships: [] };
+            }
+          });
+          
+          const npcShipsResults = await Promise.all(npcShipsPromises);
+          const npcShipsMap: Record<number, OwnedShip[]> = {};
+          npcShipsResults.forEach(result => {
+            npcShipsMap[result.userId] = result.ships;
+          });
+          setNpcShipsData(npcShipsMap);
         } else {
           // Filter regular users for PvP (excluding NPCs, Admin, test_user, and current user)
           const pvpUsers = users.filter((u: UserData) => 
@@ -49,6 +75,10 @@ const Battle: React.FC = () => {
         }
       } catch (error) {
         console.error('Error loading battle data:', error);
+        showError(
+          t('common.error'),
+          t('battle.messages.load_error')
+        );
       } finally {
         setLoading(false);
       }
@@ -61,7 +91,10 @@ const Battle: React.FC = () => {
 
   const handleBattleStart = async (opponentId: number) => {
     if (userShips.length === 0) {
-      alert('Você precisa ter pelo menos uma nave ativa para batalhar! Vá para "Minhas Naves" para ativar uma nave.');
+      showWarning(
+        t('battle.notifications.no_ships_title'),
+        t('battle.notifications.no_ships_message')
+      );
       return;
     }
 
@@ -69,25 +102,28 @@ const Battle: React.FC = () => {
       setBattleLoading(true);
       setBattleResult(null);
 
-      // Use the first active ship for battle
-      const userShip = userShips[0];
+      // Use ALL active ships for battle
+      const userShipNumbers = userShips.map(ship => ship.ship_number);
       
       // Get opponent's active ships
       const opponentShips = await getUserOwnedShips(opponentId);
       const opponentActiveShips = opponentShips.filter(ship => ship.status === 'active');
       
       if (opponentActiveShips.length === 0) {
-        alert('O oponente não possui naves ativas para batalha!');
+        showWarning(
+          t('battle.messages.opponent_no_ships'),
+          t('battle.messages.opponent_no_ships')
+        );
         return;
       }
       
-      // Use opponent's first active ship
-      const opponentShip = opponentActiveShips[0];
+      // Use ALL opponent's active ships
+      const opponentShipNumbers = opponentActiveShips.map(ship => ship.ship_number);
       
       const battleRequest: BattleRequest = {
         opponent_user_id: opponentId,
-        user_ship_numbers: userShip.ship_number,
-        opponent_ship_numbers: opponentShip.ship_number,
+        user_ship_numbers: userShipNumbers,
+        opponent_ship_numbers: opponentShipNumbers,
         user_formation: 'AGGRESSIVE',
         opponent_formation: 'DEFENSIVE'
       };
@@ -95,9 +131,50 @@ const Battle: React.FC = () => {
       const result = await startBattle(battleRequest);
       setBattleResult(result);
       
+      // Show battle result notification with log button
+      // Ensure proper type comparison between userId and winner_user_id
+      const currentUserId = Number(userId);
+      const winnerUserId = result.winner_user_id;
+      
+      const isVictory = winnerUserId === currentUserId;
+      const isDraw = winnerUserId === null;
+      
+      const battleLogAction = {
+        label: t('battle.notifications.view_log'),
+        onClick: () => setShowBattleLogModal(true),
+        variant: 'secondary' as const
+      };
+      
+      if (isVictory) {
+        showSuccess(
+          t('battle.notifications.victory_title'),
+          t('battle.notifications.victory_message', { battleId: result.battle_id }),
+          undefined,
+          [battleLogAction]
+        );
+      } else if (isDraw) {
+        showWarning(
+          t('battle.notifications.draw_title'),
+          t('battle.notifications.draw_message', { battleId: result.battle_id }),
+          undefined,
+          [battleLogAction]
+        );
+      } else {
+        showError(
+          t('battle.notifications.defeat_title'),
+          t('battle.notifications.defeat_message', { battleId: result.battle_id }),
+          7000,
+          [battleLogAction]
+        );
+      }
+      
     } catch (error: any) {
       console.error('Battle failed:', error);
-      alert(`Erro na batalha: ${error.response?.data?.detail || error.message || 'Erro desconhecido'}`);
+      const errorMessage = error.response?.data?.detail || error.message || t('battle.notifications.unknown_error');
+      showError(
+        t('battle.notifications.error_title'),
+        t('battle.notifications.error_message', { error: errorMessage })
+      );
     } finally {
       setBattleLoading(false);
     }
@@ -109,7 +186,7 @@ const Battle: React.FC = () => {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-slate-400">Carregando dados de batalha...</p>
+            <p className="text-slate-400">{t('battle.messages.loading')}</p>
           </div>
         </div>
       </GameLayout>
@@ -123,52 +200,60 @@ const Battle: React.FC = () => {
         <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
           <h1 className="text-2xl font-bold mb-6 flex items-center">
             <span className="text-3xl mr-3">⚔️</span>
-            Arena de Batalha
+            {t('battle.title')}
           </h1>
           
           <div className="flex space-x-2 mb-6">
             <button
               onClick={() => setBattleMode('npc')}
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                battleMode === 'npc'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                battleMode === 'npc' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
-              🤖 Batalha vs NPC
+              {t('battle.modes.npc')}
             </button>
             <button
               onClick={() => setBattleMode('pvp')}
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                battleMode === 'pvp'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                battleMode === 'pvp' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
-              👥 Batalha PvP
+              {t('battle.modes.pvp')}
             </button>
           </div>
         </div>
-
 
 
         {/* Opponent Selection */}
         <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <span className="text-2xl mr-3">{battleMode === 'npc' ? '🤖' : '👥'}</span>
-            {battleMode === 'npc' ? 'Escolha seu Oponente NPC' : 'Escolha seu Oponente'}
+            {battleMode === 'npc' ? t('battle.sections.choose_npc') : t('battle.sections.choose_opponent')}
           </h2>
           
           {battleMode === 'npc' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {npcUsers.length === 0 ? (
                 <div className="col-span-full text-center py-8">
-                  <p className="text-slate-400">Nenhum NPC disponível para batalha no momento.</p>
+                  <p className="text-slate-400">{t('battle.messages.no_npcs')}</p>
                 </div>
               ) : (
                 npcUsers.map((npc: UserData) => {
                   // Remove "NPC_" prefix from nickname for display
                   const displayName = npc.nickname.replace(/^NPC_/i, '');
+                  const npcShips = npcShipsData[npc.user_id] || [];
+                  
+                  // Group ships by name and count them
+                  const shipCounts = npcShips.reduce((acc, ship) => {
+                    acc[ship.ship_name] = (acc[ship.ship_name] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>);
+                  
+                  const totalShips = npcShips.length;
                   
                   return (
                     <div key={npc.user_id} className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
@@ -176,31 +261,72 @@ const Battle: React.FC = () => {
                         <span className="text-4xl">🤖</span>
                         <h3 className="font-semibold text-white mt-2">{displayName}</h3>
                       </div>
-                      <div className="space-y-2 text-sm">
+                      
+                      {/* NPC Stats */}
+                      <div className="space-y-2 text-sm mb-4">
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Nível:</span>
+                          <span className="text-slate-400">{t('battle.labels.level')}:</span>
                           <span className="text-blue-400 font-medium">{npc.level}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">ELO:</span>
+                          <span className="text-slate-400">{t('battle.labels.rank')}:</span>
+                          <span className="text-purple-400 font-medium">{translateRank(npc.rank, language)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t('battle.labels.elo')}:</span>
                           <span className="text-yellow-400 font-medium">{Math.round(npc.elo_rank)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Vitórias:</span>
+                          <span className="text-slate-400">{t('battle.labels.victories')}:</span>
                           <span className="text-green-400 font-medium">{npc.victories}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Derrotas:</span>
+                          <span className="text-slate-400">{t('battle.labels.defeats')}:</span>
                           <span className="text-red-400 font-medium">{npc.defeats}</span>
                         </div>
                       </div>
+                      
+                      {/* Fleet Composition */}
+                      <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-600/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold text-cyan-400 flex items-center">
+                            <span className="text-lg mr-1">🚀</span>
+                            {t('battle.labels.fleet')}
+                          </h4>
+                          <span className="text-xs text-slate-400">
+                            {totalShips} {t('battle.labels.ships')}
+                          </span>
+                        </div>
+                        
+                        {totalShips === 0 ? (
+                          <p className="text-xs text-slate-500 italic">{t('battle.messages.no_active_ships')}</p>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(shipCounts).map(([shipName, count]) => (
+                              <div key={shipName} className="flex items-center justify-between text-xs bg-slate-700/30 rounded px-2 py-1">
+                                <span className="text-slate-300 truncate flex-1 mr-1 text-xs">{shipName}</span>
+                                <span className="text-cyan-400 font-medium text-xs">
+                                  {count}x
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
                       <button 
                         onClick={() => handleBattleStart(npc.user_id)}
-                        className="w-full mt-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={battleLoading}
+                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={battleLoading || totalShips === 0}
                       >
-                        {battleLoading ? 'Batalhando...' : 'Batalhar'}
+                        {battleLoading ? t('battle.actions.battling') : t('battle.actions.battle')}
                       </button>
+                      
+                      {totalShips === 0 && (
+                        <p className="text-xs text-red-400 text-center mt-2">
+                          {t('battle.messages.npc_no_ships')}
+                        </p>
+                      )}
                     </div>
                   );
                 })
@@ -210,7 +336,7 @@ const Battle: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {availableUsers.length === 0 ? (
                 <div className="col-span-full text-center py-8">
-                  <p className="text-slate-400">Nenhum jogador disponível para batalha no momento.</p>
+                  <p className="text-slate-400">{t('battle.messages.no_players')}</p>
                 </div>
               ) : (
                 availableUsers.map((opponent: UserData) => (
@@ -221,19 +347,23 @@ const Battle: React.FC = () => {
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Nível:</span>
+                        <span className="text-slate-400">{t('battle.labels.level')}:</span>
                         <span className="text-blue-400 font-medium">{opponent.level}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">ELO:</span>
+                        <span className="text-slate-400">{t('battle.labels.rank')}:</span>
+                        <span className="text-purple-400 font-medium">{translateRank(opponent.rank, language)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">{t('battle.labels.elo')}:</span>
                         <span className="text-yellow-400 font-medium">{Math.round(opponent.elo_rank)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Vitórias:</span>
+                        <span className="text-slate-400">{t('battle.labels.victories')}:</span>
                         <span className="text-green-400 font-medium">{opponent.victories}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Derrotas:</span>
+                        <span className="text-slate-400">{t('battle.labels.defeats')}:</span>
                         <span className="text-red-400 font-medium">{opponent.defeats}</span>
                       </div>
                     </div>
@@ -242,7 +372,7 @@ const Battle: React.FC = () => {
                       className="w-full mt-4 bg-gradient-to-r from-slate-600 to-blue-600 text-white py-2 px-4 rounded-lg hover:from-slate-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={battleLoading}
                     >
-                      {battleLoading ? 'Batalhando...' : 'Desafiar'}
+                      {battleLoading ? t('battle.actions.battling') : t('battle.actions.challenge')}
                     </button>
                   </div>
                 ))
@@ -251,126 +381,12 @@ const Battle: React.FC = () => {
           )}
         </div>
 
-        {/* Battle Result Modal/Section */}
-        {battleResult && (
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center">
-                <span className="text-2xl mr-3">
-                  {battleResult.winner_user_id === userId ? '🏆' : battleResult.winner_user_id === null ? '🤝' : '💀'}
-                </span>
-                Resultado da Batalha
-              </h2>
-              <button
-                onClick={() => setBattleResult(null)}
-                className="text-slate-400 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Battle Summary */}
-            <div className="mb-6">
-              <div className={`text-center py-4 px-6 rounded-lg mb-4 ${
-                battleResult.winner_user_id === userId 
-                  ? 'bg-green-900/30 border border-green-500/30' 
-                  : battleResult.winner_user_id === null 
-                  ? 'bg-yellow-900/30 border border-yellow-500/30'
-                  : 'bg-red-900/30 border border-red-500/30'
-              }`}>
-                <h3 className={`text-2xl font-bold ${
-                  battleResult.winner_user_id === userId 
-                    ? 'text-green-400' 
-                    : battleResult.winner_user_id === null 
-                    ? 'text-yellow-400'
-                    : 'text-red-400'
-                }`}>
-                  {battleResult.winner_user_id === userId 
-                    ? 'VITÓRIA!' 
-                    : battleResult.winner_user_id === null 
-                    ? 'EMPATE!'
-                    : 'DERROTA!'}
-                </h3>
-                <p className="text-slate-300 mt-2">
-                  Batalha #{battleResult.battle_id} • {new Date(battleResult.timestamp).toLocaleString('pt-BR')}
-                </p>
-              </div>
-
-              {/* Participants */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {battleResult.participants.map((participant) => (
-                  <div key={participant.user_id} className={`p-4 rounded-lg border ${
-                    participant.user_id === userId 
-                      ? 'bg-blue-900/20 border-blue-500/30' 
-                      : 'bg-slate-700/20 border-slate-600/30'
-                  }`}>
-                    <div className="flex items-center space-x-3 mb-3">
-                      <span className="text-2xl">
-                        {participant.user_id === userId ? '👤' : '🤖'}
-                      </span>
-                      <div>
-                        <h4 className="font-semibold text-white">{participant.nickname}</h4>
-                        <p className="text-sm text-slate-400">{participant.ship_name}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Ataque:</span>
-                        <span className="text-red-400">{participant.attack}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Escudo:</span>
-                        <span className="text-blue-400">{participant.shield}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">HP:</span>
-                        <span className="text-green-400">{participant.hp}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Evasão:</span>
-                        <span className="text-yellow-400">{participant.evasion}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Battle Log */}
-            <div className="bg-slate-900/50 rounded-lg p-4 max-h-64 overflow-y-auto">
-              <h4 className="font-semibold text-white mb-3 flex items-center">
-                <span className="text-lg mr-2">📜</span>
-                Log da Batalha
-              </h4>
-              <div className="space-y-1">
-                {battleResult.battle_log.map((logEntry, index) => (
-                  <div key={index} className="text-sm text-slate-300 font-mono">
-                    <span className="text-slate-500">[{index + 1}]</span> {logEntry}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-center space-x-4 mt-6">
-              <button
-                onClick={() => setBattleResult(null)}
-                className="px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
-              >
-                Fechar
-              </button>
-              <button
-                onClick={() => {
-                  // Could implement battle history or rematch functionality
-                  alert('Funcionalidade em desenvolvimento!');
-                }}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Ver Histórico
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Battle Log Modal */}
+        <BattleLogModal
+          isOpen={showBattleLogModal}
+          onClose={() => setShowBattleLogModal(false)}
+          battleResult={battleResult}
+        />
 
       </div>
     </GameLayout>

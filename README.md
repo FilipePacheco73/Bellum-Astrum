@@ -1,5 +1,7 @@
 # 🚀 Bellum Astrum
 
+**Current Version: 0.5.6**
+
 Bellum Astrum is a learning project focused on backend development with FastAPI, PostgreSQL database (Neon), and spaceship battle logic. The project is now organized to facilitate expansion with a modern frontend.
 
 ---
@@ -18,7 +20,7 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 - 🕹️ CRUD for users and ships
 - ⚔️ Advanced battle system with rank-based bonuses and NPC mechanics
 - 🛒 Ship market (buy/sell)
-- 🛠️ Shipyard system with repair and cooldown
+- 🛠️ **Shipyard System**: Complete ship repair functionality with 60-second cooldowns
 - 💼 **Work System**: Soft recovery mechanism for players who lose all ships/money
 - 🌱 Data seeding endpoints
 - 📡 Modular and extensible REST API
@@ -34,7 +36,7 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 ### 🖥️ Frontend & UI
 - 🖥️ Modern web interface (React + Vite + Tailwind)
 - 🔐 JWT-based authentication system
-- 🌍 Multi-language support (Portuguese/English)
+- 🌍 **Advanced Translation System**: Complete internationalization with Portuguese/English support
 - 🎮 Complete game interface with sidebar navigation
 - 📊 User dashboard with statistics and ELO ranking
 
@@ -56,7 +58,7 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 - **Testing:** Pytest, FastAPI TestClient
 - **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v3
 - **API Client:** Axios with automatic token injection
-- **Internationalization:** Custom translation system (PT-BR/EN-US)
+- **Internationalization:** Advanced translation system with nested keys, parameter interpolation, and fallbacks (PT-BR/EN-US)
 - **Structure:** Backend in `backend/app/`, Frontend in `frontend/`, Database in `database/`
 
 ---
@@ -393,7 +395,7 @@ flowchart LR
 
 ---
 
-## 🧩 Main Endpoints
+## 🧩 Endpoints
 
 ### Authentication
 - `POST /api/v1/users/register` – Register new user with email and password
@@ -402,6 +404,7 @@ flowchart LR
 ### Users
 - `GET /api/v1/users/` – List all users
 - `GET /api/v1/users/{user_id}` – Get specific user details
+- `GET /api/v1/users/{user_id}/ships` – Get user's owned ships with current stats
 
 ### Ships
 - `GET /api/v1/ships/` – List all ship templates
@@ -547,7 +550,11 @@ Work system & NPC progression          :done,    des17, 2025-07-12, 1d
 Multi-ship battles & formation system  :done,    des18, 2025-07-13, 1d
 Constants refactor & changelog updates :done,    des19, 2025-07-15, 1d
 Import refactor & multi-env config     :done,    des20, 2025-07-21, 1d
-Backend/Frontend refactor, i18n, changelog & security       :done,    des21, 2025-07-26, 4d
+Backend/Frontend refactor & i18n       :done,    des21, 2025-07-26, 4d
+Market system overhaul & Ships page    :done,    des22, 2025-07-28, 1d
+Shipyard repair system implementation  :done,    des23, 2025-07-29, 1d
+Advanced translation system & Battle UI :done,   des24, 2025-07-30, 1d
+Schema organization & BattleLog fixes  :done,    des25, 2025-07-31, 1d
 ```
 
 ---

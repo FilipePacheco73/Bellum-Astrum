@@ -3,6 +3,7 @@ import GameLayout from '../components/GameLayout';
 import { useLanguage } from '../contexts/LanguageContext';
 import translations from '../locales/translations';
 import { getShips, buyShip, getUserData, type Ship, type UserData } from '../config/api';
+import { getUserIdFromToken } from '../utils/shipUtils';
 
 const Market: React.FC = () => {
   const { language } = useLanguage();
@@ -22,15 +23,11 @@ const Market: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Get user data from localStorage (user_id)
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No authentication token found');
+        // Get user ID from token
+        const userId = getUserIdFromToken();
+        if (!userId) {
+          throw new Error('User not authenticated');
         }
-        
-        // Decode token to get user_id (simple JWT decode)
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const userId = payload.user_id;
         
         // Fetch ships and user data in parallel
         const [shipsData, userDataResponse] = await Promise.all([

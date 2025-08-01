@@ -5,7 +5,80 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.5] - 2025-01-28
+## [0.5.6] - 2025-07-31
+
+### Added
+- **Shipyard System**: Complete ship repair functionality implementation
+  - POST /shipyard/repair endpoint with ship_number parameter
+  - 60-second cooldown system between repairs per ship
+  - ShipyardLog model for tracking repair history and cooldowns
+  - Comprehensive repair validation (ship ownership, status, cooldown)
+  - Ship statistics restoration to base values (attack, shield, HP, evasion, fire_rate, value)
+- **Complete Translation System**: Full internationalization support across multiple pages
+  - Portuguese (pt-BR) and English (en-US) translations for Battle page interface
+  - BattleLogModal and ToastNotification components fully translated
+  - Enhanced LanguageContext with nested key support and parameter interpolation
+  - Translation function (t) with fallback mechanism for missing translations
+- **Battle System Enhancements**: Improved bonus application and ship data handling
+  - Proper rank bonus application at battle start and removal at battle end
+  - Enhanced battle flow with temporary bonus management during combat
+  - Improved ship statistics degradation system using base values
+
+### Changed
+- **Backend Schema Organization**: Major cleanup and consolidation
+  - Removed duplicate schemas.py file after comprehensive verification
+  - All organized schema files confirmed complete and properly structured
+  - Updated imports across all route files to use organized schema structure
+  - Consolidated ship-related schemas into single ship_schemas.py file
+- **Battle Interface**: Complete translation overhaul
+  - All hardcoded Portuguese text replaced with translation keys
+  - Battle modes, opponent selection, statistics, and actions fully localized
+  - Battle log modal with complete translation support for all elements
+  - Toast notifications with internationalization support
+- **Dashboard Improvements**: Enhanced information organization
+  - Eliminated duplicate "Naves Perdidas" and "Naves Destruídas" statistics
+  - Cleaner information hierarchy with battle stats in dedicated sections
+  - Improved user experience with organized data presentation
+- **Ships Page Enhancements**: Improved statistics display and rank bonus system
+  - Ship statistics now show "Current / Base" format with proper rounding
+  - Comprehensive rank bonus display with detailed calculations
+  - Enhanced fleet overview with rank-based bonus explanations
+
+### Fixed
+- **Critical BattleLogModal Issue**: Resolved destroyed ships showing "N/A" for base values
+  - Fixed getCurrentShipData() function to handle destroyed ships properly
+  - Implemented proper ship data retrieval for battle result display
+  - Enhanced ship lookup logic to show correct base stats even for destroyed ships
+- **Battle System Bonus Management**: Fixed rank bonus application inconsistencies
+  - Proper bonus application at battle start and removal before degradation
+  - Corrected ship statistics degradation to use base values consistently
+  - Fixed potential inconsistencies in final ship values after battles
+- **Translation Display Issues**: Resolved all hardcoded text and translation key problems
+  - Fixed translation key display issues (e.g., "battle.notifications.victory_title")
+  - Eliminated all hardcoded strings across battle interface components
+  - Consistent translation system implementation across all pages
+- **User Validation Security**: Enhanced nickname validation and PvP filtering
+  - Validation to prevent "Admin" and "test_user" nicknames in registration
+  - PvP battle filtering to exclude administrative and test accounts
+  - Client-side and server-side validation with proper visual feedback
+
+### Technical Improvements
+- **API Integration**: Enhanced backend-frontend communication
+  - Shipyard repair endpoint with comprehensive validation and error handling
+  - Improved ship data retrieval for battle logs and statistics display
+  - Better error handling for ship repair cooldowns and validation
+- **Translation Architecture**: Robust internationalization system
+  - Nested translation key support for better organization
+  - Dynamic parameter replacement in translation strings
+  - Comprehensive fallback mechanism for missing translations
+  - Enhanced type safety in translation functions
+- **Code Quality and Organization**: Improved maintainability and structure
+  - Removed duplicate schema files and consolidated imports
+  - Better separation of concerns in translation and battle logic
+  - Enhanced error handling and user feedback systems
+  - Improved component structure and reduced code duplication
+
+## [0.5.5] - 2025-07-28
 
 ### Added
 - **Market System Overhaul**: Complete redesign of the Market page with real-time functionality

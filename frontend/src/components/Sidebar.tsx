@@ -53,6 +53,13 @@ const Sidebar: React.FC<SidebarProps> = ({ userData }) => {
       description: sidebarT?.menu_descriptions?.market || 'Comprar e vender'
     },
     {
+      id: 'shipyard',
+      label: t.shipyard?.title || 'Shipyard',
+      path: '/shipyard',
+      icon: '🔧',
+      description: sidebarT?.menu_descriptions?.shipyard || 'Reparar naves'
+    },
+    {
       id: 'users',
       label: t.users?.title || 'Players',
       path: '/users',

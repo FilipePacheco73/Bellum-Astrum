@@ -29,6 +29,9 @@ DAMAGE_VARIATION_RANGE = (0.85, 1.15)
 # Credits awarded multiplier
 CREDITS_AWARDED_MULTIPLIER = 0.1
 
+# Shipyard constants
+SHIPYARD_REPAIR_COOLDOWN_SECONDS = 60  # Cooldown between ship repairs
+
 # Ship sell value multiplier
 SELL_VALUE_MULTIPLIER = 0.4
 

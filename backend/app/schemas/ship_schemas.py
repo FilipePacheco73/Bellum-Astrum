@@ -22,12 +22,6 @@ class ShipBase(BaseModel):
     hp: Optional[float] = 100
     value: Optional[int] = 1000
 
-class ShipCreate(ShipBase):
-    """
-    Model for creating a new ship.
-    Inherits all attributes from ShipBase.
-    """
-    pass
 
 class ShipResponse(ShipBase):
     """
