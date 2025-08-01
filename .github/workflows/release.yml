@@ -39,6 +39,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ steps.changelog.outputs.version }} \
+          # Create temporary file for release notes
+          echo "${{ steps.changelog.outputs.body }}" > release_notes.txt
+          
+          # Create release using the temporary file
+          gh release create "${{ steps.changelog.outputs.version }}" \
             --title "Release ${{ steps.changelog.outputs.version }}" \
-            --notes "${{ steps.changelog.outputs.body }}"
+            --notes-file release_notes.txt
