@@ -21,6 +21,8 @@ jobs:
       - name: Get latest changelog entry
         id: changelog
         run: |
+          export LC_ALL=C.UTF-8
+          export LANG=C.UTF-8
           VERSION=$(grep -m1 '^## ' $CHANGELOG_FILE | sed -E 's/^## \[([0-9.]+)\].*/v\1/')
           BODY=$(awk '/^## /{i++}i==2{exit}i==1' $CHANGELOG_FILE | tail -n +2)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
