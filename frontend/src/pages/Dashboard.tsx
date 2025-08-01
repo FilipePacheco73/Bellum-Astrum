@@ -234,15 +234,15 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-slate-400">{t.elo_rating}</span>
-                <span className="text-yellow-400 font-semibold">{(userData.elo_rank || 1000).toLocaleString()}</span>
+                <span className="text-yellow-400 font-semibold">{Math.round(userData.elo_rank || 1000).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-slate-400">{t.damage_dealt}</span>
-                <span className="text-orange-400 font-semibold">{(userData.damage_dealt || 0).toLocaleString()}</span>
+                <span className="text-orange-400 font-semibold">{Math.round(userData.damage_dealt || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-slate-400">{t.additional_stats?.damage_taken || 'Damage Taken'}</span>
-                <span className="text-orange-300 font-semibold">{(userData.damage_taken || 0).toLocaleString()}</span>
+                <span className="text-orange-300 font-semibold">{Math.round(userData.damage_taken || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-slate-400">{t.ships_destroyed}</span>
@@ -330,28 +330,7 @@ const Dashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
-          <h2 className="text-xl font-bold text-white mb-4">{t.quick_actions}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg transition-colors text-center">
-              <span className="text-2xl mb-2 block">🚀</span>
-              <span className="text-sm">{t.my_ships}</span>
-            </button>
-            <button className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg transition-colors text-center">
-              <span className="text-2xl mb-2 block">🛒</span>
-              <span className="text-sm">{t.market}</span>
-            </button>
-            <button className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-lg transition-colors text-center">
-              <span className="text-2xl mb-2 block">⚔️</span>
-              <span className="text-sm">{t.battle}</span>
-            </button>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg transition-colors text-center">
-              <span className="text-2xl mb-2 block">👥</span>
-              <span className="text-sm">{t.users}</span>
-            </button>
-          </div>
-        </div>
+
       </div>
     </GameLayout>
   );

@@ -77,7 +77,49 @@ def get_ship_route(ship_id: int, request: Request, db: Session = Depends(get_db)
         raise HTTPException(status_code=500, detail=f"Ship lookup failed: {str(e)}")
 
 @router.get("/user/{user_id}/ships", response_model=list[OwnedShipResponse])
-def get_user_ships_route(user_id: int, db: Session = Depends(get_db)):
-    """Get all owned ships for a specific user"""
-    ships = ship_crud.get_user_owned_ships(db=db, user_id=user_id)
+def get_user_ships_route(
+    user_id: int, 
+    db: Session = Depends(get_db),
+    status: str = None
+):
+    """Get owned ships for a specific user with optional status filtering
+    
+    Args:
+        user_id: ID of the user
+        status: Optional comma-separated list of status to include (e.g., "active,owned,destroyed")
+                If not provided, defaults to "active,owned" (excludes destroyed ships)
+    """
+    status_filter = None
+    if status:
+        status_filter = [s.strip() for s in status.split(',')]
+    
+    ships = ship_crud.get_user_owned_ships(db=db, user_id=user_id, status_filter=status_filter)
     return ships
+
+@router.get("/owned/{ship_number}", response_model=OwnedShipResponse)
+def get_owned_ship_by_number_route(ship_number: int, db: Session = Depends(get_db)):
+    """Get owned ship data by ship_number (for battle log purposes)
+    
+    This endpoint allows fetching ship data by ship_number regardless of owner,
+    which is useful for displaying base stats in battle logs for NPC ships.
+    """
+    try:
+        ship = ship_crud.get_owned_ship_by_number(db=db, ship_number=ship_number)
+        if not ship:
+            raise HTTPException(status_code=404, detail="Ship not found")
+        return ship
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_error(
+            db=db,
+            action=GameAction.ACTIVATE_SHIP,  # Reusing existing action
+            error_message=str(e),
+            user_id=None,
+            details={
+                "ship_number": ship_number,
+                "action": "get_ship_by_number",
+                "exception_type": type(e).__name__
+            }
+        )
+        raise HTTPException(status_code=500, detail=f"Failed to get ship data: {str(e)}")

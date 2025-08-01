@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from backend.app.crud.shipyard_crud import get_last_shipyard_log, update_shipyard_log, repair_owned_ship, can_repair_ship
+from backend.app.crud.shipyard_crud import get_last_shipyard_log, update_shipyard_log, repair_owned_ship, can_repair_ship, get_user_ships_cooldown_status
 from database.models import OwnedShips
-from backend.app.schemas.shipyard_schemas import ShipRepairResponse
+from backend.app.schemas.shipyard_schemas import ShipRepairResponse, ShipyardStatusResponse
 from backend.app.utils.auth_utils import get_current_user
 from backend.app.utils import log_user_action, log_error, GameAction
 from backend.app.database import get_db
@@ -73,3 +73,39 @@ def repair_ship(
         user_id=ship.user_id,
         ship_id=ship.ship_id
     )
+
+@router.get("/status", response_model=ShipyardStatusResponse)
+def get_shipyard_status(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get cooldown status for all user ships.
+    
+    Returns information about which ships can be repaired,
+    which are in cooldown, and which need repair.
+    """
+    try:
+        status_data = get_user_ships_cooldown_status(db, current_user.user_id)
+        
+        log_user_action(
+            db=db,
+            action=GameAction.PERFORMANCE_ISSUE,
+            user_id=current_user.user_id,
+            details={"action": "shipyard_status_check", "total_ships": status_data['total_ships']}
+        )
+        
+        return ShipyardStatusResponse(**status_data)
+        
+    except Exception as e:
+        log_error(
+            db=db,
+            action=GameAction.PERFORMANCE_ISSUE,
+            error_message=f"Error getting shipyard status: {str(e)}",
+            user_id=current_user.user_id,
+            details={"error": str(e)}
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Error retrieving shipyard status"
+        )

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta, timezone
 from database.models import OwnedShips, ShipyardLog
+from datetime import datetime, timezone
+from backend.app.utils.constants import SHIPYARD_REPAIR_COOLDOWN_SECONDS
 
 # Get the last shipyard log for a user and ship
 def get_last_shipyard_log(db: Session, user_id: int, ship_number: int):
@@ -32,11 +33,66 @@ def repair_owned_ship(db: Session, ship: OwnedShips):
     return ship
 
 # Check if the ship can be repaired (1 minute cooldown)
-def can_repair_ship(log: ShipyardLog, cooldown_seconds: int = 60):
+def can_repair_ship(log: ShipyardLog, cooldown_seconds: int = SHIPYARD_REPAIR_COOLDOWN_SECONDS):
     if not log:
         return True, 0
+    
     now = datetime.now(timezone.utc)
-    elapsed = (now - log.last_used_at).total_seconds()
+    
+    # Ensure both datetimes have timezone info
+    last_used = log.last_used_at
+    if last_used.tzinfo is None:
+        # If the stored datetime is naive, assume it's UTC
+        last_used = last_used.replace(tzinfo=timezone.utc)
+    
+    elapsed = (now - last_used).total_seconds()
     if elapsed >= cooldown_seconds:
         return True, 0
     return False, int(cooldown_seconds - elapsed)
+
+# Check if a ship needs repair (any actual stat is less than base stat)
+def ship_needs_repair(ship: OwnedShips) -> bool:
+    return (ship.actual_attack < ship.base_attack or
+            ship.actual_shield < ship.base_shield or
+            ship.actual_hp < ship.base_hp or
+            ship.actual_fire_rate < ship.base_fire_rate or
+            ship.actual_evasion < ship.base_evasion)
+
+# Get cooldown status for all user ships
+def get_user_ships_cooldown_status(db: Session, user_id: int, cooldown_seconds: int = SHIPYARD_REPAIR_COOLDOWN_SECONDS):
+    # Get all user ships that are not destroyed or sold
+    ships = db.query(OwnedShips).filter(
+        OwnedShips.user_id == user_id,
+        OwnedShips.status.in_(['active', 'owned'])
+    ).all()
+    
+    ship_statuses = []
+    ships_needing_repair = 0
+    ships_in_cooldown = 0
+    
+    for ship in ships:
+        # Check if ship needs repair
+        needs_repair = ship_needs_repair(ship)
+        if needs_repair:
+            ships_needing_repair += 1
+        
+        # Check cooldown status
+        log = get_last_shipyard_log(db, user_id, ship.ship_number)
+        can_repair, wait_seconds = can_repair_ship(log, cooldown_seconds)
+        
+        if not can_repair:
+            ships_in_cooldown += 1
+        
+        ship_statuses.append({
+            'ship_number': ship.ship_number,
+            'can_repair': can_repair,
+            'cooldown_seconds': wait_seconds,
+            'needs_repair': needs_repair
+        })
+    
+    return {
+        'ships': ship_statuses,
+        'total_ships': len(ships),
+        'ships_needing_repair': ships_needing_repair,
+        'ships_in_cooldown': ships_in_cooldown
+    }

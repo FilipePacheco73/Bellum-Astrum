@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import GameLayout from '../components/GameLayout';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { OwnedShip, UserShipLimits, UserData } from '../config/api';
-import { getUserOwnedShips, getUserShipLimits, getUserData, activateShip, deactivateShip } from '../config/api';
+import { getUserOwnedShips, getUserShipLimits, getUserData, activateShip, deactivateShip, updateUserFormation } from '../config/api';
 import translations from '../locales/translations';
-
-interface DecodedToken {
-  user_id: number;
-  sub: string;
-  exp: number;
-}
+import { translateRank } from '../utils/rankUtils';
+import { getShipIcon, getUserIdFromToken } from '../utils/shipUtils';
 
 const Ships: React.FC = () => {
   const { language } = useLanguage();
@@ -21,43 +17,12 @@ const Ships: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<{ [key: number]: boolean }>({});
+  const [selectedFormation, setSelectedFormation] = useState<string>('');
+  const [formationLoading, setFormationLoading] = useState(false);
 
-  // Get ship icon based on ship name
-  const getShipIcon = (shipName: string): string => {
-    const name = shipName.toLowerCase();
-    if (name.includes('falcon') || name.includes('hawk') || name.includes('eagle')) return '🦅';
-    if (name.includes('swift') || name.includes('condor')) return '🚀';
-    if (name.includes('sparrow') || name.includes('kestrel')) return '🛸';
-    if (name.includes('osprey') || name.includes('harrier') || name.includes('raven')) return '✈️';
-    if (name.includes('breeze') || name.includes('lightning') || name.includes('thunder')) return '⚡';
-    if (name.includes('tempest') || name.includes('storm')) return '🌪️';
-    if (name.includes('comet') || name.includes('nova') || name.includes('meteor')) return '☄️';
-    if (name.includes('pulsar') || name.includes('asteroid')) return '🌌';
-    if (name.includes('galaxy') || name.includes('quasar') || name.includes('nebula')) return '🌠';
-    if (name.includes('vortex') || name.includes('supernova')) return '💫';
-    if (name.includes('orion') || name.includes('phoenix') || name.includes('titan')) return '🔥';
-    if (name.includes('seraph') || name.includes('leviathan')) return '👑';
-    return '🚀'; // default
-  };
 
-  // Get user ID from JWT token
-  const getUserId = (): number | null => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-      // Simple JWT decode without external library
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      const decoded = JSON.parse(jsonPayload) as DecodedToken;
-      return decoded.user_id;
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      return null;
-    }
-  };
+
+
 
   // Calculate rank bonuses based on user level and rank
   const getRankBonuses = () => {
@@ -102,7 +67,7 @@ const Ships: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const userId = getUserId();
+      const userId = getUserIdFromToken();
       if (!userId) {
         setError('User not authenticated');
         return;
@@ -118,6 +83,8 @@ const Ships: React.FC = () => {
       setShips(shipsData);
       setShipLimits(limitsData);
       setUserData(userDataResponse);
+      // Initialize selected formation with user's current default
+      setSelectedFormation(userDataResponse.default_formation || 'AGGRESSIVE');
     } catch (error) {
       console.error('Error loading ships data:', error);
       setError(t.messages.error_loading);
@@ -174,24 +141,30 @@ const Ships: React.FC = () => {
           ? { ...ship, status: 'owned' }
           : ship
       ));
-      
-      // Update ship limits
-      if (shipLimits) {
-        setShipLimits({
-          ...shipLimits,
-          current_active_ships: shipLimits.current_active_ships - 1,
-          slots_remaining: shipLimits.slots_remaining + 1,
-          can_activate_more: true
-        });
-      }
-      
-      // Show success message
-      console.log(t.messages.deactivation_success);
     } catch (error) {
       console.error('Error deactivating ship:', error);
-      console.error(t.messages.deactivation_error);
+      setError(t.messages.deactivation_error);
     } finally {
       setActionLoading(prev => ({ ...prev, [shipNumber]: false }));
+    }
+  };
+
+  // Handle formation save
+  const handleSaveFormation = async () => {
+    if (!userData || !selectedFormation) return;
+    
+    setFormationLoading(true);
+    try {
+      await updateUserFormation(userData.user_id, selectedFormation);
+      // Update local user data
+      setUserData({ ...userData, default_formation: selectedFormation });
+      // Show success message (you could add a toast notification here)
+      console.log('Formation saved successfully');
+    } catch (error) {
+      console.error('Error saving formation:', error);
+      setError(t.labels.formation_error);
+    } finally {
+      setFormationLoading(false);
     }
   };
 
@@ -244,8 +217,8 @@ const Ships: React.FC = () => {
           <p className="text-slate-400">{t.subtitle}</p>
         </div>
 
-        {/* Fleet Overview and Rank Bonuses */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Fleet Overview, Rank Bonuses and Default Formation */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Fleet Overview */}
           <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
@@ -284,7 +257,7 @@ const Ships: React.FC = () => {
                 <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-700/30">
                   <div>
                     <span className="text-slate-400 text-sm">{t.labels.current_rank}:</span>
-                    <span className="ml-2 text-yellow-400 font-semibold">{userData.rank}</span>
+                    <span className="ml-2 text-yellow-400 font-semibold">{translateRank(userData.rank, language)}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 text-sm">{t.labels.level}:</span>
@@ -335,6 +308,68 @@ const Ships: React.FC = () => {
                 <p className="text-slate-400">{t.labels.loading_rank_info}</p>
               </div>
             )}
+          </div>
+
+          {/* Default Formation Selection */}
+          <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
+              <span className="text-2xl mr-3">⚔️</span>
+              {t.labels.default_formation}
+            </h2>
+            <p className="text-slate-400 text-sm mb-4">{t.labels.formation_description}</p>
+            
+            <div className="space-y-3">
+              {['DEFENSIVE', 'AGGRESSIVE', 'TACTICAL'].map((formation) => (
+                <div key={formation} className="flex items-center space-x-3">
+                  <input
+                    type="radio"
+                    id={formation}
+                    name="formation"
+                    value={formation}
+                    checked={selectedFormation === formation}
+                    onChange={(e) => setSelectedFormation(e.target.value)}
+                    className="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500 focus:ring-2"
+                  />
+                  <label htmlFor={formation} className="flex-1 cursor-pointer">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-medium">
+                        {formation}
+                      </span>
+                      <span className="text-slate-400 text-sm">
+                        {t.formation.strategies[formation as keyof typeof t.formation.strategies]}
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              ))}
+            </div>
+            
+            <button
+              onClick={handleSaveFormation}
+              disabled={formationLoading || !selectedFormation || (userData ? selectedFormation === userData.default_formation : false)}
+              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center"
+            >
+              {formationLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                t.labels.save_formation
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Visual Separator */}
+        <div className="flex items-center justify-center py-6">
+          <div className="flex items-center space-x-4 w-full max-w-md">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-slate-600"></div>
+            <div className="flex items-center space-x-2 px-4">
+              <span className="text-slate-400 text-sm font-medium">Suas Naves</span>
+              <span className="text-2xl">🚀</span>
+            </div>
+            <div className="flex-1 h-px bg-gradient-to-l from-transparent via-slate-600 to-slate-600"></div>
           </div>
         </div>
 

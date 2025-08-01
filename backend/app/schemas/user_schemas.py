@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, field_serializer
+from pydantic import BaseModel, EmailStr, ConfigDict, field_serializer, field_validator
 from typing import Optional, Any
 
 class UserBase(BaseModel):
@@ -100,6 +100,7 @@ class UserResponse(BaseModel):
     experience: int
     level: int
     rank: Any
+    default_formation: str
     
     @field_serializer('rank')
     def serialize_rank(self, rank: Any) -> str:
@@ -109,6 +110,25 @@ class UserResponse(BaseModel):
         return str(rank)
     
     model_config = ConfigDict(from_attributes=True)
+
+
+class UpdateFormationRequest(BaseModel):
+    """
+    Request model for updating user's default formation.
+    
+    Attributes:
+        default_formation (str): Formation strategy ("DEFENSIVE", "AGGRESSIVE", "TACTICAL")
+    """
+    default_formation: str
+    
+    @field_validator('default_formation')
+    @classmethod
+    def validate_formation(cls, v: str) -> str:
+        """Validate formation is one of the allowed values."""
+        allowed_formations = ["DEFENSIVE", "AGGRESSIVE", "TACTICAL"]
+        if v.upper() not in allowed_formations:
+            raise ValueError(f"Formation must be one of: {', '.join(allowed_formations)}")
+        return v.upper()
 
 
 class UserShipLimitsResponse(BaseModel):

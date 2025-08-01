@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 from backend.app.database import get_db
 from database.models import User
-from backend.app.schemas.user_schemas import UserCreate, UserLogin, UserResponse
+from backend.app.schemas.user_schemas import UserCreate, UserLogin, UserResponse, UpdateFormationRequest
 from backend.app.crud import user_crud
 from backend.app.utils import create_access_token, log_user_action, log_security_event, log_error, GameAction
 import time
@@ -151,4 +151,18 @@ def get_user_route(user_id: int, db: Session = Depends(get_db)):
     db_user = user_crud.get_user(db=db, user_id=user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+@router.put("/{user_id}/formation", response_model=UserResponse)
+def update_user_formation(user_id: int, formation_request: UpdateFormationRequest, db: Session = Depends(get_db)):
+    """Update user's default formation."""
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update the formation
+    db_user.default_formation = formation_request.default_formation
+    db.commit()
+    db.refresh(db_user)
+    
     return db_user

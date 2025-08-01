@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from backend.app.schemas.ship_schemas import ShipCreate
 from database import Ship
 from database.models import OwnedShips
 from typing import List
@@ -11,38 +10,43 @@ def get_ship(db: Session, ship_id: int):
 def get_ships(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Ship).offset(skip).limit(limit).all()
 
-def create_ship(db: Session, ship: ShipCreate):
-    db_ship = Ship(**ship.dict())
-    db.add(db_ship)
-    db.commit()
-    db.refresh(db_ship)
-    return db_ship
-
-def update_ship(db: Session, ship_id: int, ship_data: ShipCreate):
-    db_ship = db.query(Ship).filter(Ship.ship_id == ship_id).first()
-    if db_ship:
-        for key, value in ship_data.dict(exclude_unset=True).items():
-            setattr(db_ship, key, value)
-        db.commit()
-        db.refresh(db_ship)
-    return db_ship
-
-def delete_ship(db: Session, ship_id: int):
-    db_ship = db.query(Ship).filter(Ship.ship_id == ship_id).first()
-    if db_ship:
-        db.delete(db_ship)
-        db.commit()
-        return True
-    return False
-
-def get_user_owned_ships(db: Session, user_id: int) -> List[OwnedShips]:
+def get_user_owned_ships(db: Session, user_id: int, status_filter: List[str] = None) -> List[OwnedShips]:
     """
-    Get all owned ships for a user (both active and owned status).
-    Used for displaying user's ship collection.
+    Get owned ships for a user with optional status filtering.
+    
+    Args:
+        db: Database session
+        user_id: ID of the user
+        status_filter: List of status to include. If None, defaults to ['active', 'owned']
+                      Common values: ['active', 'owned', 'destroyed']
+    
+    Returns:
+        List of OwnedShips matching the criteria
     """
+    if status_filter is None:
+        status_filter = ['active', 'owned']  # Default: exclude destroyed ships
+    
     ships = db.query(OwnedShips).filter(
         OwnedShips.user_id == user_id,
-        OwnedShips.status.in_(['active', 'owned'])  # Exclude destroyed ships
+        OwnedShips.status.in_(status_filter)
     ).all()
     
     return ships
+
+def get_owned_ship_by_number(db: Session, ship_number: int) -> OwnedShips:
+    """
+    Get owned ship data by ship_number regardless of owner.
+    Used for battle log purposes to fetch base stats of any ship.
+    
+    Args:
+        db: Database session
+        ship_number: Ship number to search for
+    
+    Returns:
+        OwnedShips object if found, None otherwise
+    """
+    ship = db.query(OwnedShips).filter(
+        OwnedShips.ship_number == ship_number
+    ).first()
+    
+    return ship

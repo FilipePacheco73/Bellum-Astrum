@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Users from './pages/Users';
 import Ships from './pages/Ships';
 import Market from './pages/Market';
+import Shipyard from './pages/Shipyard';
 import Battle from './pages/Battle';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -10,9 +11,11 @@ import Dashboard from './pages/Dashboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SidebarProvider } from './contexts/SidebarContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import SessionExpiredModal from './components/SessionExpiredModal';
+import ToastContainer from './components/ToastNotification';
 import './App.css';
 
 function AppContent() {
@@ -21,7 +24,7 @@ function AppContent() {
   const { showSessionExpired, setShowSessionExpired } = useAuth();
   
   // Routes that use the sidebar layout (game pages)
-  const sidebarRoutes = ['/dashboard', '/users', '/ships', '/market', '/battle'];
+  const sidebarRoutes = ['/dashboard', '/users', '/ships', '/market', '/shipyard', '/battle'];
   const useSidebar = sidebarRoutes.includes(location.pathname);
 
   const handleSessionExpiredClose = () => {
@@ -52,6 +55,7 @@ function AppContent() {
           <Route path="/users" element={<Users />} />
           <Route path="/ships" element={<Ships />} />
           <Route path="/market" element={<Market />} />
+          <Route path="/shipyard" element={<Shipyard />} />
           <Route path="/battle" element={<Battle />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -63,6 +67,9 @@ function AppContent() {
         onClose={handleSessionExpiredClose}
         onLogin={handleSessionExpiredLogin}
       />
+      
+      {/* Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 }
@@ -71,11 +78,13 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <SidebarProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </SidebarProvider>
+        <NotificationProvider>
+          <SidebarProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </SidebarProvider>
+        </NotificationProvider>
       </LanguageProvider>
     </AuthProvider>
   );

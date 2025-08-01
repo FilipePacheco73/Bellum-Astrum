@@ -87,6 +87,9 @@ def apply_rank_bonus_to_ship_stats(user, ship_stats: dict, db: Session) -> dict:
             # if bonus is not None and bonus != 0:
             if bonus:
                 stats[key] = stats.get(key, 0) * (1 + bonus)
+                # Ensure value field is always an integer for schema validation
+                if key == 'value':
+                    stats[key] = int(round(stats[key]))
     return stats
 
 
