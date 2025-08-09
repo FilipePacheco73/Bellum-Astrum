@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.8] - 2025-08-09
+
+### Fixed
+- **User Data Consistency**: Resolved inconsistent user information display across pages
+  - All pages now show correct user nickname and level instead of "Player Level 1" fallbacks
+  - Dashboard, Battle, Ships, Market, and Work pages display unified user information
+  - Enhanced useUserData hook with proper loading states and error handling
+  - Automatic data synchronization across all game pages
+  - Improved user experience with consistent sidebar information display
+
+- **Translation System Enhancements**: Complete internationalization support
+  - Fixed all remaining hardcoded Portuguese text in Battle page components
+  - Enhanced translation system with parameter interpolation and nested key support
+  - BattleLogModal and ToastNotification components fully translated
+  - Comprehensive battle system translations for both Portuguese and English
+  - Consistent language switching across all game interface elements
+
+### Technical Improvements
+- **Code Organization**: Enhanced component structure and data flow
+  - Centralized user data management with reusable custom hooks
+  - Improved translation context with advanced interpolation capabilities
+  - Better separation of concerns between UI components and data logic
+  - Enhanced error handling and loading states across all pages
+
+- **Documentation Structure**: Reorganized README.md with improved navigation
+  - Enhanced project overview with clearer game feature descriptions
+  - Structured documentation links for Backend, Database, and Frontend components
+  - Improved tech stack presentation with comprehensive technology listing
+  - Better organized project goals section with educational objectives
+  - Professional formatting with emoji icons and logical section flow
+
 ## [0.5.7] - 2025-08-09
 
 ### Added

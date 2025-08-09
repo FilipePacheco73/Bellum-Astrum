@@ -1,308 +1,70 @@
 # 🚀 Bellum Astrum
 
-**Current Version: 0.5.7** | **[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
+**Current Version: 0.5.8** | **[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
 
-Bellum Astrum is a learning project focused on backend development with FastAPI, PostgreSQL database (Neon), and spaceship battle logic. The project is now organized to facilitate expansion with a modern frontend.
+## 🎮 About the Game
 
----
+Bellum Astrum is a strategic spaceship battle game where players command fleets, engage in tactical combat, and progress through military ranks. Set in a futuristic space environment, players can:
+
+- **Battle System**: Engage in strategic combat against NPCs or other players with complex battle mechanics
+- **Fleet Management**: Buy, sell, repair, and customize spaceships with different stats and capabilities
+- **Progression**: Advance through 11 military ranks (Recruit to Fleet Admiral) with rank-based bonuses
+- **Economy**: Participate in a dynamic economy with ship trading and work-based income recovery
+- **Multiplayer**: Challenge other players in PvP battles with ELO ranking system
 
 ## 🎯 Project Goals
 
-- 🧩 **Backend Learning:** Practice with FastAPI, SQLAlchemy, and Pydantic.
-- 🔗 **RESTful API:** Endpoints for game resources.
-- 🤖 **AI-Ready Base:** Structure ready for intelligent agents and frontend integration.
+Bellum Astrum serves as a comprehensive learning project with multiple educational objectives:
 
----
-
-## ✨ Features
-
-### 🎮 Core Game Systems
-- 🕹️ CRUD for users and ships
-- ⚔️ Advanced battle system with rank-based bonuses and NPC mechanics
-- 🛒 Ship market (buy/sell)
-- 🛠️ **Shipyard System**: Complete ship repair functionality with 60-second cooldowns
-- 💼 **Work System**: Soft recovery mechanism for players who lose all ships/money
-- 🌱 Data seeding endpoints
-- 📡 Modular and extensible REST API
-
-### 🎯 Progression & Economy
-- 🎯 **Progression System**: Experience, levels, and military ranks (11 ranks: Recruit to Fleet Admiral)
-- ⭐ **Rank Bonuses**: Multiplicative stat bonuses (0% to 60%) based on user rank
-- 💰 **Work System**: Rank-based recovery jobs with progressive income (700-40,000 credits)
-- ⏰ **Smart Cooldowns**: Balanced work intervals (2min for Recruit, 12min for Fleet Admiral) 
-- 🤖 **NPC System**: 11 balanced AI opponents with special battle mechanics
-- 📈 **Dynamic XP**: Experience scales based on opponent difficulty and level difference
-
-### 🖥️ Frontend & UI
-- 🖥️ Modern web interface (React + Vite + Tailwind)
-- 🔐 JWT-based authentication system
-- 🌍 **Advanced Translation System**: Complete internationalization with Portuguese/English support
-- 🎮 Complete game interface with sidebar navigation
-- 📊 User dashboard with statistics and ELO ranking
-
-### 🔧 Technical Infrastructure
-- 🗄️ **Centralized Database Module**: Organized database management with lifecycle controls
-- 📝 **Comprehensive Logging**: System audit trails and monitoring
-- 🔧 **Database Scripts**: Command-line tools for database management
-- 🔄 Automated GitHub release workflow (changelog-based)
-- 🧪 Full end-to-end automated tests (18 tests covering all systems)
-- 📝 Standardized Copilot instructions
-
----
+- 🧩 **Backend Development**: Master FastAPI, SQLAlchemy, and Pydantic in a real-world application
+- 🏗️ **System Architecture**: Learn to design scalable, modular backend systems
+- 🗄️ **Database Design**: Practice complex database relationships and data modeling
+- 🔗 **RESTful APIs**: Build comprehensive API endpoints for game resources
+- 🎨 **Frontend Integration**: Create modern React-based user interfaces
+- 🌍 **Internationalization**: Implement multi-language support systems
+- 🧪 **Testing**: Develop comprehensive test suites and automation
+- 🤖 **AI-Ready Foundation**: Structure ready for intelligent agents and advanced game logic
 
 ## 🛠️ Tech Stack
 
 - **Backend:** Python 3.12+, FastAPI, SQLAlchemy, Pydantic
-- **Database:** PostgreSQL (Neon, etc.) — `DATABASE_URL` required
+- **Database:** PostgreSQL with centralized management module
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v3
 - **Authentication:** JWT with bcrypt password hashing
-- **Testing:** Pytest, FastAPI TestClient
-- **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v3
-- **API Client:** Axios with automatic token injection
-- **Internationalization:** Advanced translation system with nested keys, parameter interpolation, and fallbacks (PT-BR/EN-US)
-- **Structure:** Backend in `backend/app/`, Frontend in `frontend/`, Database in `database/`
+- **Testing:** Pytest with comprehensive end-to-end coverage
+- **Internationalization:** Advanced translation system (PT-BR/EN-US)
+- **Deployment:** Automated GitHub release workflow
 
----
+## 📚 Documentation
 
-## 🏗️ Database Architecture
+For detailed information about each component of the project, please refer to the specific documentation:
 
-The project features a centralized database module with clean imports and lifecycle management, now using PostgreSQL (Neon) as the only supported backend:
+- 📖 **[Backend Documentation](backend/README.md)** - FastAPI setup, routes, business logic, and API endpoints
+- 🗄️ **[Database Documentation](database/README.md)** - Database schema, models, setup, and management tools
+- 🎨 **[Frontend Documentation](frontend/README.md)** - React application, components, styling, and user interface
 
-### Database Structure
-```
-database/
-├── __init__.py           # Clean exports for easy imports
-├── config.py             # Database configuration and engine setup
-├── session.py            # Session management and dependency injection
-├── models.py             # SQLAlchemy models (User, Ship, OwnedShips, etc.)
-├── base_data.py          # Initial data for seeding
-├── lifecycle.py          # Database initialization and health checks
-├── setup.py              # Main command-line setup script
-└── scripts/              # Quick utility scripts
-    ├── init_db.py        # Quick initialization
-    ├── seed_db.py        # Quick seeding
-    └── reset_db.py       # Quick reset
-```
+## 🚀 Quick Start
 
-### Database Models
-- **User**: Game user accounts with ELO ranking, experience, levels, ranks, and statistics
-- **Ship**: Ship templates with base characteristics (30 ships in 6 tiers)
-- **OwnedShips**: Individual ships owned by users with current stats
-- **BattleHistory**: Records of battles with detailed logs
-- **SystemLogs**: Comprehensive audit logging for security and debugging
-- **ShipyardLog**: Tracks last shipyard usage per user/ship
-- **RankBonus**: Stores rank-based stat bonuses for progression system
+To get started with Bellum Astrum, follow these basic steps:
 
-### Database Management
+1. **Clone and Setup**: Clone the repository and set up your Python virtual environment
+2. **Database Configuration**: Set up PostgreSQL and configure environment variables
+3. **Backend Setup**: Install Python dependencies and start the FastAPI server
+4. **Frontend Setup**: Install Node.js dependencies and start the React development server
+5. **Play**: Register an account and start battling!
 
-You can manage the database using the provided command-line scripts:
+For detailed setup instructions, please refer to the component-specific documentation linked above.
 
-```bash
-# Check database connection
-python database/setup.py health
+## 🎮 Game Features
 
-# Initialize database with sample data (includes ships, NPCs, etc.)
-python database/setup.py init --seed
-
-# Add sample data to existing database
-python database/setup.py seed
-
-# Reset database (drop + recreate + seed)
-python database/setup.py reset --seed
-
-# Clear all data (keep structure)
-python database/setup.py clear
-```
-
-> **Note:** Make sure your environment variables are properly configured before running these commands.
-
-### Clean Imports
-```python
-# Simple imports for common use cases
-from database import get_db, User, Ship, OwnedShips
-from database import initialize_database, check_database_health
-```
-
----
-
-## 🏁 Getting Started
-
-### Prerequisites
-
-- Python 3.12+
-- Node.js 18+ (for frontend)
-- PostgreSQL database (Neon, local PostgreSQL, etc.)
-- Git
-- (Recommended) Virtual environment: `python -m venv venv`
-
-### 1. 📥 Clone and Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/FilipePacheco73/Bellum-Astrum.git
-cd Bellum-Astrum
-
-# Create and activate virtual environment
-python -m venv venv
-
-# On Windows:
-venv\Scripts\activate
-
-# On Linux/macOS:
-source venv/bin/activate
-
-# Install Python dependencies
-pip install -r requirements.txt
-```
-
-### 2. 🗄️ Database Setup
-
-#### Required Environment Variables
-
-Create environment files with the following variables:
-
-**`database/.env`** (Database configuration):
-```env
-# Environment (local, dev, prod)
-ENVIRONMENT=local
-
-# Database URLs for different environments
-DATABASE_URL_LOCAL=postgresql://username:password@localhost:5432/bellum_astrum_local
-DATABASE_URL_DEV=postgresql://username:password@dev-host:5432/bellum_astrum_dev
-DATABASE_URL_PROD=postgresql://username:password@prod-host:5432/bellum_astrum_prod
-
-# Database settings
-DB_ECHO=False
-
-# User seeding (for initial data)
-ADMIN_EMAIL=your-admin-email@example.com
-ADMIN_PASSWORD=your-secure-admin-password
-NPC_PASSWORD=your-secure-npc-password
-NPC_ASTRO_EMAIL=npc1@example.com
-NPC_CYBER_EMAIL=npc2@example.com
-NPC_ORION_EMAIL=npc3@example.com
-NPC_VEGA_EMAIL=npc4@example.com
-NPC_NEBULA_EMAIL=npc5@example.com
-NPC_PULSAR_EMAIL=np6@example.com
-NPC_QUASAR_EMAIL=npc7@example.com
-NPC_TITAN_EMAIL=npc8@example.com
-NPC_SOLARIS_EMAIL=npc9@example.com
-NPC_ANDROMEDA_EMAIL=npc10@example.com
-NPC_CENTAURI_EMAIL=npc11@example.com
-
-```
-
-**`backend/.env`** (Backend configuration):
-```env
-# Environment
-ENVIRONMENT=local
-
-# Database URLs (same as database/.env)
-DATABASE_URL_LOCAL=postgresql://username:password@localhost:5432/bellum_astrum_local
-DATABASE_URL_DEV=postgresql://username:password@dev-host:5432/bellum_astrum_dev
-DATABASE_URL_PROD=postgresql://username:password@prod-host:5432/bellum_astrum_prod
-
-# Database settings
-DB_ECHO=False
-
-# JWT Configuration - Different keys for each environment (generate secure secret keys)
-JWT_SECRET_KEY_LOCAL=your-local-jwt-secret-key-here
-JWT_SECRET_KEY_DEV=your-dev-jwt-secret-key-here-change-this-in-production
-JWT_SECRET_KEY_PROD=your-prod-jwt-secret-key-here-change-this-in-production
-
-# Logging
-LOG_LEVEL=INFO
-
-# Python path
-PYTHONPATH=.
-```
-
-#### Database Initialization
-
-```bash
-# Check database connection
-python database/setup.py health
-
-# Initialize database with sample data (includes ships, NPCs, etc.)
-python database/setup.py init --seed
-
-# Verify setup by checking health again
-python database/setup.py health
-```
-
-### 3. 🚀 Backend Setup
-
-```bash
-# Start the FastAPI server
-uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-The API will be available at:
-- **Main API**: [http://localhost:8000](http://localhost:8000)
-- **Interactive docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Health check**: [http://localhost:8000/health](http://localhost:8000/health)
-
-### 4. 🌐 Frontend Setup (Optional)
-
-**`frontend/.env`** (Frontend configuration):
-```env
-# Environment
-VITE_ENVIRONMENT=local
-
-# API URLs for different environments
-VITE_API_BASE_URL_LOCAL=http://localhost:8000/api/v1
-VITE_API_BASE_URL_DEV=https://your-dev-api.com/api/v1
-VITE_API_BASE_URL_PROD=https://your-prod-api.com/api/v1
-```
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-Frontend will be available at: [http://localhost:5173](http://localhost:5173)
-
-### 5. ✅ Verification
-
-1. **Database Health**: Visit [http://localhost:8000/health](http://localhost:8000/health)
-2. **API Documentation**: Visit [http://localhost:8000/docs](http://localhost:8000/docs)
-3. **Test Registration**: Create a user account via API or frontend
-4. **Run Tests**: `pytest backend/app/test/` (optional)
-
-### 🔧 Environment Examples
-
-#### Using Neon (Recommended)
-```env
-DATABASE_URL_LOCAL=postgresql://username:password@ep-example-123456.us-east-1.aws.neon.tech/neondb?sslmode=require
-```
-
-#### Using Local PostgreSQL
-```env
-DATABASE_URL_LOCAL=postgresql://postgres:your-password@localhost:5432/bellum_astrum
-```
-
-#### Using Docker PostgreSQL
-```bash
-# Start PostgreSQL container
-docker run --name bellum-postgres -e POSTGRES_PASSWORD=your-secure-password -e POSTGRES_DB=bellum_astrum -p 5432:5432 -d postgres:15
-
-# Use this URL
-DATABASE_URL_LOCAL=postgresql://postgres:your-secure-password@localhost:5432/bellum_astrum
-```
-
-### 🚨 Important Notes
-
-- **Security**: Always change default passwords and JWT keys in production environments
-- **Credentials**: Never use default passwords like 'admin123' or 'password' in production
-- **Database**: Ensure your PostgreSQL database exists before running setup commands
-- **Environment**: The system automatically uses the appropriate environment based on `ENVIRONMENT` variable
-- **NPCs**: Sample data includes 11 NPCs with different ranks and ships for testing battles
-- **Work System**: Users can earn credits through the work system if they lose all ships/money
+- ⚔️ **Strategic Combat**: Engage in tactical battles with complex damage calculations
+- 🚀 **Fleet Management**: Build and customize your spaceship fleet
+- 🏆 **Ranking System**: Progress through 11 military ranks with stat bonuses
+- 💰 **Dynamic Economy**: Trade ships and earn credits through various activities
+- 🤖 **AI Opponents**: Battle against balanced NPC opponents
+- 👥 **Multiplayer**: Challenge other players with ELO rating system
+- 🌍 **Multi-language**: Full support for Portuguese and English
+- 📊 **Statistics**: Track your progress with detailed battle and progression stats
 
 ---
 
@@ -311,214 +73,17 @@ DATABASE_URL_LOCAL=postgresql://postgres:your-secure-password@localhost:5432/bel
 ```
 /Bellum-Astrum
 │
-├── .github/                            # GitHub configuration and automation
-│   ├── instructions/                   # Development guidelines and instructions
-│   └── workflows/                      # GitHub Actions CI/CD workflows
-│
-├── backend/                            # FastAPI backend application
-│   └── app/                            # Main application code
-│       ├── crud/                       # CRUD operations (users, ships, battles, market, logs, work)
-│       ├── routes/                     # API routes/endpoints (auth, battle, market, ships, work)
-│       ├── schemas/                    # Pydantic schemas (modularized by feature)
-│       ├── test/                       # Automated tests (pytest)
-│       ├── utils/                      # Utility functions (auth, logging, etc.)
-│       └── main.py                     # FastAPI entry point with lifespan management
-│
-├── database/                           # Centralized database module
-│   ├── scripts/                        # Quick utility scripts
-│   ├── models.py                       # SQLAlchemy models (User, Ship, etc.)
-│   ├── config.py                       # Database configuration and engine
-│   ├── session.py                      # Session management and dependency injection
-│   ├── lifecycle.py                    # Database initialization and health checks
-│   ├── base_data.py                    # Initial seed data with environment variables
-│   └── setup.py                        # Main command-line setup script
-│
-├── frontend/                           # React frontend application
-│   ├── public/                         # Static assets (logos, images, flags)
-│   ├── src/                            # React source code
-│   │   ├── components/                 # Reusable React components (layout, UI)
-│   │   ├── contexts/                   # React context providers (auth, language)
-│   │   ├── hooks/                      # Custom React hooks (useUserData, useAuth)
-│   │   ├── pages/                      # Main pages/routes (Dashboard, Battle, Ships, Market, Work)
-│   │   ├── utils/                      # Utility functions and translations
-│   │   └── App.tsx                     # Main App component with routing
-│   ├── package.json                    # Frontend dependencies
-│   ├── tailwind.config.ts              # Tailwind CSS configuration
-│   └── vite.config.ts                  # Vite configuration
-│
-├── requirements.txt                    # Python dependencies
-├── CHANGELOG.md                        # Version history and changes
-├── README.md                           # Project documentation
-└── LICENSE                             # MIT License
+├── backend/          # FastAPI backend application
+├── database/         # Centralized database module  
+├── frontend/         # React frontend application
+├── requirements.txt  # Python dependencies
+├── CHANGELOG.md      # Version history
+└── README.md         # This file
 ```
 
----
+Each component has its own detailed documentation - see the links above for comprehensive setup and usage information.
 
-## 🗺️ Project Flowchart
-
-```mermaid
-flowchart LR
-    User["👤 User"]
-    Frontend["🌐 Frontend (React/Vite)"]
-    API["🚀 FastAPI (Render)"]
-    DB["🗄️ PostgreSQL (Neon)"]
-
-    User -->|"Interacts"| Frontend
-    Frontend -->|"HTTP Requests (REST, JWT)"| API
-    API -->|"ORM (SQLAlchemy)"| DB
-    DB -->|"Data"| API
-    API -->|"JSON Response"| Frontend
-    Frontend -->|"UI Update"| User
-```
-
-**Legend:**
-- User: Game player (web interface)
-- Frontend: React app (Vite, Tailwind)
-- API: FastAPI backend (auth, business logic, REST endpoints)
-- DB: PostgreSQL database (Neon)
-
-- All authentication, business logic, and data persistence flow through this pipeline.
-- Logging, health checks, and admin tools interact directly with the API and database, but are not shown to the end user.
-
----
-
-## 🧩 Endpoints
-
-### Authentication
-- `POST /api/v1/auth/register` – Register a new user with validation
-- `POST /api/v1/auth/login` – User login with JWT token
-- `GET /api/v1/health` – System health check with database status
-
-### Users
-- `GET /api/v1/users/` – List all users (filtered for PvP/NPC modes)
-- `GET /api/v1/users/{user_id}` – Get specific user details with stats
-- `GET /api/v1/users/{user_id}/ships` – Get user's owned ships with current/base stats
-
-### Ships
-- `GET /api/v1/ships/` – List all ship templates with complete stats
-- `GET /api/v1/ships/{ship_id}` – Get specific ship template details
-
-### Market System
-- `POST /api/v1/market/buy/{ship_id}` – Purchase ship with credit validation
-- `POST /api/v1/market/sell/{owned_ship_number}` – Sell owned ship
-
-### Shipyard System
-- `POST /api/v1/shipyard/repair` – Repair ship with 60-second cooldown
-- `GET /api/v1/shipyard/status` – Check repair cooldowns for all ships
-
-### Battle System
-- `POST /api/v1/battle/activate-ship/` – Activate ship for battle formation
-- `POST /api/v1/battle/deactivate-ship/` – Deactivate ship from battle
-- `POST /api/v1/battle/battle` – Execute battle with rank bonuses and XP gains
-- `GET /api/v1/battle/ship-limits/` – Get ship activation limits by rank
-
-### Work System
-- `POST /api/v1/work/perform` – Perform rank-based work for credits
-- `GET /api/v1/work/status` – Check work cooldown and availability
-- `GET /api/v1/work/history` – View work history with statistics
-- `GET /api/v1/work/types` – Get available work types for user's rank
-
-### System Logs
-- `POST /api/v1/logs/` – Create system log entry
-- `GET /api/v1/logs/` – List logs with filtering and pagination
-- `GET /api/v1/logs/{log_id}` – Get specific log entry
-- `DELETE /api/v1/logs/{log_id}` – Delete log entry (admin)
-
----
-
-## 💼 Work System (Recovery Mechanism)
-
-The work system provides a "soft reset" mechanism for players who have lost all their ships and money, ensuring no player gets permanently stuck.
-
-### 🎯 How It Works
-- **No Requirements**: Can work even with 0 credits and no ships
-- **Rank-Based Jobs**: Each rank has a specific work type (maintenance, patrol, trading, etc.)
-- **Progressive Income**: Higher ranks earn more credits per work session
-- **Cooldown System**: Must wait between work sessions (shorter for higher ranks)
-- **Quick Recovery**: Designed so RECRUIT players can buy a basic ship in 2-3 work sessions
-
-### 💰 Income by Rank
-| Rank | Work Type | Base Income | Cooldown | Time to Ship* |
-|------|-----------|-------------|----------|---------------|
-| RECRUIT | Maintenance | 700 | 2min | ~6min |
-| ENSIGN | Patrol | 1,000 | 3min | ~9min |
-| LIEUTENANT | Trading | 1,400 | 3min | ~6min |
-| LIEUTENANT_COMMANDER | Security | 1,900 | 4min | ~8min |
-| COMMANDER | Operations | 2,600 | 4min | ~6min |
-| CAPTAIN | Command | 3,500 | 5min | ~7min |
-| COMMODORE | Logistics | 4,750 | 6min | ~8min |
-| REAR_ADMIRAL | Intelligence | 6,500 | 7min | ~9min |
-| VICE_ADMIRAL | Planning | 8,750 | 8min | ~10min |
-| ADMIRAL | Leadership | 12,500 | 10min | ~11min |
-| FLEET_ADMIRAL | Strategy | 17,500 | 12min | ~13min |
-
-*Time to buy cheapest ship (1,500 credits)
-
-### 🔄 Recovery Process
-1. Player loses all ships/money in battles
-2. Use `/work/perform` to earn credits (no requirements)
-3. Wait for cooldown to complete
-4. Repeat until enough credits for a ship
-5. Buy ship from market and return to normal gameplay
-
----
-
-## 🎯 Progression System
-
-Bellum Astrum features a comprehensive progression system that enhances gameplay through experience, levels, and military ranks.
-
-### Experience & Levels
-- **Exponential Growth**: XP requirements increase exponentially (base 100, factor 1.5)
-- **Dynamic XP Gains**: Earn more XP fighting higher-level opponents, less for lower-level
-- **Battle Participation**: Both winners and losers gain experience from battles
-- **Level-Up Rewards**: Automatic progression checks after each battle
-
-### Military Ranks
-The game features 11 military ranks based on Fibonacci-like level requirements:
-
-| Rank | Level Required | Stat Bonus |
-|------|----------------|------------|
-| Recruit | 1 | 0% |
-| Ensign | 3 | 5% |
-| Lieutenant | 5 | 10% |
-| Lieutenant Commander | 8 | 15% |
-| Commander | 13 | 20% |
-| Captain | 21 | 25% |
-| Commodore | 35 | 30% |
-| Rear Admiral | 55 | 35% |
-| Vice Admiral | 89 | 40% |
-| Admiral | 144 | 50% |
-| Fleet Admiral | 233 | 60% |
-
-### Rank Bonuses
-Rank bonuses apply multiplicatively to all ship stats during battles:
-- **Attack**: Increased damage output
-- **Shield**: Enhanced defensive capabilities
-- **HP**: Additional health points
-- **Evasion**: Improved dodge chance
-- **Fire Rate**: Faster attack speed
-- **Value**: Higher ship worth
-
-### NPC System
-11 NPCs distributed across different ranks provide balanced opposition:
-- **Balanced Economy**: NPCs don't gain or lose currency
-- **Ship Restoration**: NPC ships auto-repair after battles
-- **ELO Protection**: Only human players gain/lose ELO against NPCs
-- **Progressive Challenge**: NPCs scale from Recruit to Fleet Admiral
-
----
-
-## 🚀 Release Automation
-
-Releases are now created automatically on every push to `main`, using the latest changelog entry as the release notes.
-
----
-
-## 🤖 Copilot Instructions
-
-Custom Copilot instructions for this project are available in `.github/instructions/copilot-instructions.md`.
-
-## 📊 Timeline (Commit History)
+## 📊 Project Timeline
 
 ```mermaid
 gantt
@@ -552,6 +117,13 @@ Advanced translation system & Battle UI :done,   des24, 2025-07-30, 1d
 Schema organization & BattleLog fixes  :done,    des25, 2025-07-31, 1d
 Work system implementation & UI polish :done,    des26, 2025-08-09, 1d
 ```
+
+## 🛠️ Development
+
+- **Version**: 0.5.7 with automated GitHub release workflow
+- **Testing**: Comprehensive test suite with 18 end-to-end tests
+- **Documentation**: Standardized Copilot instructions in `.github/instructions/`
+- **Architecture**: Modular design ready for AI agent integration
 
 ---
 
