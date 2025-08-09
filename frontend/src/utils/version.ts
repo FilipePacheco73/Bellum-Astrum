@@ -1,4 +1,4 @@
 // Current project version
 export const getCurrentVersion = (): string => {
-  return '0.5.7';
+  return '0.5.8';
 };
