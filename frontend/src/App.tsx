@@ -5,6 +5,8 @@ import Ships from './pages/Ships';
 import Market from './pages/Market';
 import Shipyard from './pages/Shipyard';
 import Battle from './pages/Battle';
+import Work from './pages/Work';
+import Messages from './pages/Messages';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -24,7 +26,7 @@ function AppContent() {
   const { showSessionExpired, setShowSessionExpired } = useAuth();
   
   // Routes that use the sidebar layout (game pages)
-  const sidebarRoutes = ['/dashboard', '/users', '/ships', '/market', '/shipyard', '/battle'];
+  const sidebarRoutes = ['/dashboard', '/users', '/ships', '/market', '/shipyard', '/battle', '/work', '/messages'];
   const useSidebar = sidebarRoutes.includes(location.pathname);
 
   const handleSessionExpiredClose = () => {
@@ -57,6 +59,8 @@ function AppContent() {
           <Route path="/market" element={<Market />} />
           <Route path="/shipyard" element={<Shipyard />} />
           <Route path="/battle" element={<Battle />} />
+          <Route path="/work" element={<Work />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

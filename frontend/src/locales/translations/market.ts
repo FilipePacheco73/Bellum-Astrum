@@ -4,11 +4,6 @@ export const marketTranslations = {
       title: 'Mercado',
       subtitle: 'Compre e venda naves espaciais.',
       your_credits: 'Seus Créditos',
-      tabs: {
-        ships: 'Naves',
-        upgrades: 'Upgrades',
-        resources: 'Recursos'
-      },
       ship_types: {
         fighter: {
           name: 'Série Caça',
@@ -39,6 +34,10 @@ export const marketTranslations = {
           description: 'Naves Supremas - Dominação final'
         }
       },
+      tabs: {
+        buy: 'Comprar Naves',
+        sell: 'Vender Naves'
+      },
       actions: {
         buy: 'Comprar',
         sell: 'Vender',
@@ -54,7 +53,18 @@ export const marketTranslations = {
         evasion: 'Evasão',
         quantity: 'Quantidade',
         available: 'Disponível',
-        owned: 'Possuídas'
+        owned: 'Possuídas',
+        status: 'Status',
+        ship_number: 'Número da Nave',
+        sell_price: 'Preço de venda'
+      },
+      sell: {
+        title: 'Suas Naves',
+        description: 'Clique em "Vender" para vender uma nave por 40% do valor atual',
+        no_ships: 'Você não possui naves para vender',
+        sell_price_percentage: '40%',
+        status_active: 'Ativa',
+        status_inactive: 'Inativa'
       },
       tiers: {
         tier_1: {
@@ -88,6 +98,8 @@ export const marketTranslations = {
         purchase_error: 'Erro ao realizar compra',
         sale_success: 'Venda realizada com sucesso!',
         sale_error: 'Erro ao realizar venda',
+        ship_not_found: 'Nave não encontrada ou dados do usuário não disponíveis',
+        selling_error: 'Erro ao vender nave. Tente novamente.',
         insufficient_credits: 'Créditos insuficientes',
         no_ships_available: 'Nenhuma nave disponível no momento',
         try_again: 'Tentar novamente'
@@ -100,9 +112,8 @@ export const marketTranslations = {
       subtitle: 'Buy and sell spaceships.',
       your_credits: 'Your Credits',
       tabs: {
-        ships: 'Ships',
-        upgrades: 'Upgrades',
-        resources: 'Resources'
+        buy: 'Buy Ships',
+        sell: 'Sell Ships'
       },
       ship_types: {
         fighter: {
@@ -149,7 +160,18 @@ export const marketTranslations = {
         evasion: 'Evasion',
         quantity: 'Quantity',
         available: 'Available',
-        owned: 'Owned'
+        owned: 'Owned',
+        status: 'Status',
+        ship_number: 'Ship Number',
+        sell_price: 'Sell Price'
+      },
+      sell: {
+        title: 'Your Ships',
+        description: 'Click "Sell" to sell a ship for 40% of current value',
+        no_ships: 'You have no ships to sell',
+        sell_price_percentage: '40%',
+        status_active: 'Active',
+        status_inactive: 'Inactive'
       },
       tiers: {
         tier_1: {
@@ -181,8 +203,10 @@ export const marketTranslations = {
         loading: 'Loading market...',
         purchase_success: 'Purchase successful!',
         purchase_error: 'Error making purchase',
-        sale_success: 'Sale successful!',
-        sale_error: 'Error making sale',
+        sale_success: 'Ship sold successfully!',
+        sale_error: 'Error selling ship',
+        ship_not_found: 'Ship not found or user data not available',
+        selling_error: 'Error selling ship. Please try again.',
         insufficient_credits: 'Insufficient credits',
         no_ships_available: 'No ships available at the moment',
         try_again: 'Try again'

@@ -222,7 +222,7 @@ def test_work_status(user_ids):
     assert "work_type" in data
     assert "current_rank" in data
     assert "estimated_income" in data
-    assert "work_cooldown_hours" in data
+    assert "work_cooldown_minutes" in data
     print(f"DEBUG: Work status - {data}")
 
 # Test work types for user rank
@@ -237,7 +237,7 @@ def test_work_types(user_ids):
     assert "user_rank" in data
     assert "work_type" in data
     assert "estimated_income_range" in data
-    assert "cooldown_hours" in data
+    assert "cooldown_minutes" in data
     print(f"DEBUG: Available work type - {data}")
 
 # Test performing work
@@ -298,7 +298,7 @@ def test_work_status_after_work(user_ids):
     assert data["can_work"] is False  # Should be false due to cooldown
     assert "time_until_available" in data
     assert data["time_until_available"] > 0  # Should have time remaining
-    print(f"DEBUG: Work status after work - Can work: {data['can_work']}, Time until available: {data['time_until_available']:.2f} hours")
+    print(f"DEBUG: Work status after work - Can work: {data['can_work']}, Time until available: {data['time_until_available']:.2f} minutes")
 
 # Test log creation
 def test_create_log():

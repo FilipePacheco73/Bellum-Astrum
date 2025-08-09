@@ -265,19 +265,24 @@ def seed_initial_data() -> None:
 
 def seed_rank_bonuses(session) -> int:
     """Seed the RankBonus table with default values for each UserRank if not present."""
-    existing_count = session.query(RankBonus).count()
-    if existing_count > 0:
-        logger.info("RankBonus entries already exist, skipping rank bonus seeding")
-        log_system_event(
-            session,
-            action="SEED_RANKBONUS_SKIPPED",
-            details={
-                "message": "RankBonus entries already exist in database",
-                "existing_count": existing_count
-            },
-            category="SYSTEM"
-        )
-        return 0
+    try:
+        existing_count = session.query(RankBonus).count()
+        if existing_count > 0:
+            logger.info("RankBonus entries already exist, skipping rank bonus seeding")
+            log_system_event(
+                session,
+                action="SEED_RANKBONUS_SKIPPED",
+                details={
+                    "message": "RankBonus entries already exist in database",
+                    "existing_count": existing_count
+                },
+                category="SYSTEM"
+            )
+            return 0
+    except Exception as e:
+        # If count fails (e.g., during schema migration), assume table is empty and proceed
+        logger.info(f"Could not check existing RankBonus count (likely fresh table): {e}")
+        logger.info("Proceeding with rank bonus seeding...")
 
     logger.info("Seeding rank bonuses...")
     bonuses = get_rank_bonuses_data()

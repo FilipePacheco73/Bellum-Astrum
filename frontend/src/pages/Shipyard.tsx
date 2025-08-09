@@ -5,9 +5,11 @@ import type { OwnedShip, ShipyardStatusResponse } from '../config/api';
 import { getUserOwnedShips, repairShip, getShipyardStatus } from '../config/api';
 import translations from '../locales/translations';
 import { getShipIcon, getUserIdFromToken } from '../utils/shipUtils';
+import { useUserData } from '../hooks/useUserData';
 
 const Shipyard: React.FC = () => {
   const { language } = useLanguage();
+  const { userData } = useUserData();
   const t = translations[language].shipyard;
   
   const [ships, setShips] = useState<OwnedShip[]>([]);
@@ -171,7 +173,7 @@ const Shipyard: React.FC = () => {
 
   if (loading) {
     return (
-      <GameLayout>
+      <GameLayout userData={userData}>
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
@@ -184,7 +186,7 @@ const Shipyard: React.FC = () => {
 
   if (error) {
     return (
-      <GameLayout>
+      <GameLayout userData={userData}>
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="text-red-400 text-6xl mb-4">⚠️</div>
@@ -226,7 +228,7 @@ const Shipyard: React.FC = () => {
   );
 
   return (
-    <GameLayout>
+    <GameLayout userData={userData}>
       <div className="space-y-6 pr-4">
         {/* Header */}
         <div className="text-center">

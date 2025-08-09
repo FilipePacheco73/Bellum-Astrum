@@ -48,6 +48,16 @@ export const battleTranslations = {
         no_ships_title: 'Nenhuma Nave Ativa',
         no_ships_message: 'Você precisa de pelo menos uma nave ativa para batalhar! Vá em "Minhas Naves" para ativar uma nave.',
         view_log: 'Ver Log'
+      },
+      fleet_modal: {
+        title: 'Frota',
+        summary: 'Resumo da Frota',
+        no_ships: 'Nenhuma nave na frota',
+        total_ships: 'Total de Naves',
+        total_attack: 'Ataque Total',
+        total_shield: 'Escudo Total',
+        total_hp: 'HP Total',
+        view_fleet: 'Ver Frota'
       }
     },
     battle_log: {
@@ -127,6 +137,16 @@ export const battleTranslations = {
         no_ships_title: 'No Active Ships',
         no_ships_message: 'You need at least one active ship to battle! Go to "My Ships" to activate a ship.',
         view_log: 'View Log'
+      },
+      fleet_modal: {
+        title: 'Fleet',
+        summary: 'Fleet Summary',
+        no_ships: 'No ships in fleet',
+        total_ships: 'Total Ships',
+        total_attack: 'Total Attack',
+        total_shield: 'Total Shield',
+        total_hp: 'Total HP',
+        view_fleet: 'View Fleet'
       }
     },
     battle_log: {

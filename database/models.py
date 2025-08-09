@@ -398,13 +398,13 @@ class RankBonus(Base):
     value = Column(Float, default=0, nullable=False)
     max_active_ships = Column(Integer, default=1, nullable=False)
     work_income = Column(Integer, default=100, nullable=False)
-    work_cooldown_hours = Column(Integer, default=4, nullable=False)
+    work_cooldown_minutes = Column(Integer, default=240, nullable=False)
 
     # Database constraints to ensure valid values
     __table_args__ = (
         CheckConstraint('max_active_ships >= 1', name='check_max_active_ships_positive'),
         CheckConstraint('work_income >= 0', name='check_work_income_positive'),
-        CheckConstraint('work_cooldown_hours >= 1', name='check_work_cooldown_positive'),
+        CheckConstraint('work_cooldown_minutes >= 1', name='check_work_cooldown_positive'),
     )
 
     def __repr__(self) -> str:
@@ -412,7 +412,7 @@ class RankBonus(Base):
             f"<RankBonus(rank={self.rank}, min_level={self.min_level}, attack={self.attack}, "
             f"shield={self.shield}, hp={self.hp}, evasion={self.evasion}, fire_rate={self.fire_rate}, "
             f"value={self.value}, max_active_ships={self.max_active_ships}, "
-            f"work_income={self.work_income}, work_cooldown_hours={self.work_cooldown_hours})>"
+            f"work_income={self.work_income}, work_cooldown_minutes={self.work_cooldown_minutes})>"
         )
 
 

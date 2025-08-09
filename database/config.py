@@ -49,5 +49,14 @@ engine = create_engine(
 Base = declarative_base()
 
 if ENVIRONMENT == "local":
-    from database.lifecycle import initialize_database
-    initialize_database(with_seed=True)
+    import sys
+    import os
+    
+    # Check if we're running database setup commands - if so, skip auto-initialization
+    # This prevents auto-init from interfering with reset/init/clear commands
+    script_name = os.path.basename(sys.argv[0]) if sys.argv else ""
+    is_setup_script = script_name == "setup.py" or any("setup.py" in arg for arg in sys.argv)
+    
+    if not is_setup_script:
+        from database.lifecycle import initialize_database
+        initialize_database(with_seed=True)

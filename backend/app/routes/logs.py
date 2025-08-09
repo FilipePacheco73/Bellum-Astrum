@@ -12,12 +12,31 @@ def create_log_route(log: SystemLogCreate, db: Session = Depends(get_db)):
     return create_log(db, log)
 
 @router.get("/", response_model=LogQueryResponse)
-def list_logs_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    logs = get_logs(db, skip=skip, limit=limit)
+def list_logs_route(
+    user_id: int = None,
+    log_level: str = None,
+    log_category: str = None,
+    action: str = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    # Create query parameters object
+    query_params = LogQueryRequest(
+        user_id=user_id,
+        log_level=log_level,
+        log_category=log_category,
+        action=action,
+        limit=limit,
+        offset=offset
+    )
+    
+    logs, total_count = get_logs(db, query_params)
+    
     return LogQueryResponse(
         logs=logs,
-        total_count=len(logs),
-        page=skip // limit + 1 if limit else 1,
+        total_count=total_count,
+        page=offset // limit + 1 if limit else 1,
         per_page=limit
     )
 

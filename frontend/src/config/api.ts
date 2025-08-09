@@ -316,4 +316,135 @@ export const repairShip = async (shipNumber: number): Promise<ShipRepairResponse
   return response.data;
 };
 
+// Log/Message interfaces
+export interface SystemLogResponse {
+  log_id: number;
+  timestamp: string;
+  user_id?: number;
+  log_level: string;
+  log_category: string;
+  action: string;
+  details?: Record<string, any>;
+  ip_address?: string;
+  user_agent?: string;
+  session_id?: string;
+  resource_affected?: string;
+  old_value?: Record<string, any>;
+  new_value?: Record<string, any>;
+  error_message?: string;
+  execution_time_ms?: number;
+}
+
+export interface LogQueryRequest {
+  user_id?: number;
+  log_level?: string;
+  log_category?: string;
+  action?: string;
+  start_date?: string;
+  end_date?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface LogQueryResponse {
+  logs: SystemLogResponse[];
+  total_count: number;
+  page: number;
+  per_page: number;
+}
+
+// Get user messages/logs with filtering and pagination
+export const getUserMessages = async (
+  userId: number,
+  filters?: Omit<LogQueryRequest, 'user_id'>
+): Promise<LogQueryResponse> => {
+  const params: LogQueryRequest = {
+    user_id: userId,
+    limit: 50,
+    offset: 0,
+    ...filters
+  };
+
+  const response = await api.get('/logs/', { params });
+  return response.data;
+};
+
+// Get all logs (admin functionality)
+export const getLogs = async (filters?: LogQueryRequest): Promise<LogQueryResponse> => {
+  const params: LogQueryRequest = {
+    limit: 100,
+    offset: 0,
+    ...filters
+  };
+
+  const response = await api.get('/logs/', { params });
+  return response.data;
+};
+
+// Work system interfaces
+export interface WorkPerformResponse {
+  success: boolean;
+  income_earned: number;
+  work_type: string;
+  new_currency_balance: number;
+  cooldown_until: string;
+  next_available_in_minutes: number;
+}
+
+export interface WorkStatusResponse {
+  can_work: boolean;
+  time_until_available: number;
+  last_work_performed: string | null;
+  estimated_income: number;
+  work_type: string;
+  current_rank: string;
+  work_cooldown_minutes: number;
+}
+
+export interface WorkHistoryEntry {
+  id: number;
+  work_type: string;
+  income_earned: number;
+  performed_at: string;
+  rank_at_time: string;
+}
+
+export interface WorkHistoryResponse {
+  total_work_sessions: number;
+  total_income_earned: number;
+  work_history: WorkHistoryEntry[];
+  average_income_per_session: number;
+}
+
+export interface AvailableWorkTypesResponse {
+  user_rank: string;
+  work_type: string;
+  estimated_income_range: {
+    min: number;
+    max: number;
+  };
+  cooldown_minutes: number;
+}
+
+// Work API functions
+export const performWork = async (): Promise<WorkPerformResponse> => {
+  const response = await api.post('/work/perform');
+  return response.data;
+};
+
+export const getWorkStatus = async (): Promise<WorkStatusResponse> => {
+  const response = await api.get('/work/status');
+  return response.data;
+};
+
+export const getWorkHistory = async (limit: number = 20): Promise<WorkHistoryResponse> => {
+  const response = await api.get('/work/history', { params: { limit } });
+  return response.data;
+};
+
+export const getAvailableWorkTypes = async (): Promise<AvailableWorkTypesResponse> => {
+  const response = await api.get('/work/types');
+  return response.data;
+};
+
 export default api;

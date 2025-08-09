@@ -5,6 +5,9 @@ import { shipsTranslations } from './ships';
 import { marketTranslations } from './market';
 import { battleTranslations } from './battle';
 import { shipyardTranslations } from './shipyard';
+import { usersTranslations } from './users';
+import { messagesTranslations } from './messages';
+import { workTranslations } from './work';
 
 // Função para mesclar objetos de tradução profundamente
 function deepMerge(target: any, ...sources: any[]): any {
@@ -38,7 +41,10 @@ const translations = deepMerge(
   shipsTranslations,
   marketTranslations,
   battleTranslations,
-  shipyardTranslations
+  shipyardTranslations,
+  workTranslations,
+  usersTranslations,
+  messagesTranslations
 );
 
 export default translations;

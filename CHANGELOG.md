@@ -5,6 +5,106 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.7] - 2025-08-09
+
+### Added
+- **Complete Work System**: Fully functional work page with comprehensive backend integration
+  - Work.tsx page with real-time cooldown timer and status updates
+  - API integration with /work/perform, /work/status, /work/history, /work/types endpoints
+  - Dynamic work types based on user rank with appropriate income ranges
+  - Work history with complete statistics (total sessions, earnings, averages)
+  - Real-time cooldown countdown with automatic data refresh when timer completes
+  - Responsive design with loading states and error handling
+  - Complete Portuguese and English translations for all work-related interface elements
+  - Navigation integration with 🔨 icon in sidebar menu
+
+- **User Data Consistency System**: Centralized user data management across all pages
+  - Created useUserData.ts custom hook for consistent user information loading
+  - Eliminated "Player Level 1" fallback issues across Battle, Ships, and Market pages
+  - All pages now display correct user nickname and level in sidebar
+  - Unified user data loading with loading states and error handling
+  - Automatic user data refresh functionality
+
+- **Enhanced Translation System**: Expanded internationalization support
+  - Enhanced LanguageContext with nested translation keys support
+  - Parameter interpolation in translations (e.g., '{seconds}s' replacement)
+  - Work system translations with comprehensive Portuguese and English support
+  - BattleLogModal and ToastNotification translation improvements
+  - Translation fallback mechanism for missing keys
+
+### Changed
+- **Work Cooldown System**: Converted from hours to minutes for better gameplay experience
+  - All rank cooldowns converted: RECRUIT (2h→120min) to FLEET_ADMIRAL (12h→720min)
+  - Backend models updated from work_cooldown_hours to work_cooldown_minutes
+  - API responses now return cooldown information in minutes
+  - Time calculations updated throughout work system (seconds/60 instead of seconds/3600)
+
+- **Ships Page Enhancements**: Improved ship statistics display format
+  - Ship statistics now show "Current / Base" format for all stats
+  - Attack, Shield, HP, and Evasion rounded to nearest integer
+  - Fire Rate displayed with 1 decimal place precision
+  - Evasion converted to percentage format with proper rounding
+  - Rank bonus display section showing detailed bonus calculations
+  - Enhanced fleet overview with dynamic bonus explanations
+
+- **Dashboard Information Organization**: Improved data presentation
+  - Eliminated duplicate "Naves Perdidas" and "Naves Destruídas" statistics
+  - Battle statistics properly organized in dedicated "Battle Statistics" section
+  - Ship information section now focuses on active ships and fleet status
+  - Cleaner information hierarchy for better user experience
+
+### Fixed
+- **Critical Ships Page Issue**: Resolved white screen problem
+  - Created /users/{user_id}/ships backend endpoint for proper ship data loading
+  - Updated getUserOwnedShips() API function to use correct endpoint
+  - Ships page now properly displays user's owned ships with all details and statistics
+  - Fixed ship data loading for active and owned ships (excluding destroyed ships)
+
+- **User Validation Security**: Enhanced nickname validation system
+  - Backend validation prevents nicknames containing "admin" or "test_user" (case-insensitive)
+  - Frontend Register.tsx with isValidNickname() client-side validation
+  - PvP battle filtering excludes administrative and test user accounts
+  - Visual feedback with red borders and error messages for invalid nicknames
+  - Double validation (client + server) for enhanced security
+
+- **Battle System Improvements**: Enhanced NPC and PvP opponent management
+  - NPCs are now real users from database with "NPC" in nickname instead of hardcoded opponents
+  - Dynamic NPC filtering based on nickname patterns
+  - PvP mode shows only regular users (excluding NPCs, admin, test users)
+  - NPCs display real statistics (level, ELO, victories, defeats)
+  - Unified interface between NPCs and PvP opponents
+
+- **Translation Issues**: Resolved hardcoded text across multiple pages
+  - Battle page fully translated with all interface elements using translation keys
+  - Fixed translation key display issues (e.g., "battle.notifications.victory_title")
+  - BattleLogModal with complete translation support for all battle result elements
+  - Consistent translation system implementation across all game pages
+
+### Technical Improvements
+- **Backend Schema Organization**: Enhanced code structure and maintainability
+  - Consolidated ship-related schemas into single ship_schemas.py file
+  - Removed duplicate owned_ship_schemas.py after migration
+  - Updated all imports across ships.py, users.py, and battle.py routes
+  - Improved code organization with centralized schema management
+
+- **API Architecture**: Enhanced backend-frontend communication
+  - New /users/{user_id}/ships endpoint for comprehensive ship data retrieval
+  - Improved error handling and response validation across all work endpoints
+  - Enhanced ship data structure with base and actual statistics support
+  - Proper filtering of ship data by status (active, owned, excluding destroyed)
+
+- **Hook Architecture**: Improved state management and code reusability
+  - useUserData custom hook for centralized user data management
+  - Consistent loading states and error handling across all pages
+  - Automatic data refresh capabilities in user data hook
+  - Eliminated code duplication in user data loading logic
+
+- **Work System Backend**: Comprehensive work functionality implementation
+  - Work cooldown system fully implemented with minute-based calculations
+  - Work history tracking with detailed statistics and rank information
+  - Dynamic work types based on user rank with appropriate income ranges
+  - Complete logging system for all work activities and security events
+
 ## [0.5.6] - 2025-07-31
 
 ### Added

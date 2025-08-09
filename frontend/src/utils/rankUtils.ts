@@ -61,3 +61,25 @@ export const getRankLevel = (rank: string): number => {
   const index = rankOrder.indexOf(rank);
   return index >= 0 ? index : 0;
 };
+
+/**
+ * Gets the emoji icon for a rank
+ * @param rank - The rank in English (as stored in database)
+ * @returns The emoji icon for the rank
+ */
+export const getRankIcon = (rank: string): string => {
+  switch (rank?.toLowerCase()) {
+    case 'recruit': return '🎖️';
+    case 'ensign': return '🏅';
+    case 'lieutenant': return '🏆';
+    case 'lieutenant_commander': return '🥇';
+    case 'commander': return '🥈';
+    case 'captain': return '🥉';
+    case 'commodore': return '💫';
+    case 'rear_admiral': return '⭐';
+    case 'vice_admiral': return '🌟';
+    case 'admiral': return '🌠';
+    case 'fleet_admiral': return '👑';
+    default: return '🚀';
+  }
+};

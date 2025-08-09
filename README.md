@@ -1,6 +1,6 @@
 # 🚀 Bellum Astrum
 
-**Current Version: 0.5.6**
+**Current Version: 0.5.7** | **[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
 
 Bellum Astrum is a learning project focused on backend development with FastAPI, PostgreSQL database (Neon), and spaceship battle logic. The project is now organized to facilitate expansion with a modern frontend.
 
@@ -29,7 +29,7 @@ Bellum Astrum is a learning project focused on backend development with FastAPI,
 - 🎯 **Progression System**: Experience, levels, and military ranks (11 ranks: Recruit to Fleet Admiral)
 - ⭐ **Rank Bonuses**: Multiplicative stat bonuses (0% to 60%) based on user rank
 - 💰 **Work System**: Rank-based recovery jobs with progressive income (700-40,000 credits)
-- ⏰ **Smart Cooldowns**: Balanced work intervals (2h for Recruit, 30min for Fleet Admiral)
+- ⏰ **Smart Cooldowns**: Balanced work intervals (2min for Recruit, 12min for Fleet Admiral) 
 - 🤖 **NPC System**: 11 balanced AI opponents with special battle mechanics
 - 📈 **Dynamic XP**: Experience scales based on opponent difficulty and level difference
 
@@ -313,56 +313,43 @@ DATABASE_URL_LOCAL=postgresql://postgres:your-secure-password@localhost:5432/bel
 │
 ├── .github/                            # GitHub configuration and automation
 │   ├── instructions/                   # Development guidelines and instructions
-│   │   └── copilot-instructions.md     # Custom Copilot instructions for this project
 │   └── workflows/                      # GitHub Actions CI/CD workflows
-│       └── release.yml                 # Automated release workflow based on changelog
 │
-├── backend/
-│   └── app/
-│       ├── main.py                     # FastAPI entry point with lifespan management
-│       ├── crud/                       # CRUD operations (users, ships, battles, market, logs)
-│       ├── routes/                     # API routes/endpoints
-│       ├── schemas/                    # Pydantic schemas (modularized)
+├── backend/                            # FastAPI backend application
+│   └── app/                            # Main application code
+│       ├── crud/                       # CRUD operations (users, ships, battles, market, logs, work)
+│       ├── routes/                     # API routes/endpoints (auth, battle, market, ships, work)
+│       ├── schemas/                    # Pydantic schemas (modularized by feature)
 │       ├── test/                       # Automated tests (pytest)
 │       ├── utils/                      # Utility functions (auth, logging, etc.)
-│       └── __init__.py
+│       └── main.py                     # FastAPI entry point with lifespan management
 │
 ├── database/                           # Centralized database module
-│   ├── __init__.py                     # Clean exports and imports
-│   ├── base_data.py                    # Initial seed data with environment variables
-│   ├── config.py                       # Database configuration and engine
-│   ├── lifecycle.py                    # Database initialization and health checks
+│   ├── scripts/                        # Quick utility scripts
 │   ├── models.py                       # SQLAlchemy models (User, Ship, etc.)
+│   ├── config.py                       # Database configuration and engine
 │   ├── session.py                      # Session management and dependency injection
-│   ├── setup.py                        # Main command-line setup script
-│   └── scripts/                        # Quick utility scripts
-│       ├── init_db.py                  # Quick database initialization
-│       ├── reset_db.py                 # Quick database reset
-│       └── seed_db.py                  # Quick database seeding
+│   ├── lifecycle.py                    # Database initialization and health checks
+│   ├── base_data.py                    # Initial seed data with environment variables
+│   └── setup.py                        # Main command-line setup script
 │
-├── frontend/
+├── frontend/                           # React frontend application
 │   ├── public/                         # Static assets (logos, images, flags)
 │   ├── src/                            # React source code
-│   │   ├── assets/                     # Static assets for React
-│   │   ├── components/                 # Reusable React components
-│   │   ├── config/                     # API client configuration
-│   │   ├── contexts/                   # React context providers
-│   │   ├── locales/                    # Localization and translations
-│   │   ├── pages/                      # Main pages/routes
-│   │   ├── App.tsx                     # Main App component
-│   │   ├── main.tsx                    # React entry point
-│   │   ├── index.css                   # Global styles
-│   │   └── vite-env.d.ts               # TypeScript definitions
+│   │   ├── components/                 # Reusable React components (layout, UI)
+│   │   ├── contexts/                   # React context providers (auth, language)
+│   │   ├── hooks/                      # Custom React hooks (useUserData, useAuth)
+│   │   ├── pages/                      # Main pages/routes (Dashboard, Battle, Ships, Market, Work)
+│   │   ├── utils/                      # Utility functions and translations
+│   │   └── App.tsx                     # Main App component with routing
 │   ├── package.json                    # Frontend dependencies
 │   ├── tailwind.config.ts              # Tailwind CSS configuration
-│   ├── tsconfig.json                   # TypeScript configuration
 │   └── vite.config.ts                  # Vite configuration
 │
-├── .gitignore                          # Git ignore rules
-├── LICENSE                             # MIT License
-├── requirements.txt                    # Main Python dependencies
+├── requirements.txt                    # Python dependencies
+├── CHANGELOG.md                        # Version history and changes
 ├── README.md                           # Project documentation
-└── CHANGELOG.md                        # Version history and changes
+└── LICENSE                             # MIT License
 ```
 
 ---
@@ -398,42 +385,44 @@ flowchart LR
 ## 🧩 Endpoints
 
 ### Authentication
-- `POST /api/v1/users/register` – Register new user with email and password
-- `POST /api/v1/users/login` – Login user and receive JWT token
+- `POST /api/v1/auth/register` – Register a new user with validation
+- `POST /api/v1/auth/login` – User login with JWT token
+- `GET /api/v1/health` – System health check with database status
 
 ### Users
-- `GET /api/v1/users/` – List all users
-- `GET /api/v1/users/{user_id}` – Get specific user details
-- `GET /api/v1/users/{user_id}/ships` – Get user's owned ships with current stats
+- `GET /api/v1/users/` – List all users (filtered for PvP/NPC modes)
+- `GET /api/v1/users/{user_id}` – Get specific user details with stats
+- `GET /api/v1/users/{user_id}/ships` – Get user's owned ships with current/base stats
 
 ### Ships
-- `GET /api/v1/ships/` – List all ship templates
+- `GET /api/v1/ships/` – List all ship templates with complete stats
 - `GET /api/v1/ships/{ship_id}` – Get specific ship template details
 
 ### Market System
-- `POST /api/v1/market/buy/{ship_id}` – Authenticated user buys a ship
-- `POST /api/v1/market/sell/{owned_ship_number}` – Authenticated user sells a ship
+- `POST /api/v1/market/buy/{ship_id}` – Purchase ship with credit validation
+- `POST /api/v1/market/sell/{owned_ship_number}` – Sell owned ship
 
-### Shipyard
-- `POST /api/v1/shipyard/repair` – Repair a ship (authenticated, with cooldown)
+### Shipyard System
+- `POST /api/v1/shipyard/repair` – Repair ship with 60-second cooldown
+- `GET /api/v1/shipyard/status` – Check repair cooldowns for all ships
 
 ### Battle System
-- `POST /api/v1/battle/activate-ship/` – Activate a ship for battle
-- `POST /api/v1/battle/deactivate-ship/` – Deactivate a ship from battle
-- `POST /api/v1/battle/battle` – Battle between two users with rank bonuses and progression
-- `GET /api/v1/battle/ship-limits/` – Get user's ship activation limits based on rank
+- `POST /api/v1/battle/activate-ship/` – Activate ship for battle formation
+- `POST /api/v1/battle/deactivate-ship/` – Deactivate ship from battle
+- `POST /api/v1/battle/battle` – Execute battle with rank bonuses and XP gains
+- `GET /api/v1/battle/ship-limits/` – Get ship activation limits by rank
 
-### Work System (Recovery)
-- `POST /api/v1/work/perform` – Perform work to earn credits (rank-based income)
-- `GET /api/v1/work/status` – Check work availability and cooldown status
-- `GET /api/v1/work/history` – View work history and total earnings
-- `GET /api/v1/work/types` – Get available work types for current rank
+### Work System
+- `POST /api/v1/work/perform` – Perform rank-based work for credits
+- `GET /api/v1/work/status` – Check work cooldown and availability
+- `GET /api/v1/work/history` – View work history with statistics
+- `GET /api/v1/work/types` – Get available work types for user's rank
 
-### Logs
-- `POST /api/v1/logs/` – Create a new log entry
-- `GET /api/v1/logs/` – List all logs with pagination and filtering
-- `GET /api/v1/logs/{log_id}` – Get log by ID
-- `DELETE /api/v1/logs/{log_id}` – Delete log by ID
+### System Logs
+- `POST /api/v1/logs/` – Create system log entry
+- `GET /api/v1/logs/` – List logs with filtering and pagination
+- `GET /api/v1/logs/{log_id}` – Get specific log entry
+- `DELETE /api/v1/logs/{log_id}` – Delete log entry (admin)
 
 ---
 
@@ -451,11 +440,17 @@ The work system provides a "soft reset" mechanism for players who have lost all 
 ### 💰 Income by Rank
 | Rank | Work Type | Base Income | Cooldown | Time to Ship* |
 |------|-----------|-------------|----------|---------------|
-| RECRUIT | Maintenance | 700 | 2h | ~4h |
-| ENSIGN | Patrol | 1,400 | 1.75h | ~3.5h |
-| LIEUTENANT | Trading | 2,500 | 1.5h | ~1h |
-| ... | ... | ... | ... | ... |
-| FLEET_ADMIRAL | Strategy | 40,000 | 0.5h | ~1h |
+| RECRUIT | Maintenance | 700 | 2min | ~6min |
+| ENSIGN | Patrol | 1,000 | 3min | ~9min |
+| LIEUTENANT | Trading | 1,400 | 3min | ~6min |
+| LIEUTENANT_COMMANDER | Security | 1,900 | 4min | ~8min |
+| COMMANDER | Operations | 2,600 | 4min | ~6min |
+| CAPTAIN | Command | 3,500 | 5min | ~7min |
+| COMMODORE | Logistics | 4,750 | 6min | ~8min |
+| REAR_ADMIRAL | Intelligence | 6,500 | 7min | ~9min |
+| VICE_ADMIRAL | Planning | 8,750 | 8min | ~10min |
+| ADMIRAL | Leadership | 12,500 | 10min | ~11min |
+| FLEET_ADMIRAL | Strategy | 17,500 | 12min | ~13min |
 
 *Time to buy cheapest ship (1,500 credits)
 
@@ -555,6 +550,7 @@ Market system overhaul & Ships page    :done,    des22, 2025-07-28, 1d
 Shipyard repair system implementation  :done,    des23, 2025-07-29, 1d
 Advanced translation system & Battle UI :done,   des24, 2025-07-30, 1d
 Schema organization & BattleLog fixes  :done,    des25, 2025-07-31, 1d
+Work system implementation & UI polish :done,    des26, 2025-08-09, 1d
 ```
 
 ---

@@ -21,14 +21,14 @@ class WorkPerformResponse(BaseModel):
         work_type (str): Type of work that was performed
         new_currency_balance (int): User's currency balance after the work
         cooldown_until (datetime): When the user can work again
-        next_available_in_hours (float): Hours until next work is available
+        next_available_in_minutes (float): Minutes until next work is available
     """
     success: bool
     income_earned: int
     work_type: str
     new_currency_balance: int
     cooldown_until: datetime
-    next_available_in_hours: float
+    next_available_in_minutes: float
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -49,7 +49,7 @@ class WorkStatusResponse(BaseModel):
     estimated_income: int
     work_type: str
     current_rank: str
-    work_cooldown_hours: int
+    work_cooldown_minutes: int
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -97,10 +97,10 @@ class AvailableWorkTypesResponse(BaseModel):
         user_rank (str): User's current rank
         work_type (str): Work type available for this rank
         estimated_income_range (dict): Min and max income range for this rank
-        cooldown_hours (int): Hours between work sessions for this rank
+        cooldown_minutes (int): Minutes between work sessions for this rank
     """
     user_rank: str
     work_type: str
     estimated_income_range: dict
-    cooldown_hours: int
+    cooldown_minutes: int
     model_config = ConfigDict(from_attributes=True)
