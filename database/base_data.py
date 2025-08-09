@@ -137,7 +137,7 @@ USERS_DATA: List[Dict[str, Any]] = [
 
 # Format: (rank, min_level, attack_mult%, shield_mult%, hp_mult%, evasion_bonus, fire_rate_mult%, value_mult%, max_active_ships)
 
-# Format: (rank, min_level, attack, shield, hp, evasion, fire_rate, value, max_active_ships, work_income, work_cooldown_hours)
+# Format: (rank, min_level, attack, shield, hp, evasion, fire_rate, value, max_active_ships, work_income, work_cooldown_minutes)
 _RANK_BONUS_TEMPLATES = [
     (UserRank.RECRUIT, 1, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1, 700, 2),
     (UserRank.ENSIGN, 3, 0.05, 0.05, 0.05, 0.01, 0.05, 0.10, 2, 1000, 3),
@@ -164,9 +164,9 @@ RANK_BONUSES_DATA: List[Dict[str, Any]] = [
         "value": float(value),
         "max_active_ships": int(max_active_ships),
         "work_income": int(work_income),
-        "work_cooldown_hours": int(work_cooldown_hours),
+        "work_cooldown_minutes": int(work_cooldown_minutes),
     }
-    for rank, min_level, attack, shield, hp, evasion, fire_rate, value, max_active_ships, work_income, work_cooldown_hours in _RANK_BONUS_TEMPLATES
+    for rank, min_level, attack, shield, hp, evasion, fire_rate, value, max_active_ships, work_income, work_cooldown_minutes in _RANK_BONUS_TEMPLATES
 ]
 
 

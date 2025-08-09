@@ -4,7 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotification } from '../contexts/NotificationContext';
 import BattleLogModal from '../components/BattleLogModal';
+import FleetModal from '../components/FleetModal';
 import { translateRank } from '../utils/rankUtils';
+import { useAppNotifications } from '../utils/notificationUtils';
+import { useUserData } from '../hooks/useUserData';
 import { getUsers, getUserOwnedShips, startBattle, type UserData, type OwnedShip, type BattleResult, type BattleRequest } from '../config/api';
 
 type BattleMode = 'npc' | 'pvp';
@@ -16,82 +19,85 @@ const Battle: React.FC = () => {
   const [battleLoading, setBattleLoading] = useState(false);
   const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
   const [showBattleLogModal, setShowBattleLogModal] = useState(false);
+  const [showFleetModal, setShowFleetModal] = useState(false);
+  const [selectedFleet, setSelectedFleet] = useState<{ ships: OwnedShip[], playerName: string }>({ ships: [], playerName: '' });
   const [userShips, setUserShips] = useState<OwnedShip[]>([]);
   const { userId } = useAuth();
   const { t, language } = useLanguage();
-  const { showSuccess, showError, showWarning } = useNotification();
+  const notificationContext = useNotification();
+  const { actionError } = useAppNotifications();
+  const { userData } = useUserData();
 
   // NPC users will be loaded from database (users with "NPC" in their names)
   const [npcUsers, setNpcUsers] = useState<UserData[]>([]);
   const [npcShipsData, setNpcShipsData] = useState<Record<number, OwnedShip[]>>({});
 
-  useEffect(() => {
-    const loadBattleData = async () => {
-      if (!userId) return;
+  // Load battle data when component mounts or dependencies change
+  const fetchBattleData = async () => {
+    if (!userId) return;
+    
+    try {
+      setLoading(true);
       
-      try {
-        setLoading(true);
-        
-        // Load user's active ships for battle
-        const ships = await getUserOwnedShips(userId);
-        setUserShips(ships.filter(ship => ship.status === 'active'));
-        
-        // Load users for both NPC and PvP modes
-        const users = await getUsers();
-        
-        if (battleMode === 'npc') {
-          // Filter users with "NPC" in their names for NPC battles
-          const npcs = users.filter((u: UserData) => 
-            u.nickname.toLowerCase().includes('npc') && u.user_id !== userId
-          );
-          setNpcUsers(npcs);
-          
-          // Load ships data for each NPC
-          const npcShipsPromises = npcs.map(async (npc) => {
-            try {
-              const ships = await getUserOwnedShips(npc.user_id);
-              return { userId: npc.user_id, ships: ships.filter(ship => ship.status === 'active') };
-            } catch (error) {
-              console.error(`Failed to load ships for NPC ${npc.nickname}:`, error);
-              return { userId: npc.user_id, ships: [] };
-            }
-          });
-          
-          const npcShipsResults = await Promise.all(npcShipsPromises);
-          const npcShipsMap: Record<number, OwnedShip[]> = {};
-          npcShipsResults.forEach(result => {
-            npcShipsMap[result.userId] = result.ships;
-          });
-          setNpcShipsData(npcShipsMap);
-        } else {
-          // Filter regular users for PvP (excluding NPCs, Admin, test_user, and current user)
-          const pvpUsers = users.filter((u: UserData) => 
-            !u.nickname.toLowerCase().includes('npc') && 
-            !u.nickname.toLowerCase().includes('admin') &&
-            !u.nickname.toLowerCase().includes('test_user') &&
-            u.user_id !== userId
-          );
-          setAvailableUsers(pvpUsers);
-        }
-      } catch (error) {
-        console.error('Error loading battle data:', error);
-        showError(
-          t('common.error'),
-          t('battle.messages.load_error')
+      // Load user's active ships for battle
+      const ships = await getUserOwnedShips(userId);
+      setUserShips(ships.filter(ship => ship.status === 'active'));
+      
+      // Load users for both NPC and PvP modes
+      const users = await getUsers();
+      
+      if (battleMode === 'npc') {
+        // Filter users with "NPC" in their names for NPC battles
+        const npcs = users.filter((u: UserData) => 
+          u.nickname.toLowerCase().includes('npc') && u.user_id !== userId
         );
-      } finally {
-        setLoading(false);
+        setNpcUsers(npcs);
+        
+        // Load ships data for each NPC
+        const npcShipsPromises = npcs.map(async (npc) => {
+          try {
+            const ships = await getUserOwnedShips(npc.user_id);
+            return { userId: npc.user_id, ships: ships.filter(ship => ship.status === 'active') };
+          } catch (error) {
+            console.error(`Failed to load ships for NPC ${npc.nickname}:`, error);
+            return { userId: npc.user_id, ships: [] };
+          }
+        });
+        
+        const npcShipsResults = await Promise.all(npcShipsPromises);
+        const npcShipsMap: Record<number, OwnedShip[]> = {};
+        npcShipsResults.forEach(result => {
+          npcShipsMap[result.userId] = result.ships;
+        });
+        setNpcShipsData(npcShipsMap);
+      } else {
+        // Filter regular users for PvP (excluding NPCs, Admin, test_user, and current user)
+        const pvpUsers = users.filter((u: UserData) => 
+          !u.nickname.toLowerCase().includes('npc') && 
+          !u.nickname.toLowerCase().includes('admin') &&
+          !u.nickname.toLowerCase().includes('test_user') &&
+          u.user_id !== userId
+        );
+        setAvailableUsers(pvpUsers);
       }
-    };
+    } catch (error) {
+      console.error('Error loading battle data:', error);
+      actionError(
+        t('common.error'),
+        t('battle.messages.load_error')
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadBattleData();
+  useEffect(() => {
+    fetchBattleData();
   }, [userId, battleMode]);
-
-
 
   const handleBattleStart = async (opponentId: number) => {
     if (userShips.length === 0) {
-      showWarning(
+      notificationContext.showWarning(
         t('battle.notifications.no_ships_title'),
         t('battle.notifications.no_ships_message')
       );
@@ -110,8 +116,8 @@ const Battle: React.FC = () => {
       const opponentActiveShips = opponentShips.filter(ship => ship.status === 'active');
       
       if (opponentActiveShips.length === 0) {
-        showWarning(
-          t('battle.messages.opponent_no_ships'),
+        notificationContext.showWarning(
+          t('battle.notifications.choose_opponent_title'),
           t('battle.messages.opponent_no_ships')
         );
         return;
@@ -131,49 +137,44 @@ const Battle: React.FC = () => {
       const result = await startBattle(battleRequest);
       setBattleResult(result);
       
-      // Show battle result notification with log button
-      // Ensure proper type comparison between userId and winner_user_id
-      const currentUserId = Number(userId);
-      const winnerUserId = result.winner_user_id;
-      
-      const isVictory = winnerUserId === currentUserId;
-      const isDraw = winnerUserId === null;
-      
-      const battleLogAction = {
+      // Battle is complete, update UI
+      const winner = result.winner_user_id;
+      const isVictory = winner === Number(userId);
+      const isDraw = winner === null;
+
+      const viewLogAction = {
         label: t('battle.notifications.view_log'),
         onClick: () => setShowBattleLogModal(true),
-        variant: 'secondary' as const
+        variant: 'primary' as const
       };
-      
+
       if (isVictory) {
-        showSuccess(
+        notificationContext.showSuccess(
           t('battle.notifications.victory_title'),
           t('battle.notifications.victory_message', { battleId: result.battle_id }),
-          undefined,
-          [battleLogAction]
+          5000,
+          [viewLogAction]
         );
       } else if (isDraw) {
-        showWarning(
+        notificationContext.showInfo(
           t('battle.notifications.draw_title'),
           t('battle.notifications.draw_message', { battleId: result.battle_id }),
-          undefined,
-          [battleLogAction]
+          5000,
+          [viewLogAction]
         );
       } else {
-        showError(
+        notificationContext.showError(
           t('battle.notifications.defeat_title'),
           t('battle.notifications.defeat_message', { battleId: result.battle_id }),
-          7000,
-          [battleLogAction]
+          0,
+          [viewLogAction]
         );
       }
-      
-    } catch (error: any) {
-      console.error('Battle failed:', error);
-      const errorMessage = error.response?.data?.detail || error.message || t('battle.notifications.unknown_error');
-      showError(
-        t('battle.notifications.error_title'),
-        t('battle.notifications.error_message', { error: errorMessage })
+    } catch (error) {
+      console.error('Battle error:', error);
+      actionError(
+        t('common.error'),
+        t('battle.messages.battle_error')
       );
     } finally {
       setBattleLoading(false);
@@ -194,7 +195,7 @@ const Battle: React.FC = () => {
   }
 
   return (
-    <GameLayout>
+    <GameLayout userData={userData}>
       <div className="space-y-6 pr-4">
         {/* Battle Mode Tabs */}
         <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
@@ -203,12 +204,12 @@ const Battle: React.FC = () => {
             {t('battle.title')}
           </h1>
           
-          <div className="flex space-x-2 mb-6">
+          <div className="flex gap-3 mb-4" role="group">
             <button
               onClick={() => setBattleMode('npc')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                battleMode === 'npc' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                battleMode === 'npc'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
@@ -216,9 +217,9 @@ const Battle: React.FC = () => {
             </button>
             <button
               onClick={() => setBattleMode('pvp')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                battleMode === 'pvp' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                battleMode === 'pvp'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
@@ -226,7 +227,6 @@ const Battle: React.FC = () => {
             </button>
           </div>
         </div>
-
 
         {/* Opponent Selection */}
         <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
@@ -236,7 +236,7 @@ const Battle: React.FC = () => {
           </h2>
           
           {battleMode === 'npc' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {npcUsers.length === 0 ? (
                 <div className="col-span-full text-center py-8">
                   <p className="text-slate-400">{t('battle.messages.no_npcs')}</p>
@@ -247,14 +247,6 @@ const Battle: React.FC = () => {
                   const displayName = npc.nickname.replace(/^NPC_/i, '');
                   const npcShips = npcShipsData[npc.user_id] || [];
                   
-                  // Group ships by name and count them
-                  const shipCounts = npcShips.reduce((acc, ship) => {
-                    acc[ship.ship_name] = (acc[ship.ship_name] || 0) + 1;
-                    return acc;
-                  }, {} as Record<string, number>);
-                  
-                  const totalShips = npcShips.length;
-                  
                   return (
                     <div key={npc.user_id} className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
                       <div className="text-center mb-3">
@@ -262,7 +254,6 @@ const Battle: React.FC = () => {
                         <h3 className="font-semibold text-white mt-2">{displayName}</h3>
                       </div>
                       
-                      {/* NPC Stats */}
                       <div className="space-y-2 text-sm mb-4">
                         <div className="flex justify-between">
                           <span className="text-slate-400">{t('battle.labels.level')}:</span>
@@ -284,45 +275,45 @@ const Battle: React.FC = () => {
                           <span className="text-slate-400">{t('battle.labels.defeats')}:</span>
                           <span className="text-red-400 font-medium">{npc.defeats}</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t('battle.labels.ships')}:</span>
+                          <span className="text-cyan-400 font-medium">{npcShips.length}</span>
+                        </div>
                       </div>
                       
-                      {/* Fleet Composition */}
-                      <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-600/30">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-sm font-semibold text-cyan-400 flex items-center">
-                            <span className="text-lg mr-1">🚀</span>
-                            {t('battle.labels.fleet')}
-                          </h4>
-                          <span className="text-xs text-slate-400">
-                            {totalShips} {t('battle.labels.ships')}
-                          </span>
+                      {/* Fleet Button */}
+                      {npcShips.length > 0 && (
+                        <div className="mb-4">
+                          <button
+                            onClick={() => {
+                              setSelectedFleet({ ships: npcShips, playerName: displayName });
+                              setShowFleetModal(true);
+                            }}
+                            className="w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg border border-slate-600/30 transition-all duration-200 flex items-center justify-between"
+                          >
+                            <div className="flex items-center">
+                              <span className="text-lg mr-2">🚀</span>
+                              <span className="text-sm font-semibold text-cyan-400">{t('battle.fleet_modal.view_fleet')}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-slate-400">{npcShips.length} {t('battle.labels.ships')}</span>
+                              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </div>
+                          </button>
                         </div>
-                        
-                        {totalShips === 0 ? (
-                          <p className="text-xs text-slate-500 italic">{t('battle.messages.no_active_ships')}</p>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-1">
-                            {Object.entries(shipCounts).map(([shipName, count]) => (
-                              <div key={shipName} className="flex items-center justify-between text-xs bg-slate-700/30 rounded px-2 py-1">
-                                <span className="text-slate-300 truncate flex-1 mr-1 text-xs">{shipName}</span>
-                                <span className="text-cyan-400 font-medium text-xs">
-                                  {count}x
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      )}
                       
                       <button 
                         onClick={() => handleBattleStart(npc.user_id)}
                         className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={battleLoading || totalShips === 0}
+                        disabled={battleLoading || npcShips.length === 0}
                       >
                         {battleLoading ? t('battle.actions.battling') : t('battle.actions.battle')}
                       </button>
                       
-                      {totalShips === 0 && (
+                      {npcShips.length === 0 && (
                         <p className="text-xs text-red-400 text-center mt-2">
                           {t('battle.messages.npc_no_ships')}
                         </p>
@@ -386,6 +377,14 @@ const Battle: React.FC = () => {
           isOpen={showBattleLogModal}
           onClose={() => setShowBattleLogModal(false)}
           battleResult={battleResult}
+        />
+
+        {/* Fleet Modal */}
+        <FleetModal
+          isOpen={showFleetModal}
+          onClose={() => setShowFleetModal(false)}
+          ships={selectedFleet.ships}
+          playerName={selectedFleet.playerName}
         />
 
       </div>

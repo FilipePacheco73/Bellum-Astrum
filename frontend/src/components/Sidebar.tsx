@@ -60,11 +60,25 @@ const Sidebar: React.FC<SidebarProps> = ({ userData }) => {
       description: sidebarT?.menu_descriptions?.shipyard || 'Reparar naves'
     },
     {
+      id: 'work',
+      label: t.work?.title || 'Work',
+      path: '/work',
+      icon: '🔨',
+      description: sidebarT?.menu_descriptions?.work || 'Ganhar créditos trabalhando'
+    },
+    {
       id: 'users',
       label: t.users?.title || 'Players',
       path: '/users',
       icon: '👥',
       description: sidebarT?.menu_descriptions?.users || 'Outros jogadores'
+    },
+    {
+      id: 'messages',
+      label: t.messages?.title || 'Messages',
+      path: '/messages',
+      icon: '📨',
+      description: sidebarT?.menu_descriptions?.messages || 'Notificações e logs'
     }
   ];
 

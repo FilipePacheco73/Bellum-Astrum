@@ -50,7 +50,7 @@ def get_user_work_status(db: Session, user_id: int) -> Optional[Dict]:
     if last_work and last_work.cooldown_until.replace(tzinfo=UTC) > now:
         can_work = False
         time_remaining = last_work.cooldown_until.replace(tzinfo=UTC) - now
-        time_until_available = time_remaining.total_seconds() / 3600.0  # Convert to hours
+        time_until_available = time_remaining.total_seconds() / 60.0  # Convert to minutes
     
     work_type = get_work_type_for_rank(user.rank)
     min_income, max_income = get_work_income_range_for_rank(user.rank, rank_bonus.work_income)
@@ -63,7 +63,7 @@ def get_user_work_status(db: Session, user_id: int) -> Optional[Dict]:
         "estimated_income_range": {"min": min_income, "max": max_income},
         "work_type": work_type,
         "current_rank": user.rank.value,
-        "work_cooldown_hours": rank_bonus.work_cooldown_hours
+        "work_cooldown_minutes": rank_bonus.work_cooldown_minutes
     }
 
 
@@ -95,8 +95,8 @@ def can_user_work(db: Session, user_id: int) -> Tuple[bool, str]:
         return True, "Cooldown period has expired, can work now"
     
     time_remaining = last_work.cooldown_until.replace(tzinfo=UTC) - now
-    hours_remaining = time_remaining.total_seconds() / 3600.0
-    return False, f"Must wait {hours_remaining:.1f} hours before working again"
+    minutes_remaining = time_remaining.total_seconds() / 60.0
+    return False, f"Must wait {minutes_remaining:.1f} minutes before working again"
 
 
 def perform_work(db: Session, user_id: int) -> Tuple[Optional[Dict], str]:
@@ -133,7 +133,7 @@ def perform_work(db: Session, user_id: int) -> Tuple[Optional[Dict], str]:
     
     # Calculate cooldown
     now = datetime.now(UTC)
-    cooldown_until = now + timedelta(hours=rank_bonus.work_cooldown_hours)
+    cooldown_until = now + timedelta(minutes=rank_bonus.work_cooldown_minutes)
     
     # Update user currency
     user.currency_value += income_earned
@@ -159,7 +159,7 @@ def perform_work(db: Session, user_id: int) -> Tuple[Optional[Dict], str]:
         "work_type": work_type,
         "new_currency_balance": user.currency_value,
         "cooldown_until": cooldown_until,
-        "next_available_in_hours": rank_bonus.work_cooldown_hours
+        "next_available_in_minutes": rank_bonus.work_cooldown_minutes
     }, "Work completed successfully"
 
 
@@ -237,5 +237,5 @@ def get_available_work_types_for_user(db: Session, user_id: int) -> Optional[Dic
         "user_rank": user.rank.value,
         "work_type": work_type,
         "estimated_income_range": {"min": min_income, "max": max_income},
-        "cooldown_hours": rank_bonus.work_cooldown_hours
+        "cooldown_minutes": rank_bonus.work_cooldown_minutes
     }

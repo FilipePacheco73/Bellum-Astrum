@@ -6,9 +6,13 @@ import { getUserOwnedShips, getUserShipLimits, getUserData, activateShip, deacti
 import translations from '../locales/translations';
 import { translateRank } from '../utils/rankUtils';
 import { getShipIcon, getUserIdFromToken } from '../utils/shipUtils';
+import { useAppNotifications } from '../utils/notificationUtils';
+import { useUserData } from '../hooks/useUserData';
 
 const Ships: React.FC = () => {
   const { language } = useLanguage();
+  const { actionSuccess, actionError } = useAppNotifications();
+  const { userData: globalUserData } = useUserData();
   const t = translations[language].ships;
   
   const [ships, setShips] = useState<OwnedShip[]>([]);
@@ -117,12 +121,11 @@ const Ships: React.FC = () => {
         });
       }
       
-      // Show success message (you could add a toast notification here)
-      console.log(t.messages.activation_success);
+      // Show success message using centralized notification system
+      actionSuccess(t.messages.activation_success);
     } catch (error) {
       console.error('Error activating ship:', error);
-      // Show error message (you could add a toast notification here)
-      console.error(t.messages.activation_error);
+      actionError(t.messages.activation_error);
     } finally {
       setActionLoading(prev => ({ ...prev, [shipNumber]: false }));
     }
@@ -158,10 +161,14 @@ const Ships: React.FC = () => {
       await updateUserFormation(userData.user_id, selectedFormation);
       // Update local user data
       setUserData({ ...userData, default_formation: selectedFormation });
-      // Show success message (you could add a toast notification here)
-      console.log('Formation saved successfully');
+      // Show success message using centralized notification system
+      actionSuccess(
+        t.formation.formation_saved,
+        t.formation.strategies[selectedFormation as keyof typeof t.formation.strategies]
+      );
     } catch (error) {
       console.error('Error saving formation:', error);
+      actionError(t.formation.formation_error);
       setError(t.labels.formation_error);
     } finally {
       setFormationLoading(false);
@@ -209,7 +216,7 @@ const Ships: React.FC = () => {
   const ownedShips = ships.filter(ship => ship.status === 'owned');
 
   return (
-    <GameLayout>
+    <GameLayout userData={globalUserData}>
       <div className="space-y-6 pr-4">
         {/* Header */}
         <div className="text-center">
@@ -333,10 +340,10 @@ const Ships: React.FC = () => {
                   <label htmlFor={formation} className="flex-1 cursor-pointer">
                     <div className="flex justify-between items-center">
                       <span className="text-white font-medium">
-                        {formation}
+                        {t.formation.strategies[formation as keyof typeof t.formation.strategies]}
                       </span>
                       <span className="text-slate-400 text-sm">
-                        {t.formation.strategies[formation as keyof typeof t.formation.strategies]}
+                        {t.formation.strategy_descriptions[formation as keyof typeof t.formation.strategy_descriptions]}
                       </span>
                     </div>
                   </label>

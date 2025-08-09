@@ -75,7 +75,7 @@ def perform_work_route(
                 "income_earned": result["income_earned"],
                 "new_currency_balance": result["new_currency_balance"],
                 "user_rank": current_user.rank.value,
-                "cooldown_hours": result["next_available_in_hours"],
+                "cooldown_minutes": result["next_available_in_minutes"],
                 "success": True
             },
             ip_address=request.client.host,

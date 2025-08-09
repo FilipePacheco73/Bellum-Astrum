@@ -10,7 +10,8 @@ export const shipsTranslations = {
         owned: 'Possuídas',
         total: 'Total',
         destroyed: 'Destruídas',
-        sold: 'Vendidas'
+        sold: 'Vendidas',
+        available_slots: 'Slots Disponíveis'
       },
       status: {
         active: 'Ativa',
@@ -43,7 +44,12 @@ export const shipsTranslations = {
         bonus_formula: 'Os valores "Atual" das suas naves são calculados aplicando estes bônus aos valores "Base"',
         base_bonus_per_level: 'Bônus base por nível',
         rank_multiplier: 'Multiplicador de patente',
-        final_bonus: 'Bônus final'
+        final_bonus: 'Bônus final',
+        how_it_works: 'Como Funciona',
+        default_formation: 'Formação de Batalha Padrão',
+        formation_description: 'Selecione sua estratégia de batalha padrão',
+        save_formation: 'Salvar Formação',
+        rank_bonuses: 'Bônus de Patente'
       },
       formation: {
         title: 'Formação de Batalha',
@@ -51,9 +57,14 @@ export const shipsTranslations = {
         ship_position: 'Posição da Nave {number}',
         strategy: 'Estratégia',
         strategies: {
-          DEFENSIVE: 'Focar em defesa e sobrevivência',
-          AGGRESSIVE: 'Maximizar dano causado',
-          TACTICAL: 'Abordagem equilibrada com mira estratégica'
+          DEFENSIVE: 'Defensiva',
+          AGGRESSIVE: 'Agressiva',
+          TACTICAL: 'Tática'
+        },
+        strategy_descriptions: {
+          DEFENSIVE: 'Maximiza defesa e sobrevivência',
+          AGGRESSIVE: 'Maximiza dano ofensivo',
+          TACTICAL: 'Equilibra ataque e defesa'
         },
         save_formation: 'Salvar Formação',
         formation_saved: 'Formação salva com sucesso!',
@@ -83,7 +94,8 @@ export const shipsTranslations = {
         owned: 'Owned',
         total: 'Total',
         destroyed: 'Destroyed',
-        sold: 'Sold'
+        sold: 'Sold',
+        available_slots: 'Available Slots'
       },
       status: {
         active: 'Active',
@@ -116,7 +128,12 @@ export const shipsTranslations = {
         bonus_formula: 'The "Current" values of your ships are calculated by applying these bonuses to the "Base" values',
         base_bonus_per_level: 'Base bonus per level',
         rank_multiplier: 'Rank multiplier',
-        final_bonus: 'Final bonus'
+        final_bonus: 'Final bonus',
+        how_it_works: 'How It Works',
+        default_formation: 'Default Battle Formation',
+        formation_description: 'Select your default battle strategy',
+        save_formation: 'Save Formation',
+        rank_bonuses: 'Rank Bonuses'
       },
       formation: {
         title: 'Battle Formation',
@@ -124,9 +141,14 @@ export const shipsTranslations = {
         ship_position: 'Ship {number} Position',
         strategy: 'Strategy',
         strategies: {
-          DEFENSIVE: 'Focus on defense and survival',
-          AGGRESSIVE: 'Maximize damage dealt',
-          TACTICAL: 'Balanced approach with strategic targeting'
+          DEFENSIVE: 'Defensive',
+          AGGRESSIVE: 'Aggressive',
+          TACTICAL: 'Tactical'
+        },
+        strategy_descriptions: {
+          DEFENSIVE: 'Maximizes defense and survival',
+          AGGRESSIVE: 'Maximizes offensive damage',
+          TACTICAL: 'Balances attack and defense'
         },
         save_formation: 'Save Formation',
         formation_saved: 'Formation saved successfully!',
