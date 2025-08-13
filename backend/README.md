@@ -312,6 +312,7 @@ When contributing to the backend:
 - **← [Project Overview](../README.md)** - Main project documentation and overview
 - **🗄️ [Database Documentation](../database/README.md)** - Database schema, models, and setup
 - **🎨 [Frontend Documentation](../frontend/README.md)** - React frontend and UI components
+- **🤖 [AI Agents Documentation](../AI_Agents/README.md)** - Autonomous AI players and match system
 
 ---
 *For frontend integration, see [frontend/README.md](../frontend/README.md)*

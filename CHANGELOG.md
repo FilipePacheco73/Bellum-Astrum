@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.9] - 2025-08-12
+
+### Added
+- **Autonomous AI Agents System**: Complete implementation of intelligent AI players
+  - Multi-personality AI agents (Warrior, Guardian, Tactician) with distinct behavioral patterns
+  - LLM-powered decision making using HuggingFace Transformers (DialoGPT, Mistral 7B, TinyLlama)
+  - Strategic prompts system with personality-based behaviors and adaptive decision making
+  - Automated match orchestration system for continuous AI vs AI tournaments
+  - Real-time agent performance monitoring and battle result tracking
+
+- **Advanced Logging System**: Dual logging architecture for comprehensive monitoring
+  - Structured debug logging for system events, API calls, and error tracking
+  - Dedicated AI decision logging for agent reasoning, tool usage, and strategic decisions
+  - Custom formatters with timestamps, round tracking, and agent identification
+  - Daily log rotation with organized file structure for historical analysis
+  - Performance metrics and match result logging with JSON export
+
+- **File-Based Memory System**: Intelligent agent learning and persistence
+  - JSON Lines format memory storage for each AI agent with action history
+  - Agent memory management with game state tracking before/after actions
+  - Strategic decision reasoning storage for learning pattern analysis
+  - Memory summarization for recent actions and performance insights
+  - Cross-round learning capabilities with historical action analysis
+
+### Technical Improvements
+- **Architecture Refactoring**: Enhanced project structure and code organization
+  - Modular AI agent configuration with personality definitions and LLM settings
+  - Environment variable management for AI credentials and model configurations
+  - Centralized prompt management system with aggressive, defensive, and tactical strategies
+  - Tool calling system with comprehensive error handling and retry mechanisms
+  - Match orchestration with configurable rounds, agent limits, and battle parameters
+
+- **Documentation Enhancement**: Professional documentation overhaul
+  - Complete README.md restructuring with current project status and AI capabilities
+  - Enhanced tech stack presentation organized by functional areas
+  - Updated project goals to reflect AI/ML learning objectives and data analytics
+  - Standardized navigation sections across all component documentation
+  - Professional formatting with emoji indicators and clear section hierarchy
+
+- **Code Quality Improvements**: Development workflow and structure optimization
+  - Removed legacy SQLite memory system in favor of transparent file-based storage
+  - Cleaned up unused directory structures and optimized folder organization
+  - Enhanced error handling throughout AI agent pipeline with comprehensive logging
+  - Standardized English documentation across all project components
+  - Cross-component documentation linking for improved developer navigation
+
+### Fixed
+- **Directory Structure**: Resolved incorrect folder creation and cleanup
+  - Fixed AI_Agents creating nested folders in incorrect locations
+  - Removed empty `memory` and `models` directories from codebase
+  - Corrected log file path generation to use existing project log directories
+  - Standardized memory file storage in dedicated `memories` directory
+
 ## [0.5.8] - 2025-08-09
 
 ### Fixed
