@@ -486,5 +486,6 @@ python database/scripts/reset_db.py
 - **← [Project Overview](../README.md)** - Main project documentation and overview  
 - **⚙️ [Backend Documentation](../backend/README.md)** - FastAPI backend and API endpoints
 - **🎨 [Frontend Documentation](../frontend/README.md)** - React frontend and UI components
+- **🤖 [AI Agents Documentation](../AI_Agents/README.md)** - Autonomous AI players and match system
 
 ---

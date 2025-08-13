@@ -31,6 +31,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# === AI AGENTS CACHE AND DATA ===
+AI_Agents/logs/
+AI_Agents/memories/
+AI_Agents/models_cache/
+
 # === IDE AND SYSTEM FILES ===
 .vscode/*
 !.vscode/extensions.json

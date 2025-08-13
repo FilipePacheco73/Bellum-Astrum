@@ -418,5 +418,6 @@ When contributing to the frontend:
 - **← [Project Overview](../README.md)** - Main project documentation and overview
 - **⚙️ [Backend Documentation](../backend/README.md)** - FastAPI backend and API endpoints
 - **🗄️ [Database Documentation](../database/README.md)** - Database schema, models, and setup
+- **🤖 [AI Agents Documentation](../AI_Agents/README.md)** - Autonomous AI players and match system
 
 ---
