@@ -1,13 +1,14 @@
 """
-Configuração dos modelos LLM para os agentes de IA.
+LLM models configuration for AI agents.
 """
 
+import torch
 from typing import Dict, Any
 from dataclasses import dataclass
 
 @dataclass
 class LLMConfig:
-    """Configuração de um modelo LLM"""
+    """Configuration for an LLM model"""
     model_name: str
     max_tokens: int
     temperature: float
@@ -16,88 +17,62 @@ class LLMConfig:
     eos_token_id: int = None
     device_map: str = "auto"
     torch_dtype: str = "auto"
-    load_in_4bit: bool = False  # Para reduzir uso de memória
+    load_in_4bit: bool = False  # To reduce memory usage
     trust_remote_code: bool = False
 
-# Configurações específicas para cada personalidade de IA
+# Configurations for different agent types
 LLM_CONFIGS: Dict[str, LLMConfig] = {
-    # IA Agressiva - Usando GPT2 que funcionou melhor
+    # Aggressive Agent - Using TinyLlama (lightweight and free)
     "aggressive": LLMConfig(
-        model_name="gpt2",  # Mudando para gpt2
-        max_tokens=60,
+        model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        max_tokens=200,  # Increased to allow more complete responses
         temperature=0.8,
         do_sample=True,
-        load_in_4bit=True,
-        pad_token_id=50256,
-        eos_token_id=50256
+        load_in_4bit=True,  # Use quantization to save VRAM
+        pad_token_id=2,
+        eos_token_id=2
     ),
     
-    # IA Defensiva - Usando GPT2 
+    # Defensive Agent - Using TinyLlama
     "defensive": LLMConfig(
-        model_name="gpt2",  # Mudando para gpt2
-        max_tokens=60,
+        model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        max_tokens=200,
         temperature=0.4,
         do_sample=True,
         load_in_4bit=True,
-        pad_token_id=50256,
-        eos_token_id=50256
+        pad_token_id=2,
+        eos_token_id=2
     ),
     
-    # IA Tática - Mantendo GPT2 que já funcionava
+    # Tactical Agent - Using TinyLlama
     "tactical": LLMConfig(
-        model_name="gpt2",
-        max_tokens=80,
+        model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        max_tokens=200,
         temperature=0.6,
         do_sample=True,
         load_in_4bit=True,
-        pad_token_id=50256,
-        eos_token_id=50256
+        pad_token_id=2,
+        eos_token_id=2
     )
 }
 
-# Configurações globais
+# Global configurations
 GLOBAL_CONFIG = {
-    "device": "auto",  # "cuda" se disponível, senão "cpu"
-    "cache_dir": "./AI_Agents/models_cache",  # Cache local dos modelos
+    "device": "cuda" if torch.cuda.is_available() else "cpu",  # Auto-detect GPU
+    "cache_dir": "./AI_Agents/models_cache",  # Local model cache
     "max_memory_per_gpu": "4GB",
     "offload_folder": "./AI_Agents/offload_cache"
 }
 
-# Prompts de sistema base (será expandido nos arquivos de prompts específicos)
-BASE_SYSTEM_PROMPT = """
-Você é um jogador AI no jogo espacial Bellum Astrum. Este é um jogo de batalha espacial onde você:
+def get_llm_config(agent_type: str) -> LLMConfig:
+    """Returns LLM configuration for a specific agent type"""
+    if agent_type not in LLM_CONFIGS:
+        raise ValueError(f"Agent type '{agent_type}' not found. Available: {list(LLM_CONFIGS.keys())}")
+    return LLM_CONFIGS[agent_type]
 
-MECÂNICAS BÁSICAS:
-- Possui naves com estatísticas (ataque, escudo, HP, evasão, taxa de tiro)
-- Ganha créditos trabalhando (/work/perform) 
-- Compra naves no mercado (/market/buy)
-- Ativa naves para batalha (/battle/activate-ship)
-- Batalha contra outros jogadores (/battle/battle)
-- Repara naves danificadas (/shipyard/repair)
-
-FORMAÇÕES DE BATALHA:
-- AGGRESSIVE: Sem modificadores, ataque direto
-- DEFENSIVE: +20% evasão, foca em sobrevivência  
-- TACTICAL: -10% evasão, mas mira nos alvos mais ameaçadores
-
-OBJETIVOS:
-- Subir de nível e rank através de batalhas
-- Gerenciar recursos (créditos) eficientemente
-- Manter frota de naves ativa e saudável
-- Dominar outros jogadores em combate
-
-Você deve tomar decisões estratégicas baseadas na situação atual e sua personalidade.
-"""
-
-def get_llm_config(personality: str) -> LLMConfig:
-    """Retorna a configuração LLM para uma personalidade específica"""
-    if personality not in LLM_CONFIGS:
-        raise ValueError(f"Personalidade '{personality}' não encontrada. Disponíveis: {list(LLM_CONFIGS.keys())}")
-    return LLM_CONFIGS[personality]
-
-def get_model_info(personality: str) -> Dict[str, Any]:
-    """Retorna informações sobre o modelo para uma personalidade"""
-    config = get_llm_config(personality)
+def get_model_info(agent_type: str) -> Dict[str, Any]:
+    """Returns model information for an agent type"""
+    config = get_llm_config(agent_type)
     return {
         "model_name": config.model_name,
         "max_tokens": config.max_tokens,
@@ -106,10 +81,12 @@ def get_model_info(personality: str) -> Dict[str, Any]:
     }
 
 def _get_model_size(model_name: str) -> str:
-    """Estima o tamanho do modelo baseado no nome"""
+    """Estimates model size based on name"""
     size_mapping = {
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0": "~1.1B parâmetros (~2.2GB)",
-        "microsoft/DialoGPT-medium": "~345M parâmetros (~1.4GB)",
-        "mistralai/Mistral-7B-Instruct-v0.1": "~7B parâmetros (~14GB)"
+        "microsoft/DialoGPT-medium": "~345M parameters (~690MB)",
+        "gpt2": "~124M parameters (~500MB)",
+        "gpt2-medium": "~345M parameters (~1.4GB)",
+        "TinyLlama/TinyLlama-1.1B-Chat-v1.0": "~1.1B parameters (~2.2GB, ~550MB with 4bit)",
+        "mistralai/Mistral-7B-Instruct-v0.1": "~7B parameters (~14GB, ~3.5GB with 4bit)"
     }
-    return size_mapping.get(model_name, "Tamanho desconhecido")
+    return size_mapping.get(model_name, "Unknown size")

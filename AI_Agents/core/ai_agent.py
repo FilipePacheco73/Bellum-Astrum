@@ -6,18 +6,19 @@ import asyncio
 import logging
 import json
 import re
+import random
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 from dataclasses import dataclass
+from pathlib import Path
 
 from AI_Agents.core.llm_manager import get_llm_manager
 from AI_Agents.core.tool_caller import GameToolCaller, GameTool, ToolResult, AICredentials
-from AI_Agents.core.memory_manager import AIMemoryManager, ActionMemory, BattleMemory, ActionType
-from AI_Agents.config.ai_personalities import get_personality, AIPersonality
+from AI_Agents.core.file_memory import FileBasedMemory
+from AI_Agents.prompts.aggressive_prompts import AGGRESSIVE_PROMPT
+from AI_Agents.prompts.defensive_prompts import DEFENSIVE_PROMPT
+from AI_Agents.prompts.tactical_prompts import TACTICAL_PROMPT
 from AI_Agents.prompts.system_prompts import get_system_prompt
-from AI_Agents.prompts.aggressive_prompts import get_aggressive_prompt
-from AI_Agents.prompts.defensive_prompts import get_defensive_prompt  
-from AI_Agents.prompts.tactical_prompts import get_tactical_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -40,29 +41,40 @@ class GameState:
 class AIAgent:
     """Base AI agent that can play Bellum Astrum autonomously"""
     
-    def __init__(self, personality_name: str, credentials: AICredentials):
-        self.personality_name = personality_name
-        self.personality = get_personality(personality_name)
+    def __init__(self, agent_type: str, credentials: AICredentials):
+        """
+        Initialize AI Agent
+        agent_type: 'aggressive', 'defensive', or 'tactical'
+        """
+        self.agent_type = agent_type.lower()
         self.credentials = credentials
         self.tool_caller = GameToolCaller()
         self.llm_manager = get_llm_manager()
         self.game_state = GameState()
         
+        # Initialize memory system
+        memories_dir = Path("AI_Agents/memories")
+        self.memory = FileBasedMemory(credentials.nickname, memories_dir)
+        
         # Decision tracking
         self.decision_history: List[Dict] = []
         self.round_count = 0
         self.last_action_time = None
+        self.last_action = None  # Track the type of action taken
+        self.last_decision = None  # Track the decision made
         
         # Load the appropriate LLM model
         self._load_model()
     
     def _load_model(self):
-        """Load the LLM model for this agent's personality"""
-        if not self.llm_manager.is_model_loaded(self.personality.llm_type):
-            success = self.llm_manager.load_model(self.personality.llm_type)
+        """Load the LLM model"""
+        # Use the personality type as the model type
+        model_type = self.agent_type
+        if not self.llm_manager.is_model_loaded(model_type):
+            success = self.llm_manager.load_model(model_type)
             if not success:
-                logger.error(f"Failed to load model for {self.personality_name}")
-                raise RuntimeError(f"Could not load LLM model for {self.personality.llm_type}")
+                logger.error(f"Failed to load model for {self.agent_type}")
+                raise RuntimeError(f"Could not load LLM model for {model_type}")
     
     async def update_game_state(self) -> bool:
         """Update the current game state by calling various APIs"""
@@ -174,73 +186,89 @@ Active Ships: {len(self.game_state.active_ships)}
         return context
     
     def _get_personality_prompt(self) -> str:
-        """Get personality-specific prompt"""
-        if self.personality.llm_type == "aggressive":
-            return get_aggressive_prompt("personality")
-        elif self.personality.llm_type == "defensive":
-            return get_defensive_prompt("personality")
-        elif self.personality.llm_type == "tactical":
-            return get_tactical_prompt("personality")
+        """Get agent-specific prompt"""
+        if self.agent_type == "aggressive":
+            return AGGRESSIVE_PROMPT
+        elif self.agent_type == "defensive":
+            return DEFENSIVE_PROMPT
+        elif self.agent_type == "tactical":
+            return TACTICAL_PROMPT
         else:
-            return ""
+            return AGGRESSIVE_PROMPT  # Default fallback
     
     async def make_decision(self) -> Optional[Dict[str, Any]]:
         """Make a decision using the LLM"""
         try:
-            # Build a simplified prompt for small models
+            # Increment round count
+            self.round_count += 1
+            
+            # Get personality-specific instructions
+            personality_prompt = self._get_personality_prompt()
+            
+            # Build current game state context
             context_prompt = self._build_simplified_context()
             
-            # Simple game flow explanation
-            game_flow = """
-GAME FLOW:
-1. Work to earn credits (perform_work)
-2. Buy a ship (buy_ship)
-3. Activate ship (activate_ship) 
-4. Battle other players (engage_battle)
-"""
+            # Get recent memories
+            memory_summary = self.memory.get_memory_summary(max_rounds=3)
             
-            # Determine best action based on current state
-            if self.game_state.credits < 1000 and len(self.game_state.active_ships) == 0:
-                suggestion = "You need credits to buy a ship. Try: perform_work"
-            elif len(self.game_state.active_ships) == 0:
-                suggestion = "You need a ship to battle. Try: buy_ship"
-            elif self.game_state.available_opponents and len(self.game_state.available_opponents) > 0:
-                suggestion = "You have ships and opponents available. Try: engage_battle"
-            else:
-                suggestion = "Check your status. Try: get_my_status"
-            
+            # Complete prompt with personality + memories + game state + actions
             decision_prompt = f"""
-{game_flow}
+{personality_prompt}
 
-Current state: {context_prompt}
+{memory_summary}
 
-{suggestion}
+=== SITUAÇÃO ATUAL ===
+{context_prompt}
 
-Choose ONE action:
-- get_my_status
-- perform_work  
-- buy_ship
-- activate_ship
-- engage_battle
+=== AÇÕES DISPONÍVEIS ===
+- get_my_status: Ver seu status atual
+- perform_work: Trabalhar para ganhar créditos  
+- buy_ship: Comprar uma nave
+- activate_ship: Ativar uma nave
+- repair_ship: Reparar uma nave danificada
+- engage_battle: Batalhar contra um oponente
 
-Answer with just the action name:
+=== INSTRUÇÃO IMPORTANTE ===
+Responda com UMA PALAVRA APENAS que identifique a ação escolhida.
+Exemplos de respostas válidas:
+- "status" (para verificar situação)
+- "trabalhar" (para ganhar créditos)
+- "ativar" (para ativar nave)
+- "reparar" (para consertar nave)
+- "batalhar" (para lutar)
+- "comprar" (para comprar nave)
+
+Escolha UMA ação baseada na sua personalidade e situação:
 """
-            
-            full_prompt = decision_prompt
             
             # Generate response
             response = self.llm_manager.generate_response(
-                self.personality.llm_type, 
-                full_prompt,
-                temperature=self.personality.risk_tolerance * 0.5 + 0.3  # Dynamic temperature
+                self.agent_type, 
+                decision_prompt,
+                temperature=0.7
             )
             
             if not response:
                 logger.error(f"No response from LLM for {self.credentials.nickname}")
+                # Save failed decision to memory
+                self.memory.store_decision(
+                    self.round_count, 
+                    "NO_ACTION", 
+                    "LLM failed to generate response",
+                    success=False
+                )
+                
                 # Use fallback decision making
                 fallback_decision = self._make_fallback_decision()
                 if fallback_decision:
                     logger.info(f"Using fallback decision for {self.credentials.nickname}")
+                    # Save fallback decision to memory
+                    self.memory.store_decision(
+                        self.round_count,
+                        fallback_decision['action'],
+                        f"Fallback: {fallback_decision['reason']}",
+                        success=True
+                    )
                     return fallback_decision
                 return None
             
@@ -248,6 +276,17 @@ Answer with just the action name:
             decision = self._parse_decision(response)
             
             if decision:
+                # Store the decision for tracking
+                self.last_decision = decision
+                
+                # Save decision to memory
+                self.memory.store_decision(
+                    self.round_count,
+                    decision['action'],
+                    decision['reason'],
+                    success=True
+                )
+                
                 # Add to history
                 self.decision_history.append({
                     "round": self.round_count,
@@ -256,7 +295,16 @@ Answer with just the action name:
                     "llm_response": response[:200] + "..." if len(response) > 200 else response
                 })
                 
-                logger.info(f"{self.credentials.nickname} decided: {decision['action']} - {decision['reason']}")
+                # Log only the final decision, not the full prompt
+                logger.debug(f"{self.credentials.nickname} -> {decision['action']}: {decision['reason']}")
+            else:
+                # Save failed parsing to memory
+                self.memory.store_decision(
+                    self.round_count,
+                    "PARSE_FAILED",
+                    f"Could not understand LLM response: {response[:50]}...",
+                    success=False
+                )
             
             return decision
             
@@ -267,35 +315,80 @@ Answer with just the action name:
     def _parse_decision(self, llm_response: str) -> Optional[Dict[str, Any]]:
         """Parse LLM response to extract decision"""
         try:
-            # Simple parsing - just look for the action name
+            # Simple parsing - look for action keywords in multiple languages
             response = llm_response.strip().lower()
             
-            # Map common responses to actions
+            # Map common responses to actions (Portuguese and English)
             action_map = {
+                # Status checking
                 'get_my_status': 'get_my_status',
                 'status': 'get_my_status',
                 'check': 'get_my_status',
+                'verificar': 'get_my_status',
+                'checar': 'get_my_status',
+                
+                # Work
                 'perform_work': 'perform_work', 
                 'work': 'perform_work',
+                'trabalhar': 'perform_work',
+                'trabalho': 'perform_work',
+                
+                # Ship purchase
                 'buy_ship': 'buy_ship',
                 'buy': 'buy_ship',
                 'ship': 'buy_ship',
+                'comprar': 'buy_ship',
+                'nave': 'buy_ship',
+                
+                # Ship activation
                 'activate_ship': 'activate_ship',
                 'activate': 'activate_ship',
+                'ativar': 'activate_ship',
+                'ativação': 'activate_ship',
+                
+                # Ship repair
+                'repair_ship': 'repair_ship',
+                'repair': 'repair_ship',
+                'reparar': 'repair_ship',
+                'reparo': 'repair_ship',
+                'consertar': 'repair_ship',
+                
+                # Battle
                 'engage_battle': 'engage_battle',
                 'battle': 'engage_battle',
-                'fight': 'engage_battle'
+                'fight': 'engage_battle',
+                'batalha': 'engage_battle',
+                'batalhar': 'engage_battle',
+                'lutar': 'engage_battle',
+                'combate': 'engage_battle'
             }
             
-            # Find matching action
+            # Find matching action - try multiple patterns
             action = None
+            
+            # First, try exact keyword matching
             for keyword, mapped_action in action_map.items():
                 if keyword in response:
                     action = mapped_action
                     break
             
+            # If no exact match, try broader pattern matching
             if not action:
-                logger.warning(f"No action found in LLM response: {llm_response}")
+                if any(word in response for word in ['status', 'verificar', 'checar', 'situação']):
+                    action = 'get_my_status'
+                elif any(word in response for word in ['trabalh', 'work', 'crédito', 'credit']):
+                    action = 'perform_work'
+                elif any(word in response for word in ['ativ', 'activ', 'ligar']):
+                    action = 'activate_ship'
+                elif any(word in response for word in ['repar', 'repair', 'consertar', 'fix']):
+                    action = 'repair_ship'
+                elif any(word in response for word in ['batalh', 'battle', 'lut', 'fight', 'combat']):
+                    action = 'engage_battle'
+                elif any(word in response for word in ['compr', 'buy', 'nave', 'ship']):
+                    action = 'buy_ship'
+            
+            if not action:
+                logger.debug(f"No action found in LLM response from {self.credentials.nickname}")
                 return None
             
             decision = {
@@ -348,7 +441,7 @@ Answer with just the action name:
             if self.game_state.available_opponents and self.game_state.active_ships:
                 opponent = self.game_state.available_opponents[0]
                 formations = ["AGGRESSIVE", "DEFENSIVE", "TACTICAL"]
-                formation = formations[hash(self.personality_name) % len(formations)]
+                formation = formations[hash(self.agent_type) % len(formations)]
                 
                 decision['parameters'] = {
                     'opponent_id': opponent.get('user_id'),
@@ -411,6 +504,8 @@ Answer with just the action name:
             # Execute the tool
             result = await self.tool_caller.execute_tool(tool, self.credentials, **parameters)
             
+            # Track the action taken
+            self.last_action = action
             self.last_action_time = datetime.now()
             
             logger.info(f"{self.credentials.nickname} executed {action} - Success: {result.success}")
@@ -485,7 +580,7 @@ Answer with just the action name:
                 # Have ships and opponents - try to battle
                 opponent = random.choice(self.game_state.available_opponents)
                 formations = ["AGGRESSIVE", "DEFENSIVE", "TACTICAL"]
-                formation = formations[hash(self.personality_name) % len(formations)]
+                formation = formations[hash(self.agent_type) % len(formations)]
                 
                 return {
                     "action": "engage_battle",
@@ -517,7 +612,7 @@ Answer with just the action name:
         """Get agent statistics"""
         return {
             "nickname": self.credentials.nickname,
-            "personality": self.personality_name,
+            "personality": self.agent_type,
             "round_count": self.round_count,
             "level": self.game_state.level,
             "rank": self.game_state.rank,

@@ -12,6 +12,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from AI_Agents.core.match_orchestrator import MatchOrchestrator, MatchConfig, AgentConfig, MatchType
 from AI_Agents.core.llm_manager import get_llm_manager
+from AI_Agents.core.ai_user_manager import AIUserManager
 from AI_Agents.config.env_config import get_config
 from AI_Agents.core.tool_caller import AICredentials
 from AI_Agents.config.logging_config import setup_logging, log_match_event, log_ai_tool_usage
@@ -33,56 +34,46 @@ class AIMatchRunner:
         self.orchestrator = None
         
     async def setup_test_agents(self):
-        """Setup AI agents from environment configuration"""
-        logger.info("Setting up AI agents from environment configuration...")
+        """Setup AI agents using automatic user management"""
+        logger.info("Setting up AI agents with automatic user management...")
         log_match_event(ai_logger, "AGENT_SETUP_STARTED")
         
-        # Load configuration
-        config = get_config()
-        
-        if not config.ai_agents:
-            logger.error("No AI agent credentials found in environment configuration!")
-            logger.info("Please configure AI agents in your .env file based on .env.example")
-            log_match_event(ai_logger, "AGENT_SETUP_FAILED", {"reason": "No AI credentials found"})
+        try:
+            # Initialize AI user manager
+            user_manager = AIUserManager()
+            
+            # Ensure AI users exist and are ready
+            ready_users = await user_manager.ensure_ai_users_exist()
+            
+            if not ready_users:
+                logger.error("No AI users are ready!")
+                log_match_event(ai_logger, "AGENT_SETUP_FAILED", {"reason": "No AI users ready"})
+                return []
+            
+            # Convert to AgentConfig format
+            test_agents = []
+            for user_creds in ready_users:
+                agent_config = AgentConfig(
+                    agent_type=user_creds.agent_type,
+                    email=user_creds.email,
+                    password=user_creds.password,
+                    nickname=user_creds.nickname
+                )
+                
+                test_agents.append(agent_config)
+                logger.info(f"Configured agent: {user_creds.nickname} (agent_type: {user_creds.agent_type})")
+            
+            log_match_event(ai_logger, "AGENT_SETUP_COMPLETED", {
+                "total_agents": len(test_agents), 
+                "agent_types": [agent.agent_type for agent in test_agents]
+            })
+            
+            return test_agents
+            
+        except Exception as e:
+            logger.error(f"Failed to setup AI agents: {e}")
+            log_match_event(ai_logger, "AGENT_SETUP_FAILED", {"reason": str(e)})
             return []
-        
-        # Map personalities based on agent nicknames or use defaults
-        personality_mapping = {
-            "warrior": ["warrior", "ai_warrior", "berserker"],
-            "guardian": ["guardian", "ai_guardian", "defensive"],
-            "tactician": ["tactician", "ai_tactician", "tactical"],
-            "berserker": ["berserker", "ai_berserker", "aggressive"], 
-            "economist": ["economist", "ai_economist", "economic"]
-        }
-        
-        test_agents = []
-        for i, agent_creds in enumerate(config.ai_agents):
-            # Determine personality based on nickname
-            personality = "warrior"  # default
-            nickname_lower = agent_creds.nickname.lower()
-            
-            for pers_name, keywords in personality_mapping.items():
-                if any(keyword in nickname_lower for keyword in keywords):
-                    personality = pers_name
-                    break
-            
-            # Create agent config
-            agent_config = AgentConfig(
-                personality_name=personality,
-                email=agent_creds.email,
-                password=agent_creds.password,
-                nickname=agent_creds.nickname
-            )
-            
-            test_agents.append(agent_config)
-            logger.info(f"Configured agent: {agent_creds.nickname} (personality: {personality})")
-        
-        log_match_event(ai_logger, "AGENT_SETUP_COMPLETED", {
-            "total_agents": len(test_agents), 
-            "personalities": [agent.personality_name for agent in test_agents]
-        })
-        
-        return test_agents
     
     async def run_training_match(self, rounds: int = 30):
         """Run a training match between AI agents"""
@@ -92,19 +83,21 @@ class AIMatchRunner:
             "match_type": "TRAINING"
         })
         
-        # Configure match
+        # Configure match for lightweight LLMs
         config = MatchConfig(
             match_type=MatchType.TRAINING,
             max_rounds=rounds,
-            round_delay=2.0,  # 2 seconds between rounds
-            max_concurrent_agents=5,
+            round_delay=3.0,  # Slower pace for lightweight LLMs
+            max_concurrent_agents=3,  # Fewer concurrent agents
             enable_learning=True,
-            save_logs=True,
-            auto_restart=False
+            save_logs=True
         )
         
         # Create orchestrator
         self.orchestrator = MatchOrchestrator(config)
+        
+        # Set the AI logger for detailed decision logging
+        self.orchestrator.ai_logger = ai_logger
         
         # Setup event callbacks
         self.orchestrator.on_round_complete = self._on_round_complete
@@ -114,7 +107,7 @@ class AIMatchRunner:
         test_agents = await self.setup_test_agents()
         
         for agent_config in test_agents[:3]:  # Start with 3 agents
-            logger.info(f"Adding agent: {agent_config.nickname} ({agent_config.personality_name})")
+            logger.info(f"Adding agent: {agent_config.nickname} ({agent_config.agent_type})")
             success = await self.orchestrator.add_agent(agent_config)
             if not success:
                 logger.error(f"Failed to add agent {agent_config.nickname}")
@@ -168,21 +161,42 @@ class AIMatchRunner:
             
             # Get live stats
             live_stats = self.orchestrator.get_live_stats()
-            logger.info(f"Active agents: {live_stats['active_agents']}")
-            logger.info(f"Total battles: {live_stats['total_battles']}")
+            logger.info(f"Total agents: {live_stats['total_agents']}")
+            logger.info(f"Current round: {live_stats['current_round']}")
             
             # Show top performer
             rankings = self.orchestrator.get_agent_rankings()
             if rankings:
                 top_agent = rankings[0]
-                logger.info(f"Top performer: {top_agent[0]} (Score: {top_agent[1]['performance_score']:.1f})")
+                logger.info(f"Top performer: {top_agent['name']} (Success rate: {top_agent['success_rate']:.1%})")
     
     async def _on_match_complete(self, stats):
         """Callback when match completes"""
         logger.info("=== MATCH COMPLETED ===")
-        duration = (stats.end_time - stats.start_time).total_seconds()
+        duration = stats.get("duration_seconds", 0)
         logger.info(f"Duration: {duration:.1f} seconds")
-        logger.info(f"Total rounds: {stats.total_rounds}")
+        logger.info(f"Total rounds: {stats.get('total_rounds', 0)}")
+        
+        # Cleanup empty memory files
+        await self._cleanup_empty_memory_files()
+    
+    async def _cleanup_empty_memory_files(self):
+        """Clean up empty memory files created during the match"""
+        try:
+            from pathlib import Path
+            memories_dir = Path(__file__).parent / "memories"
+            
+            if not memories_dir.exists():
+                return
+                
+            # Remove empty files
+            for file_path in memories_dir.glob("*.jsonl"):
+                if file_path.stat().st_size == 0:
+                    file_path.unlink()
+                    logger.info(f"Removed empty memory file: {file_path.name}")
+                    
+        except Exception as e:
+            logger.error(f"Failed to cleanup empty memory files: {str(e)}")
         
     def _print_final_results(self):
         """Print final match results"""
@@ -195,13 +209,10 @@ class AIMatchRunner:
         print("FINAL RESULTS")
         print("="*50)
         
-        for i, (nickname, stats) in enumerate(rankings, 1):
-            print(f"{i}. {nickname} ({stats['personality']})")
-            print(f"   Rounds: {stats['rounds_played']}")
-            print(f"   Battles: {stats['battles_won']}W/{stats['battles_lost']}L")
-            print(f"   Win Rate: {stats['win_rate']*20:.1f}%")
-            print(f"   Credits: {stats['total_credits_earned']}")
-            print(f"   Performance Score: {stats['performance_score']:.1f}")
+        for i, agent_stats in enumerate(rankings, 1):
+            print(f"{i}. {agent_stats['name']} ({agent_stats['type']})")
+            print(f"   Successful decisions: {agent_stats['successful_decisions']}")
+            print(f"   Success rate: {agent_stats['success_rate']:.1%}")
             print()
 
 async def main():

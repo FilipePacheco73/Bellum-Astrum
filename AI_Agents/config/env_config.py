@@ -68,11 +68,11 @@ def get_api_base_url() -> str:
     environment = os.getenv('ENVIRONMENT', 'development').lower()
     
     if environment == 'production':
-        return os.getenv('API_BASE_URL_PROD', 'https://api.bellumastrum.com')
+        return os.getenv('API_BASE_URL_PROD')
     elif environment == 'development':
-        return os.getenv('API_BASE_URL_DEV', 'https://api.bellumastrum.com')
+        return os.getenv('API_BASE_URL_DEV')
     else:  # local
-        return os.getenv('API_BASE_URL_LOCAL', 'http://localhost:8000')
+        return os.getenv('API_BASE_URL_LOCAL')
 
 def load_ai_agent_credentials() -> List[AIAgentCredentials]:
     """Load all configured AI agent credentials"""

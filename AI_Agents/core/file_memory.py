@@ -25,6 +25,15 @@ class AgentAction:
     result_data: Dict[str, Any]
     reasoning: str = ""
 
+@dataclass
+class SimpleDecision:
+    """Simple decision entry for memory"""
+    timestamp: str
+    round_number: int
+    action: str
+    reason: str
+    success: bool = True
+
 class FileBasedMemory:
     """File-based memory system for AI agents"""
     
@@ -36,13 +45,97 @@ class FileBasedMemory:
         # Create memory file for this agent
         self.memory_file = self.memories_dir / f"{agent_name}_memory.jsonl"
         
-        # Ensure file exists
-        if not self.memory_file.exists():
-            self.memory_file.touch()
+        # Simple decisions file (for new system)
+        self.decisions_file = self.memories_dir / f"{agent_name}_decisions.jsonl"
+        
+        # Only create files when there's actual content to write
+        # Don't create empty files unnecessarily
+    
+    def store_decision(self, round_number: int, action: str, reason: str, success: bool = True):
+        """Store a simple decision in memory"""
+        try:
+            decision = SimpleDecision(
+                timestamp=datetime.now().isoformat(),
+                round_number=round_number,
+                action=action,
+                reason=reason,
+                success=success
+            )
+            
+            # Create decisions file only when needed
+            if not self.decisions_file.exists():
+                self.decisions_file.touch()
+            
+            with open(self.decisions_file, 'a', encoding='utf-8') as f:
+                json_line = json.dumps(asdict(decision), ensure_ascii=False)
+                f.write(json_line + '\n')
+                
+            logger.debug(f"Stored decision for {self.agent_name}: {action}")
+            
+        except Exception as e:
+            logger.error(f"Failed to store decision for {self.agent_name}: {str(e)}")
+    
+    def get_recent_decisions(self, max_rounds: int = 3) -> List[SimpleDecision]:
+        """Get recent decisions (last N rounds)"""
+        try:
+            decisions = []
+            
+            if not self.decisions_file.exists():
+                return decisions
+            
+            with open(self.decisions_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            decision_data = json.loads(line.strip())
+                            decision = SimpleDecision(**decision_data)
+                            decisions.append(decision)
+                        except (json.JSONDecodeError, KeyError, ValueError) as e:
+                            logger.warning(f"Corrupted decision line for {self.agent_name}: {str(e)}")
+                            continue
+            
+            # Sort by round number and get the last max_rounds
+            decisions.sort(key=lambda x: x.round_number)
+            recent_decisions = decisions[-max_rounds:] if decisions else []
+            
+            logger.debug(f"Retrieved {len(recent_decisions)} recent decisions for {self.agent_name}")
+            return recent_decisions
+            
+        except Exception as e:
+            logger.error(f"Failed to read recent decisions for {self.agent_name}: {str(e)}")
+            return []
+    
+    def get_memory_summary(self, max_rounds: int = 3) -> str:
+        """Get a formatted summary of recent decisions for prompt inclusion"""
+        recent_decisions = self.get_recent_decisions(max_rounds)
+        
+        if not recent_decisions:
+            return "Não há memórias de decisões anteriores."
+        
+        summary_lines = ["=== MEMÓRIAS DAS ÚLTIMAS RODADAS ==="]
+        
+        for decision in recent_decisions:
+            round_num = decision.round_number
+            action = decision.action
+            reason = decision.reason
+            
+            # Simplify the reason if it's too long
+            if len(reason) > 80:
+                reason = reason[:77] + "..."
+            
+            success_indicator = "✓" if decision.success else "✗"
+            summary_lines.append(f"Rodada {round_num}: {action} {success_indicator} - {reason}")
+        
+        summary_lines.append("=== FIM DAS MEMÓRIAS ===")
+        return "\n".join(summary_lines)
     
     def store_action(self, action: AgentAction):
         """Store an action in the agent's memory file"""
         try:
+            # Create memory file only when needed
+            if not self.memory_file.exists():
+                self.memory_file.touch()
+                
             with open(self.memory_file, 'a', encoding='utf-8') as f:
                 json_line = json.dumps(asdict(action))
                 f.write(json_line + '\n')
@@ -170,53 +263,6 @@ class FileBasedMemory:
                 "losses": 0
             }
     
-    def get_memory_summary(self, recent_hours: int = 4) -> Dict[str, Any]:
-        """Get a summary of recent memory for decision making"""
-        try:
-            recent_actions = self.get_recent_actions(hours=recent_hours)
-            
-            # Group actions by tool
-            tool_usage = {}
-            for action in recent_actions:
-                if action.tool_name not in tool_usage:
-                    tool_usage[action.tool_name] = {"count": 0, "successes": 0}
-                
-                tool_usage[action.tool_name]["count"] += 1
-                if action.success:
-                    tool_usage[action.tool_name]["successes"] += 1
-            
-            # Calculate success rates
-            for tool_name, stats in tool_usage.items():
-                stats["success_rate"] = stats["successes"] / stats["count"] if stats["count"] > 0 else 0
-            
-            return {
-                "recent_actions_count": len(recent_actions),
-                "tool_usage": tool_usage,
-                "work_success_rate": self.get_tool_success_rate("work", recent_hours),
-                "battle_performance": self.get_battle_performance(recent_hours),
-                "avg_credits_per_work": self.get_average_credits_per_work(recent_hours),
-                "last_actions": [
-                    {
-                        "tool": a.tool_name,
-                        "success": a.success,
-                        "round": a.round_number,
-                        "reasoning": a.reasoning
-                    }
-                    for a in recent_actions[:5]  # Last 5 actions
-                ]
-            }
-            
-        except Exception as e:
-            logger.error(f"Failed to generate memory summary: {str(e)}")
-            return {
-                "recent_actions_count": 0,
-                "tool_usage": {},
-                "work_success_rate": 0.5,
-                "battle_performance": {"success_rate": 0.5},
-                "avg_credits_per_work": 200.0,
-                "last_actions": []
-            }
-    
     def cleanup_old_entries(self, days_to_keep: int = 7):
         """Remove entries older than specified days"""
         try:
@@ -256,3 +302,19 @@ class FileBasedMemory:
             
         except Exception as e:
             logger.error(f"Failed to cleanup memory for {self.agent_name}: {str(e)}")
+    
+    def cleanup_empty_files(self):
+        """Remove empty memory files"""
+        try:
+            # Check and remove empty memory file
+            if self.memory_file.exists() and self.memory_file.stat().st_size == 0:
+                self.memory_file.unlink()
+                logger.info(f"Removed empty memory file for {self.agent_name}")
+            
+            # Check and remove empty decisions file
+            if self.decisions_file.exists() and self.decisions_file.stat().st_size == 0:
+                self.decisions_file.unlink()
+                logger.info(f"Removed empty decisions file for {self.agent_name}")
+                
+        except Exception as e:
+            logger.error(f"Failed to cleanup empty files for {self.agent_name}: {str(e)}")
