@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.10] - 2025-08-14
+
+### Improved
+- **AI Agents Internationalization**: Complete English translation of AI system
+  - Translated all prompts, documentation, and system messages from Portuguese to English
+  - Updated AI agent personalities (Warrior, Guardian, Tactician) with English behavioral patterns
+  - Standardized game mechanics explanations and strategic decision prompts in English
+  - Enhanced code documentation and comments for international development standards
+
+- **Documentation Enhancement**: Professional AI Agents documentation improvements
+  - Enhanced README.md for AI Agents module with clearer technical specifications
+  - Improved AI personality descriptions with behavioral patterns and LLM configurations
+  - Better organized tool documentation with battle system, economy, and information management
+  - Quick start guide with environment setup and training match execution
+  - Analysis and monitoring guides with real-time statistics and log analysis examples
+
+### Technical Improvements
+- **Code Quality and Standards**: International development best practices implementation
+  - Standardized all variable names, comments, and documentation in English
+  - Improved error handling with English error messages and logging
+  - Enhanced type hints and docstrings for better code maintainability
+  - Consistent naming conventions across all AI agent modules and configurations
+
+- **System Maintenance**: Improved AI agent system organization
+  - Refined match orchestrator with English method names and documentation
+  - Updated LLM configuration with clearer model descriptions and parameter explanations
+  - Enhanced prompt system organization with categorized behavioral templates
+  - Improved logging system with standardized English message formats
+
 ## [0.5.9] - 2025-08-12
 
 ### Added

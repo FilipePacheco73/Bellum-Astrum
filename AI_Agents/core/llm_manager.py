@@ -18,206 +18,176 @@ from AI_Agents.config.llm_config import LLMConfig, get_llm_config, GLOBAL_CONFIG
 logger = logging.getLogger(__name__)
 
 class LLMManager:
-    """Manages LLM models for different AI personalities"""
+    """Manages LLM models for different AI agent types"""
     
-    def __init__(self, cache_dir: str = None):
-        self.cache_dir = cache_dir or GLOBAL_CONFIG["cache_dir"]
-        self.models: Dict[str, Any] = {}
-        self.tokenizers: Dict[str, Any] = {}
-        self.pipelines: Dict[str, Any] = {}
-        self._ensure_cache_dir()
+    def __init__(self):
+        self.models: Dict[str, AutoModelForCausalLM] = {}
+        self.tokenizers: Dict[str, AutoTokenizer] = {}
+        self.pipelines: Dict[str, pipeline] = {}
         
-    def _ensure_cache_dir(self):
-        """Ensure cache directory exists"""
-        Path(self.cache_dir).mkdir(parents=True, exist_ok=True)
+        # Setup device
+        self.device = GLOBAL_CONFIG["device"]
+        logger.info(f"Device set to use {self.device}")
         
-    def load_model(self, personality: str) -> bool:
-        """Load a model for a specific personality"""
+        # Create cache directory
+        self.cache_dir = Path(GLOBAL_CONFIG["cache_dir"])
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+    
+    def load_model(self, agent_type: str) -> bool:
+        """Load a model for a specific agent type"""
         try:
-            config = get_llm_config(personality)
-            logger.info(f"Loading model for {personality}: {config.model_name}")
+            config = get_llm_config(agent_type)
+            logger.info(f"Loading model for {agent_type}: {config.model_name}")
             
-            # Configure quantization if needed
+            # Setup quantization config if enabled
             quantization_config = None
             if config.load_in_4bit:
                 quantization_config = BitsAndBytesConfig(
                     load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
                     bnb_4bit_quant_type="nf4",
                     bnb_4bit_use_double_quant=True,
-                    bnb_4bit_compute_dtype=torch.float16
                 )
+                logger.info(f"Using 4-bit quantization for {agent_type}")
             
             # Load tokenizer
             tokenizer = AutoTokenizer.from_pretrained(
                 config.model_name,
-                cache_dir=self.cache_dir,
+                cache_dir=str(self.cache_dir),
                 trust_remote_code=config.trust_remote_code
             )
             
-            # Handle missing pad token
+            # Set pad token if not present
             if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
+                if config.pad_token_id is not None:
+                    tokenizer.pad_token_id = config.pad_token_id
+                else:
+                    tokenizer.pad_token = tokenizer.eos_token
             
             # Load model
             model = AutoModelForCausalLM.from_pretrained(
                 config.model_name,
-                cache_dir=self.cache_dir,
+                cache_dir=str(self.cache_dir),
                 device_map=config.device_map,
-                torch_dtype=getattr(torch, config.torch_dtype) if config.torch_dtype != "auto" else "auto",
+                torch_dtype=torch.float16 if config.torch_dtype == "auto" else config.torch_dtype,
                 quantization_config=quantization_config,
                 trust_remote_code=config.trust_remote_code
             )
             
-            # Create pipeline
+            # Create text generation pipeline
             text_pipeline = pipeline(
                 "text-generation",
                 model=model,
                 tokenizer=tokenizer,
-                max_new_tokens=config.max_tokens,
-                temperature=config.temperature,
-                do_sample=config.do_sample,
-                pad_token_id=tokenizer.pad_token_id,
-                eos_token_id=tokenizer.eos_token_id
+                device_map=config.device_map,
+                torch_dtype=torch.float16
             )
             
-            # Store components
-            self.models[personality] = model
-            self.tokenizers[personality] = tokenizer
-            self.pipelines[personality] = text_pipeline
+            # Store everything
+            self.models[agent_type] = model
+            self.tokenizers[agent_type] = tokenizer
+            self.pipelines[agent_type] = text_pipeline
             
-            logger.info(f"Successfully loaded model for {personality}")
+            logger.info(f"Successfully loaded model for {agent_type}")
             return True
             
         except Exception as e:
-            logger.error(f"Failed to load model for {personality}: {str(e)}")
+            logger.error(f"Failed to load model for {agent_type}: {str(e)}")
             return False
     
-    def generate_response(self, personality: str, prompt: str, **kwargs) -> Optional[str]:
-        """Generate response using the specified personality's model"""
-        if personality not in self.pipelines:
-            logger.error(f"Model for {personality} not loaded")
+    def generate_response(self, agent_type: str, prompt: str, **kwargs) -> Optional[str]:
+        """Generate response using the specified agent type's model"""
+        if agent_type not in self.pipelines:
+            logger.error(f"Model for {agent_type} not loaded")
             return None
             
         try:
             # Get model configuration
-            config = get_llm_config(personality)
+            config = get_llm_config(agent_type)
             
             # Truncate prompt if it's too long for small models
-            max_prompt_length = 512  # Conservative limit for small models
+            max_prompt_length = 1500  # TinyLlama supports 2048, leave room for response
             if len(prompt) > max_prompt_length:
-                logger.warning(f"Truncating long prompt for {personality}: {len(prompt)} -> {max_prompt_length}")
+                logger.warning(f"Truncating long prompt for {agent_type}: {len(prompt)} -> {max_prompt_length}")
                 prompt = prompt[-max_prompt_length:]  # Keep the end of the prompt (most recent context)
             
             # Override default parameters with any provided kwargs
             generation_params = {
-                "max_new_tokens": kwargs.get("max_tokens", config.max_tokens),
-                "temperature": kwargs.get("temperature", config.temperature),
-                "do_sample": kwargs.get("do_sample", config.do_sample),
-                "pad_token_id": self.tokenizers[personality].pad_token_id,
-                "eos_token_id": self.tokenizers[personality].eos_token_id,
-                "return_full_text": False  # Only return generated text
+                "max_new_tokens": config.max_tokens,
+                "temperature": config.temperature,
+                "do_sample": config.do_sample,
+                "pad_token_id": self.tokenizers[agent_type].pad_token_id,
+                "eos_token_id": config.eos_token_id or self.tokenizers[agent_type].eos_token_id,
+                "return_full_text": False,  # Only return the generated text
+                **kwargs
             }
             
-            logger.debug(f"Generating response for {personality} with prompt length: {len(prompt)}")
-            
             # Generate response
-            pipeline_output = self.pipelines[personality](prompt, **generation_params)
+            outputs = self.pipelines[agent_type](prompt, **generation_params)
             
-            # Debug logging
-            logger.debug(f"Pipeline output type: {type(pipeline_output)}")
-            logger.debug(f"Pipeline output: {pipeline_output}")
-            
-            if pipeline_output and len(pipeline_output) > 0:
-                try:
-                    # Check if output has the expected structure
-                    if isinstance(pipeline_output[0], dict) and "generated_text" in pipeline_output[0]:
-                        response = pipeline_output[0]["generated_text"].strip()
-                        
-                        # Check if response is meaningful (not just whitespace or newlines)
-                        if response and not response.replace('\n', '').replace(' ', '').replace('\t', ''):
-                            logger.warning(f"Generated response for {personality} is only whitespace: '{response}'")
-                            return None
-                        
-                        if len(response) < 3:
-                            logger.warning(f"Generated response for {personality} too short: '{response}'")
-                            return None
-                            
-                        logger.debug(f"Generated response for {personality}: {response[:100]}...")
-                        return response
-                    else:
-                        logger.error(f"Unexpected pipeline output structure for {personality}: {pipeline_output[0]}")
-                        return None
-                except (IndexError, KeyError, TypeError) as e:
-                    logger.error(f"Error accessing pipeline output for {personality}: {str(e)}")
-                    logger.error(f"Pipeline output structure: {pipeline_output}")
+            if outputs and len(outputs) > 0:
+                generated_text = outputs[0]["generated_text"].strip()
+                
+                # Validate response length
+                if len(generated_text) < 5:
+                    logger.warning(f"Generated response for {agent_type} too short: '{generated_text}'")
                     return None
+                
+                logger.debug(f"Generated response for {agent_type}: {generated_text[:100]}...")
+                return generated_text
             else:
-                logger.warning(f"Empty or None response from {personality} model")
+                logger.warning(f"No output generated for {agent_type}")
                 return None
                 
         except Exception as e:
-            logger.error(f"Error generating response for {personality}: {str(e)}")
+            logger.error(f"Error generating response for {agent_type}: {str(e)}")
             return None
     
-    def is_model_loaded(self, personality: str) -> bool:
-        """Check if a model is loaded for the personality"""
-        return personality in self.pipelines
-    
-    def unload_model(self, personality: str) -> bool:
+    def unload_model(self, agent_type: str):
         """Unload a model to free memory"""
-        try:
-            if personality in self.models:
-                del self.models[personality]
-            if personality in self.tokenizers:
-                del self.tokenizers[personality]
-            if personality in self.pipelines:
-                del self.pipelines[personality]
-                
-            # Force garbage collection
-            torch.cuda.empty_cache() if torch.cuda.is_available() else None
-            
-            logger.info(f"Unloaded model for {personality}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error unloading model for {personality}: {str(e)}")
-            return False
+        if agent_type in self.models:
+            del self.models[agent_type]
+        if agent_type in self.tokenizers:
+            del self.tokenizers[agent_type]
+        if agent_type in self.pipelines:
+            del self.pipelines[agent_type]
+        
+        # Force garbage collection
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        
+        logger.info(f"Unloaded model for {agent_type}")
     
     def get_loaded_models(self) -> list:
-        """Get list of loaded model personalities"""
-        return list(self.pipelines.keys())
+        """Get list of currently loaded models"""
+        return list(self.models.keys())
+    
+    def is_model_loaded(self, agent_type: str) -> bool:
+        """Check if a model is loaded for the given agent type"""
+        return agent_type in self.models and agent_type in self.pipelines
     
     def get_memory_usage(self) -> Dict[str, Any]:
-        """Get memory usage information"""
-        usage = {
-            "loaded_models": len(self.pipelines),
-            "personalities": list(self.pipelines.keys())
+        """Get current memory usage information"""
+        info = {
+            "loaded_models": len(self.models),
+            "device": self.device
         }
         
         if torch.cuda.is_available():
-            usage.update({
-                "gpu_memory_allocated": torch.cuda.memory_allocated(),
-                "gpu_memory_reserved": torch.cuda.memory_reserved(),
-                "gpu_memory_cached": torch.cuda.memory_cached()
+            info.update({
+                "gpu_memory_allocated": f"{torch.cuda.memory_allocated() / 1024**3:.2f} GB",
+                "gpu_memory_reserved": f"{torch.cuda.memory_reserved() / 1024**3:.2f} GB",
+                "gpu_memory_cached": f"{torch.cuda.memory_cached() / 1024**3:.2f} GB"
             })
         
-        return usage
-    
-    def cleanup(self):
-        """Clean up all models and free memory"""
-        personalities = list(self.pipelines.keys())
-        for personality in personalities:
-            self.unload_model(personality)
-        
-        logger.info("LLM Manager cleanup completed")
+        return info
 
-
-# Singleton instance for easy access
-_llm_manager_instance = None
+# Global instance
+_llm_manager = None
 
 def get_llm_manager() -> LLMManager:
     """Get the global LLM manager instance"""
-    global _llm_manager_instance
-    if _llm_manager_instance is None:
-        _llm_manager_instance = LLMManager()
-    return _llm_manager_instance
+    global _llm_manager
+    if _llm_manager is None:
+        _llm_manager = LLMManager()
+    return _llm_manager

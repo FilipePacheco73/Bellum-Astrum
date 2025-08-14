@@ -307,7 +307,7 @@ async def try_register(client: httpx.AsyncClient, email: str, password: str, nic
             }
         )
         
-        if response.status_code == 201:
+        if response.status_code in [200, 201]:
             logger.info(f"Successfully registered new AI agent: {nickname}")
             # After registration, try to login
             return await try_login(client, email, password)

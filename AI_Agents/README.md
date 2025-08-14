@@ -1,17 +1,17 @@
 # 🤖 Bellum Astrum - AI Agents Documentation
 
-The AI Agents system provides autonomous intelligent players that compete in Bellum Astrum using Large Language Models (LLMs). These AI agents make strategic decisions, learn from experience, and compete 24/7 without human intervention.
+The AI Agents system provides intelligent autonomous players that compete in Bellum Astrum using Large Language Models (LLMs). These agents make strategic decisions, learn from experience, and compete 24/7 without human intervention.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
 - **AI Framework**: Local LLMs via HuggingFace Transformers
 - **Decision Engine**: Strategic prompts with personality-based behavior
 - **Memory System**: File-based learning with JSON Lines format
 - **Logging**: Dual logging system (debug + AI decisions)
 - **Match System**: Automated tournament and training orchestration
-- **Models**: DialoGPT, Mistral 7B, TinyLlama for different personalities
+- **Models**: TinyLlama for different personalities (efficiency focused)
 
 ---
 
@@ -21,35 +21,32 @@ The AI Agents system provides autonomous intelligent players that compete in Bel
 AI_Agents/
 ├── .env                        # Environment variables (AI credentials)
 ├── .env.example               # Environment template
-├── run_ai_match.py            # Main script to execute AI matches
-├── example_logging.py         # Logging system usage examples
+├── run_ai_match.py            # Main script to run AI matches
 ├── config/                    # Configuration modules
 │   ├── env_config.py          # Environment and credentials configuration
 │   ├── llm_config.py          # LLM models configuration
-│   ├── logging_config.py      # Dual logging system setup
-│   └── ai_personalities.py    # AI personality definitions
+│   └── logging_config.py      # Dual logging system
 ├── core/                      # Core AI system modules
 │   ├── ai_agent.py            # Base AI agent class
-│   ├── llm_manager.py         # LLM model management
+│   ├── ai_user_manager.py     # Automatic AI user management
+│   ├── llm_manager.py         # LLM models management
 │   ├── tool_caller.py         # Game API interface
 │   ├── match_orchestrator.py  # Match management and orchestration
 │   └── file_memory.py         # File-based memory system
 ├── prompts/                   # AI behavior prompts
 │   ├── system_prompts.py      # Base game explanation prompts
-│   ├── aggressive_prompts.py  # Warrior AI prompts
-│   ├── defensive_prompts.py   # Guardian AI prompts
-│   └── tactical_prompts.py    # Tactician AI prompts
+│   ├── aggressive_prompts.py  # AI Warrior prompts
+│   ├── defensive_prompts.py   # AI Guardian prompts
+│   └── tactical_prompts.py    # AI Tactician prompts
 ├── logs/                      # Dual logging system output
-│   ├── debug_YYYYMMDD.log     # Technical debug logs
-│   ├── ai_decisions_YYYYMMDD.log # AI decision tracking logs
-│   └── example_ai_decisions.log # Log format examples
+│   ├── debug.log              # Technical debug logs
+│   └── ai_decisions.log       # AI decision tracking logs
 ├── memories/                  # AI learning data (auto-generated)
 │   ├── AI_Warrior_Test_memory.jsonl
 │   ├── AI_Guardian_Test_memory.jsonl
 │   └── AI_Tactician_Test_memory.jsonl
 └── models_cache/              # Downloaded LLM models cache
-    ├── models--distilgpt2/
-    └── models--gpt2/
+    └── models--TinyLlama--TinyLlama-1.1B-Chat-v1.0/
 ```
 
 ---
@@ -128,24 +125,24 @@ python run_ai_match.py
 ### 3. Monitor Real-time Activity
 ```bash
 # Technical debug logs
-tail -f logs/debug_YYYYMMDD.log
+tail -f logs/debug.log
 
 # AI decision tracking logs
-tail -f logs/ai_decisions_YYYYMMDD.log
+tail -f logs/ai_decisions.log
 ```
 
 ---
 
 ## 📊 Dual Logging System
 
-### Debug Log (`debug_YYYYMMDD.log`)
+### Debug Log (`debug.log`)
 Technical system monitoring and troubleshooting:
 - API connections and authentication
 - Technical errors and warnings  
 - System performance and debug information
 - Automatic rotation (10MB, 5 backups)
 
-### AI Decisions Log (`ai_decisions_YYYYMMDD.log`)
+### AI Decisions Log (`ai_decisions.log`)
 Detailed AI behavior tracking and analysis:
 ```
 2025-08-12 21:09:47 | Round 002 | [AI_Warrior] | DECISION_MAKING | credits: 1500 | energy: 80
@@ -222,7 +219,7 @@ config = MatchConfig(
 ### Log Analysis Examples
 ```bash
 # Filter decisions from specific agent
-grep "AI_Warrior" logs/ai_decisions_*.log
+grep "AI_Warrior" logs/ai_decisions.log
 
 # Analyze tool usage patterns
 grep "TOOL_USED" logs/ai_decisions_*.log | grep "work"

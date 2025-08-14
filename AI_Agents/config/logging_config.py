@@ -50,14 +50,11 @@ def setup_logging(logs_dir: Path) -> tuple[logging.Logger, logging.Logger]:
     # Ensure logs directory exists
     logs_dir.mkdir(exist_ok=True)
     
-    # Create timestamp for log files
-    timestamp = datetime.now().strftime("%Y%m%d")
-    
     # Debug log file (system, connections, errors)
-    debug_log_file = logs_dir / f"debug_{timestamp}.log"
+    debug_log_file = logs_dir / "debug.log"
     
     # AI decisions log file (decisions, actions, results)
-    ai_decisions_log_file = logs_dir / f"ai_decisions_{timestamp}.log"
+    ai_decisions_log_file = logs_dir / "ai_decisions.log"
     
     # Configure debug logger
     debug_logger = logging.getLogger('bellum.debug')
@@ -68,7 +65,8 @@ def setup_logging(logs_dir: Path) -> tuple[logging.Logger, logging.Logger]:
     debug_file_handler = logging.handlers.RotatingFileHandler(
         debug_log_file, 
         maxBytes=10*1024*1024,  # 10MB
-        backupCount=5
+        backupCount=5,
+        encoding='utf-8'  # Specify UTF-8 encoding
     )
     debug_file_handler.setLevel(logging.DEBUG)
     debug_file_handler.setFormatter(DebugFormatter())
@@ -91,7 +89,8 @@ def setup_logging(logs_dir: Path) -> tuple[logging.Logger, logging.Logger]:
     ai_file_handler = logging.handlers.RotatingFileHandler(
         ai_decisions_log_file,
         maxBytes=10*1024*1024,  # 10MB
-        backupCount=10
+        backupCount=10,
+        encoding='utf-8'  # Specify UTF-8 encoding
     )
     ai_file_handler.setLevel(logging.INFO)
     ai_file_handler.setFormatter(AIDecisionFormatter())
@@ -151,7 +150,7 @@ def log_ai_tool_usage(ai_logger: logging.Logger, agent_name: str, round_number: 
     """
     
     status = "SUCCESS" if success else "FAILED"
-    message = f"TOOL_USED: {tool_name} → {status}"
+    message = f"TOOL_USED: {tool_name} -> {status}"
     
     context = {}
     if tool_params:
@@ -176,7 +175,7 @@ def log_ai_action_result(ai_logger: logging.Logger, agent_name: str, round_numbe
     """
     
     status = "SUCCESS" if success else "FAILED"
-    message = f"ACTION RESULT: {action} → {status}"
+    message = f"ACTION RESULT: {action} -> {status}"
     
     context = {}
     if result_data:
