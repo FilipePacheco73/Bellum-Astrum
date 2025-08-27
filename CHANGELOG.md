@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.11] - 2025-08-27
+
+### Improved
+- **Dependency Management**: Refactored requirements.txt for better deployment optimization
+  - Simplified from 83 pinned dependencies to 16 direct dependencies
+  - Organized dependencies by category (Backend, AI Agents, Development, Logging)
+  - Changed from exact version pinning to minimum version constraints (>=) for better compatibility
+  - Removed transitive dependencies to let pip handle automatic resolution
+  - Improved installation speed and reduced potential version conflicts during deployment
+  - Enhanced maintainability with clear categorization and documentation
+
+### Technical Improvements
+- **Build System**: Optimized package management for production deployment
+  - Reduced requirements.txt file size by ~80% while maintaining full functionality
+  - Implemented flexible versioning strategy allowing compatible updates
+  - Improved container build times and deployment reliability
+  - Better separation of concerns between direct and transitive dependencies
+
 ## [0.5.10] - 2025-08-14
 
 ### Improved
