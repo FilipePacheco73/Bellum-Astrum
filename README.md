@@ -1,6 +1,6 @@
 # 🚀 Bellum Astrum
 
-**Current Version: 0.5.10** | **[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
+**Current Version: 0.5.11** | **[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
 
 ## 🎮 About the Game
 
