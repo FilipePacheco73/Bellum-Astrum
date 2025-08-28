@@ -144,7 +144,7 @@ def test_battle_against_npc(ship_numbers):
         "opponent_user_id": npc_astro_id,
         "user_ship_numbers": ship_number1,
         "opponent_ship_numbers": npc_ship_number
-        # Não especifica formações, deve usar as padrões dos usuários
+        # Don't specify formations, should use users' default formations
     }
     
     battle = client.post(

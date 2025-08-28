@@ -236,7 +236,7 @@ class OwnedShips(Base):
         return f"<OwnedShips(ship_number={self.ship_number}, user_id={self.user_id}, ship_id={self.ship_id}, ship_name={self.ship_name}, status={self.status})>"
 
 
-# ShipyardLog: registra o último uso do shipyard por usuário
+# ShipyardLog: records the last shipyard usage by user
 class ShipyardLog(Base):
     """
     Records the last use of the shipyard by user and ship.

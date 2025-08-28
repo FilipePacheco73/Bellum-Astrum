@@ -5,6 +5,85 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.12] - 2025-08-27
+
+### Added
+- **System Architecture Documentation**: Comprehensive system architecture visualization
+  - Added detailed Mermaid diagram illustrating complete system architecture
+  - Visual representation of all component interactions (Frontend, Backend, Database, AI Agents)
+  - Clear separation of layers with descriptive naming (User Interface, API, Data, Intelligence)
+  - Component interaction flows showing data movement and API communications
+  - Professional architecture documentation with technical specifications
+
+- **AI Agents System Enhancements**: Major improvements to AI decision-making and memory systems
+  - New centralized prompt system with `decision_prompts.py` and `personality_prompts.py`
+  - Enhanced LLM response structure with token tracking and reasoning capture
+  - Improved AI agent initialization with model sharing capabilities
+  - Mandatory first-round status checks for better AI context understanding
+  - Advanced memory storage with detailed token usage and AI reasoning tracking
+
+- **Dynamic Version Management**: Automated version synchronization across project components
+  - Backend version extraction from CHANGELOG.md with caching system
+  - Frontend version synchronization to match project version
+  - AI Agents version tracking with automatic CHANGELOG parsing
+  - Consistent version display across all components
+
+### Improved
+- **AI Agents Documentation**: Complete overhaul of AI Agents README
+  - Updated project structure to reflect current file organization
+  - Corrected memory system documentation (JSON format instead of deprecated JSONL)
+  - Updated AI personality configurations with current LLM settings (TinyLlama for all agents)
+  - Enhanced memory query functions documentation with actual implemented features
+  - Added performance optimization section with GPU acceleration details
+  - Updated technology stack with CUDA optimization and quantization information
+
+- **AI Decision-Making System**: Enhanced strategic decision processing
+  - Standardized response format with ACTION/EXPLANATION structure
+  - Improved fallback decision-making for LLM failures
+  - Better error handling with detailed token tracking
+  - Enhanced prompt engineering with personality-specific behaviors
+  - Model sharing optimization to reduce memory usage
+
+- **Infrastructure Documentation**: Accurate infrastructure representation
+  - Updated database documentation to reflect Neon PostgreSQL hosting
+  - Corrected AI memory system documentation (JSON storage, not SQLite)
+  - Enhanced system architecture with proper technology stack representation
+  - Improved component naming for better clarity and understanding
+
+- **Configuration Management**: Enhanced AI agent configuration system
+  - Optimized LLM configurations with GPU-specific settings
+  - Improved memory management with 4-bit quantization
+  - Enhanced model loading with automatic sharing between agent types
+  - Better temperature control for different AI personalities
+
+### Technical Improvements
+- **Documentation Accuracy**: Synchronized documentation with actual implementation
+  - Fixed discrepancies between documented and actual file structures
+  - Updated LLM model references to reflect current TinyLlama-1.1B-Chat-v1.0 usage
+  - Corrected memory format documentation to match JSON-based storage system
+  - Enhanced technical specifications with accurate hardware requirements and optimization details
+
+- **Code Architecture**: Significant refactoring and organization improvements
+  - Removed deprecated prompt files (aggressive_prompts.py, defensive_prompts.py, tactical_prompts.py)
+  - Centralized prompt management with modular personality system
+  - Enhanced error handling throughout AI agent pipeline
+  - Improved token counting and usage tracking for LLM operations
+  - Better model resource management and sharing
+
+- **Memory System Overhaul**: Complete redesign of AI agent memory management
+  - Transitioned from JSONL to structured JSON format
+  - Enhanced memory entries with token usage and AI reasoning
+  - Improved memory querying with better performance
+  - Added comprehensive cleanup and maintenance functions
+  - Better memory summarization for decision context
+
+### Fixed
+- **File Format Consistency**: Standardized memory storage formats
+  - Fixed JSONL references in run_ai_match.py to use JSON files
+  - Corrected memory file extensions throughout codebase
+  - Resolved memory file cleanup to target correct file types
+  - Enhanced memory file structure for better reliability
+
 ## [0.5.11] - 2025-08-27
 
 ### Improved

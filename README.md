@@ -1,6 +1,6 @@
 # 🚀 Bellum Astrum
 
-**Current Version: 0.5.11** | **[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
+**Current Version: 0.5.12** | **[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
 
 ## 🎮 About the Game
 
@@ -62,6 +62,72 @@ For detailed information about each component of the project, please refer to th
 - 🗄️ **[Database Documentation](database/README.md)** - Database schema, models, setup, and management tools
 - 🎨 **[Frontend Documentation](frontend/README.md)** - React application, components, styling, and user interface
 - 🤖 **[AI Agents Documentation](AI_Agents/README.md)** - Autonomous AI players, match system, and intelligence architecture
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TB
+    subgraph "User Interface Layer (Frontend)"
+        FE["🎨 Frontend<br/>React + TypeScript<br/>Port: 5173"]
+        USER["👤 Human Players"]
+    end
+    
+    subgraph "API Layer (Backend)"
+        BE["📖 Backend<br/>FastAPI + Python<br/>Port: 8000"]
+    end
+    
+    subgraph "Data Layer (Database)"
+        DB["🗄️ Database<br/>PostgreSQL (Neon)<br/>Centralized Module"]
+    end
+    
+    subgraph "Intelligence Layer (AI Agents)"
+        AI["🤖 AI Agents<br/>LLM + Strategic AI<br/>Autonomous Players"]
+        MODELS["🧠 AI Models<br/>TinyLlama-1.1B<br/>Local GPU/CPU"]
+        MEMORY["💾 AI Memory<br/>JSON Storage<br/>Learning System"]
+    end
+    
+    %% User interactions
+    USER -->|"Play Game"| FE
+    FE -->|"REST API Calls<br/>Authentication<br/>Game Actions"| BE
+    
+    %% Backend to Database
+    BE -->|"SQLAlchemy ORM<br/>CRUD Operations<br/>Game State"| DB
+    
+    %% AI Agent connections
+    AI -->|"Game API Calls<br/>Same as Human Players"| BE
+    AI -->|"Decision Making<br/>Strategic Prompts"| MODELS
+    AI -->|"Store/Retrieve<br/>Learning Data"| MEMORY
+    
+    %% Data flow
+    DB -->|"Game State<br/>User Data<br/>Battle Results"| BE
+    BE -->|"JSON Response<br/>Real-time Updates"| FE
+    FE -->|"Dynamic UI<br/>Multi-language"| USER
+    
+    %% AI learning cycle
+    MEMORY -->|"Historical Data<br/>Decision Context"| AI
+    MODELS -->|"LLM Response<br/>Strategic Decision"| AI
+    
+    %% Styling
+    classDef frontend fill:#61dafb,stroke:#21232a,color:#21232a
+    classDef backend fill:#009688,stroke:#ffffff,color:#ffffff
+    classDef database fill:#336791,stroke:#ffffff,color:#ffffff
+    classDef ai fill:#ff6b35,stroke:#ffffff,color:#ffffff
+    classDef user fill:#4caf50,stroke:#ffffff,color:#ffffff
+    
+    class FE frontend
+    class BE backend
+    class DB database
+    class AI,MODELS,MEMORY ai
+    class USER user
+```
+
+### Component Interactions
+
+- **Frontend ↔ Backend**: RESTful API communication with JWT authentication
+- **Backend ↔ Database**: SQLAlchemy ORM for all game data operations
+- **AI Agents ↔ Backend**: Same API endpoints as human players (autonomous gameplay)
+- **AI Agents ↔ Models**: Local LLM inference for strategic decision making
+- **AI Agents ↔ Memory**: Persistent learning system for improving gameplay
 
 ## 🚀 Quick Start
 

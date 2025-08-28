@@ -9,7 +9,7 @@ import { usersTranslations } from './users';
 import { messagesTranslations } from './messages';
 import { workTranslations } from './work';
 
-// Função para mesclar objetos de tradução profundamente
+// Function to deeply merge translation objects
 function deepMerge(target: any, ...sources: any[]): any {
   if (!sources.length) return target;
   const source = sources.shift();
@@ -32,7 +32,7 @@ function isObject(item: any): boolean {
   return item && typeof item === 'object' && !Array.isArray(item);
 }
 
-// Mesclar todas as traduções
+// Merge all translations
 const translations = deepMerge(
   {},
   commonTranslations,
