@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.14] - 2025-08-28
+
+### Improved
+- **AI Agents System Optimization**: Major performance and reliability improvements to the autonomous AI player system
+  - **Smart Prompt Truncation**: Implemented intelligent prompt shortening that preserves critical instructions while managing token limits for small LLMs
+  - **Enhanced Error Handling**: Improved error recovery with detailed logging and graceful fallback mechanisms
+  - **Robust Decision Making**: Advanced fallback system provides logical decisions when LLM fails, with transparent reasoning and context awareness
+  - **Token Usage Optimization**: Comprehensive token tracking and consumption analysis for performance monitoring
+  - **Model Sharing Enhancement**: Single TinyLlama instance shared across all agent types, reducing VRAM usage from ~1650MB to ~550MB
+  - **Memory System Improvements**: Enhanced JSON-based memory storage with corrupted entry recovery and detailed decision tracking
+  - **Logging System Upgrade**: Advanced dual logging with UTF-8 encoding, token metrics, and structured AI decision tracking
+  - **Authentication Improvements**: Better JWT token handling with proper user_id extraction and error reporting
+
+- **Prompt System Modernization**: Complete overhaul of AI decision-making prompts for better small-model compatibility
+  - **Simplified Templates**: Streamlined decision prompts optimized for TinyLlama's capabilities (reduced from verbose to concise format)
+  - **Personality Simplification**: Concise personality prompts focused on core behavioral patterns instead of lengthy descriptions
+  - **Format Standardization**: Mandatory ACTION/EXPLANATION format ensures consistent AI responses and better parsing
+  - **Context Optimization**: Improved memory integration and game state presentation for better decision quality
+
+- **AI Agent Intelligence Enhancements**: Significant improvements to decision-making logic and game state management
+  - **Fallback Decision System**: Intelligent priority-based fallback decisions with detailed reasoning when LLM fails
+  - **Game State Validation**: Enhanced game state updates with proper error handling and default value management
+  - **Status Check Priority**: Mandatory first-round status checks ensure proper AI context understanding
+  - **Parameter Handling**: Improved default parameter assignment and action validation
+
+- **Documentation Updates**: Comprehensive updates to AI Agents and main project documentation
+  - **AI Agents README**: Updated technology stack, memory system details, performance metrics, and debugging guides
+  - **Architecture Improvements**: Enhanced system architecture diagrams with AI intelligence layer details and token tracking
+  - **Feature Documentation**: Added decision-making system documentation and troubleshooting guides
+  - **Log Analysis Examples**: Updated examples to reflect new logging format and token tracking capabilities
+  - **Timeline Updates**: Updated project timeline to reflect recent AI system improvements and optimizations
+
+### Technical Improvements
+- **Code Quality**: Removed excessive debug logging and improved error message clarity throughout AI system
+- **Performance Monitoring**: Enhanced statistics tracking with token consumption and fallback decision frequency
+- **Resource Management**: Optimized memory usage and GPU utilization through intelligent model sharing
+- **Error Recovery**: Improved resilience to API failures and malformed LLM responses with graceful degradation
+- **Import Cleanup**: Removed unused logging functions and simplified import statements across AI modules
+
 ## [0.5.13] - 2025-08-28
 
 ### Improved

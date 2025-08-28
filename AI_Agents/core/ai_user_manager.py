@@ -198,19 +198,16 @@ class AIUserManager:
             )
             
             if response.status_code in [200, 201]:
-                logger.info(f"Successfully created user: {user_creds.nickname}")
                 return True
             elif response.status_code == 400:
                 # Check if it's because user already exists
                 response_text = response.text.lower()
                 if "nickname already registered" in response_text or "email already registered" in response_text:
-                    logger.info(f"User {user_creds.nickname} already exists")
                     return True
                 else:
                     logger.error(f"Failed to create user {user_creds.nickname}: {response.status_code} - {response.text}")
                     return False
             elif response.status_code == 409:
-                logger.info(f"User {user_creds.nickname} already exists")
                 return True  # User exists, that's fine
             else:
                 logger.error(f"Failed to create user {user_creds.nickname}: {response.status_code} - {response.text}")

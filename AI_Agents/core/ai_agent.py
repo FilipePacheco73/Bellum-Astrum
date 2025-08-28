@@ -34,6 +34,8 @@ class GameState:
     def __post_init__(self):
         if self.active_ships is None:
             self.active_ships = []
+        if self.available_opponents is None:
+            self.available_opponents = []
 
 class AIAgent:
     """Base AI agent that can play Bellum Astrum autonomously"""
@@ -79,6 +81,7 @@ class AIAgent:
     async def update_game_state(self) -> bool:
         """Update the current game state by calling various APIs"""
         try:
+            
             # Get user status
             user_result = await self.tool_caller.execute_tool(
                 GameTool.GET_MY_STATUS, self.credentials
@@ -89,6 +92,13 @@ class AIAgent:
                 self.game_state.level = user_data.get('level', 1)
                 self.game_state.rank = user_data.get('rank', 'Recruit')
                 self.game_state.elo = user_data.get('elo', 1000.0)
+            else:
+                logger.warning(f"Failed to get user status for {self.credentials.nickname}: {user_result.error}")
+                self.game_state.credits = 0
+                self.game_state.level = 1
+                self.game_state.rank = 'Recruit'
+                self.game_state.elo = 1000.0
+                return False
             
             # Get fleet status
             fleet_result = await self.tool_caller.execute_tool(
@@ -96,6 +106,9 @@ class AIAgent:
             )
             if fleet_result.success:
                 self.game_state.active_ships = fleet_result.data or []
+            else:
+                logger.warning(f"Failed to get fleet status for {self.credentials.nickname}: {fleet_result.error}")
+                self.game_state.active_ships = []
             
             # Get work status
             work_result = await self.tool_caller.execute_tool(
@@ -126,6 +139,8 @@ class AIAgent:
             )
             if opponents_result.success:
                 self.game_state.available_opponents = opponents_result.data or []
+            else:
+                self.game_state.available_opponents = []
             
             logger.info(f"{self.credentials.nickname} updated game state - Credits: {self.game_state.credits}, Level: {self.game_state.level}")
             return True
@@ -245,7 +260,7 @@ Active Ships: {len(self.game_state.active_ships)}
             llm_response = self.llm_manager.generate_response(
                 self.agent_type, 
                 decision_prompt,
-                temperature=0.5  # Lower temperature for more consistent responses
+                temperature=0.5
             )
             
             # LLM manager now always returns an LLMResponse, even on failure
@@ -254,36 +269,47 @@ Active Ships: {len(self.game_state.active_ships)}
             output_tokens = llm_response.output_tokens if llm_response else 0
             ai_reasoning = llm_response.reasoning if llm_response else ""
             
-            logger.debug(f"Received response from LLM for {self.credentials.nickname}: {response_text or 'EMPTY'} (tokens: {input_tokens}→{output_tokens})")
-            
             if not response_text:
                 logger.error(f"No response from LLM for {self.credentials.nickname}")
-                # Save failed decision to memory
-                self.memory.store_decision(
-                    self.round_count, 
-                    "NO_ACTION", 
-                    "LLM failed to generate response",
-                    success=False,
-                    input_tokens=input_tokens,
-                    output_tokens=output_tokens,
-                    ai_reasoning="LLM generation failed"
-                )
                 
-                # Use fallback decision making
+                # Use fallback decision making - but ensure we have fresh game state first
+                try:
+                    refresh_result = await self.tool_caller.execute_tool(GameTool.GET_MY_STATUS, self.credentials)
+                    if refresh_result.success:
+                        user_data = refresh_result.data
+                        self.game_state.credits = user_data.get('currency_value', 0)
+                except Exception:
+                    pass  # Continue with existing state
+                
                 fallback_decision = self._make_fallback_decision()
                 if fallback_decision:
                     logger.info(f"Using fallback decision for {self.credentials.nickname}: {fallback_decision['action']}")
-                    # Save fallback decision to memory
+                    
+                    # Save ONLY the fallback decision to memory with transparent reason
+                    fallback_reason = f"AI model failed to respond (used {input_tokens} tokens), falling back to: {fallback_decision['reason']}"
+                    fallback_ai_reasoning = f"LLM generation failed after processing {input_tokens} input tokens. Fallback decision: {fallback_decision['reason']}"
+                    
                     self.memory.store_decision(
                         self.round_count,
                         fallback_decision['action'],
-                        f"Fallback: {fallback_decision['reason']}",
+                        fallback_reason,
                         success=True,
-                        input_tokens=0,
+                        input_tokens=input_tokens,
                         output_tokens=0,
-                        ai_reasoning=f"Fallback reasoning: {fallback_decision['reason']}"
+                        ai_reasoning=fallback_ai_reasoning
                     )
                     return fallback_decision
+                    
+                # If no fallback available, save failure record
+                self.memory.store_decision(
+                    self.round_count,
+                    "SYSTEM_ERROR",
+                    f"AI model failed to respond and no fallback available (used {input_tokens} tokens)",
+                    success=False,
+                    input_tokens=input_tokens,
+                    output_tokens=0,
+                    ai_reasoning=f"Critical failure: LLM failed and fallback system unavailable. Tokens: {input_tokens}→0"
+                )
                 return None
             
             # Parse the response
@@ -316,7 +342,7 @@ Active Ships: {len(self.game_state.active_ships)}
                 })
                 
                 # Log only the final decision with token info
-                logger.debug(f"{self.credentials.nickname} -> {decision['action']}: {ai_reasoning[:100]} (tokens: {input_tokens}→{output_tokens})")
+                logger.info(f"{self.credentials.nickname} -> {decision['action']}: {ai_reasoning[:100]} (tokens: {input_tokens}→{output_tokens})")
             else:
                 # Save failed parsing to memory
                 self.memory.store_decision(
@@ -470,7 +496,9 @@ Active Ships: {len(self.game_state.active_ships)}
             logger.info(f"{self.credentials.nickname} starting round {self.round_count + 1}")
             
             # Update game state
-            if not await self.update_game_state():
+            update_success = await self.update_game_state()
+            
+            if not update_success:
                 logger.error(f"Failed to update game state for {self.credentials.nickname}")
                 return False
             
@@ -496,35 +524,56 @@ Active Ships: {len(self.game_state.active_ships)}
             return False
     
     def _make_fallback_decision(self) -> Optional[Dict[str, Any]]:
-        """Make a simple fallback decision when LLM fails"""
+        """Make a simple fallback decision when LLM fails with clear reasoning"""
         import random
         
         try:
-            # Simple decision logic based on game state
-            if self.game_state.credits < 100:
-                # Low credits - try to work
+            # First, try to get fresh game state if current one seems invalid
+            credits = getattr(self.game_state, 'credits', 0)
+            if credits == 0:
+                # Try to get a fresh status synchronously
+                try:
+                    import asyncio
+                    loop = asyncio.get_event_loop()
+                    if not loop.is_running():
+                        fresh_result = loop.run_until_complete(
+                            self.tool_caller.execute_tool(GameTool.GET_MY_STATUS, self.credentials)
+                        )
+                        if fresh_result.success:
+                            credits = fresh_result.data.get('currency_value', 0)
+                except Exception:
+                    pass  # Use current credits value
+            
+            # Ensure lists are always valid (not None)
+            active_ships = getattr(self.game_state, 'active_ships', []) or []
+            available_opponents = getattr(self.game_state, 'available_opponents', []) or []
+            
+            # Priority 1: Critical resource shortage
+            if credits < 1000:
                 return {
                     "action": "perform_work",
                     "parameters": {},
-                    "reason": "Fallback: Need credits"
+                    "reason": f"low on credits ({credits}), working to earn more"
                 }
-            elif len(self.game_state.active_ships) == 0:
-                # No ships - try to get status or buy ship
-                if self.game_state.credits >= 500:
+            
+            # Priority 2: No ships available
+            elif len(active_ships) == 0:
+                if credits >= 500:
                     return {
                         "action": "buy_ship",
-                        "parameters": {"ship_id": 1},  # Buy cheapest ship
-                        "reason": "Fallback: Need ships"
+                        "parameters": {"ship_id": 1},
+                        "reason": f"no active ships available, purchasing ship with {credits} credits"
                     }
                 else:
                     return {
                         "action": "get_my_status",
                         "parameters": {},
-                        "reason": "Fallback: Check status"
+                        "reason": f"no ships but insufficient credits ({credits}) to buy, checking status"
                     }
-            elif self.game_state.available_opponents:
-                # Have ships and opponents - try to battle
-                opponent = random.choice(self.game_state.available_opponents)
+            
+            # Priority 3: Combat opportunity
+            elif len(available_opponents) > 0 and len(active_ships) > 0:
+                opponent = random.choice(available_opponents)
                 formations = ["AGGRESSIVE", "DEFENSIVE", "TACTICAL"]
                 formation = formations[hash(self.agent_type) % len(formations)]
                 
@@ -533,25 +582,34 @@ Active Ships: {len(self.game_state.active_ships)}
                     "parameters": {
                         "opponent_id": opponent.get('user_id'),
                         "formation": formation,
-                        "ship_numbers": [ship.get('ship_number') for ship in self.game_state.active_ships[:3]]
+                        "ship_numbers": [ship.get('ship_number') for ship in active_ships[:3]]
                     },
-                    "reason": "Fallback: Battle available opponent"
+                    "reason": f"found combat opportunity with {len(active_ships)} ships vs {opponent.get('nickname', 'unknown')}"
                 }
+            
+            # Priority 4: Resource building
+            elif credits >= 100:
+                return {
+                    "action": "perform_work",
+                    "parameters": {},
+                    "reason": f"stable situation with {credits} credits and {len(active_ships)} ships, working to build resources"
+                }
+            
+            # Default fallback: Status check
             else:
-                # Default to getting status
                 return {
                     "action": "get_my_status",
                     "parameters": {},
-                    "reason": "Fallback: Refresh status"
+                    "reason": f"unclear game state (credits: {credits}, ships: {len(active_ships)}), refreshing status"
                 }
                 
         except Exception as e:
             logger.error(f"Fallback decision failed for {self.credentials.nickname}: {str(e)}")
-            # Ultimate fallback
+            # Ultimate emergency fallback
             return {
                 "action": "get_my_status",
                 "parameters": {},
-                "reason": "Ultimate fallback: Check status"
+                "reason": f"emergency fallback due to system error: {str(e)[:50]}"
             }
     
     def get_stats(self) -> Dict[str, Any]:

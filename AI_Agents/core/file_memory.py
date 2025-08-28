@@ -84,8 +84,6 @@ class FileBasedMemory:
             # Write back to file with proper JSON formatting
             with open(self.decisions_file, 'w', encoding='utf-8') as f:
                 json.dump(decisions, f, indent=2, ensure_ascii=False)
-                
-            logger.debug(f"Stored decision for {self.agent_name}: {action} (tokens: {input_tokens}→{output_tokens})")
             
         except Exception as e:
             logger.error(f"Failed to store decision for {self.agent_name}: {str(e)}")
@@ -107,9 +105,8 @@ class FileBasedMemory:
                     try:
                         decision = SimpleDecision(**decision_data)
                         decisions.append(decision)
-                    except (KeyError, ValueError) as e:
-                        logger.warning(f"Corrupted decision entry for {self.agent_name}: {str(e)}")
-                        continue
+                    except (KeyError, ValueError):
+                        continue  # Skip corrupted entries silently
                         
             except (json.JSONDecodeError, FileNotFoundError) as e:
                 logger.error(f"Failed to read decisions file for {self.agent_name}: {str(e)}")
@@ -119,7 +116,6 @@ class FileBasedMemory:
             decisions.sort(key=lambda x: x.round_number)
             recent_decisions = decisions[-max_rounds:] if decisions else []
             
-            logger.debug(f"Retrieved {len(recent_decisions)} recent decisions for {self.agent_name}")
             return recent_decisions
             
         except Exception as e:
@@ -172,8 +168,6 @@ class FileBasedMemory:
             # Write back to file with proper JSON formatting
             with open(self.memory_file, 'w', encoding='utf-8') as f:
                 json.dump(actions, f, indent=2, ensure_ascii=False)
-                
-            logger.debug(f"Stored action for {self.agent_name}: {action.tool_name}")
             
         except Exception as e:
             logger.error(f"Failed to store action for {self.agent_name}: {str(e)}")
@@ -200,9 +194,8 @@ class FileBasedMemory:
                             action = AgentAction(**action_data)
                             actions.append(action)
                             
-                    except (KeyError, ValueError) as e:
-                        logger.warning(f"Corrupted memory entry for {self.agent_name}: {str(e)}")
-                        continue
+                    except (KeyError, ValueError):
+                        continue  # Skip corrupted entries silently
                         
             except (json.JSONDecodeError, FileNotFoundError) as e:
                 logger.error(f"Failed to read memory file for {self.agent_name}: {str(e)}")

@@ -1,18 +1,25 @@
 # 🤖 Bellum Astrum - AI Agents Documentation
 
-The AI Agents system provides intelligent autonomous players that compete in Bellum Astrum using Large Language Models (LLMs). These agents make strategic decisions, learn from experience, and compete 24/7 without human intervention.
+The AI Agents system provides intelligent autonomous players that compete in Bellum Astrum using Large Language Models (LLMs). These agents make strategic decisions, learn from experience, and compet## 📊 Analysis and Monitoring
+
+### Real-time Statistics
+- Performance metrics per agent with token consumption tracking
+- Tool success rates and efficiency analysis
+- Credit and XP progression tracking with detailed logging
+- Performance rankings and comparisons
+- Fallback decision frequency monitoring for model performance assessmentwithout human intervention.
 
 ---
 
 ## 🛠️ Technology Stack
 
 - **AI Framework**: Local LLMs via HuggingFace Transformers with CUDA optimization
-- **Decision Engine**: Strategic prompts with personality-based behavior patterns
-- **Memory System**: SQLite-based learning with JSON fallback for persistence
-- **Logging**: Dual logging system (debug + AI decisions tracking)
-- **Match System**: Automated tournament and training orchestration
-- **Models**: TinyLlama-1.1B-Chat-v1.0 with 4-bit quantization for efficiency
-- **GPU Support**: CUDA acceleration with memory optimization for RTX cards
+- **Decision Engine**: Strategic prompts with simplified personality-based behavior patterns
+- **Memory System**: File-based JSON memory storage with detailed decision tracking
+- **Logging**: Advanced dual logging system (debug + AI decisions tracking with token metrics)
+- **Match System**: Automated tournament and training orchestration with real-time monitoring
+- **Models**: TinyLlama-1.1B-Chat-v1.0 with 4-bit quantization for efficiency (shared across all agents)
+- **GPU Support**: CUDA acceleration with memory optimization and smart prompt truncation
 
 ---
 
@@ -57,31 +64,31 @@ AI_Agents/
 ### AI_Warrior (Aggressive)
 Strategic behavior focused on constant aggression and high-risk actions:
 ```yaml
-Strategy: Constant attacks with high-risk, high-reward approach
-Focus: Frequent battles, rapid growth through combat
-Formation: AGGRESSIVE
-Behavior: Minimal work, maximum battle engagement
-LLM Model: TinyLlama-1.1B-Chat-v1.0 (temperature: 0.8, high creativity)
+Strategy: Combat first! High risk, high reward approach
+Focus: Ships→BATTLE, No ships→ACTIVATE, Low credits→WORK, Damaged→REPAIR
+Formation: AGGRESSIVE (always)
+Behavior: Bold and direct combat engagement
+LLM Model: TinyLlama-1.1B-Chat-v1.0 (shared model, aggressive personality prompts)
 ```
 
 ### AI_Guardian (Defensive) 
 Strategic behavior focused on survival and sustainable growth:
 ```yaml
-Strategy: Survival-first with sustainable resource accumulation
-Focus: Resource building, selective battle engagement
-Formation: DEFENSIVE  
-Behavior: Heavy work focus, safe battle choices
-LLM Model: TinyLlama-1.1B-Chat-v1.0 (temperature: 0.4, conservative decisions)
+Strategy: Safety first! Calculated moves only
+Focus: Damaged→REPAIR, No credits→WORK, Ready ships→BATTLE (safe)
+Formation: DEFENSIVE (always)
+Behavior: Prudent and calculated resource management
+LLM Model: TinyLlama-1.1B-Chat-v1.0 (shared model, defensive personality prompts)
 ```
 
 ### AI_Tactician (Strategic)
 Strategic behavior focused on calculated decisions and optimization:
 ```yaml
-Strategy: Data-driven analysis with calculated risk management
-Focus: Resource optimization and strategic timing
-Formation: Adaptive based on game context
-Behavior: Balanced work-battle ratio with strategic planning
-LLM Model: TinyLlama-1.1B-Chat-v1.0 (temperature: 0.6, balanced approach)
+Strategy: Strategy first! Analyze then act
+Focus: Assess→REPAIR if needed→WORK for credits→BATTLE when ready
+Formation: TACTICAL (always)
+Behavior: Smart and adaptable strategic planning
+LLM Model: TinyLlama-1.1B-Chat-v1.0 (shared model, tactical personality prompts)
 ```
 
 ---
@@ -138,53 +145,53 @@ tail -f logs/ai_decisions.log
 
 ### Debug Log (`debug.log`)
 Technical system monitoring and troubleshooting:
-- API connections and authentication
-- Technical errors and warnings  
-- System performance and debug information
-- Automatic rotation (10MB, 5 backups)
+- API connections and authentication status
+- Technical errors, warnings, and system diagnostics
+- System performance metrics and debug information
+- Automatic log rotation (10MB files, 5 backups with UTF-8 encoding)
 
 ### AI Decisions Log (`ai_decisions.log`)
-Detailed AI behavior tracking and analysis:
+Detailed AI behavior tracking and performance analysis:
 ```
-2025-08-12 21:09:47 | Round 002 | [AI_Warrior] | DECISION_MAKING | credits: 1500 | energy: 80
-2025-08-12 21:09:48 | Round 002 | [AI_Warrior] | TOOL_USED: work → SUCCESS | param_sector: residential | result_credits_earned: 200
+2025-08-28 15:32:15 | Round 003 | [AI_Warrior_Test] | ACTION: perform_work | SUCCESS | tokens: 247→12
+2025-08-28 15:32:20 | Round 004 | [AI_Guardian_Test] | ACTION: get_my_status | SUCCESS | credits: 1200
 ```
-- Detailed decision logs for each AI agent
-- Tools used with specific parameters
-- Action results and consequences
-- Structured format for performance analysis
+- Comprehensive decision logs for each AI agent with token usage metrics
+- Tools used with specific parameters and success/failure tracking
+- Action results, reasoning, and performance consequences
+- Structured format optimized for performance analysis and learning
+- Automatic log rotation (10MB files, 10 backups with UTF-8 encoding)
 
 ---
 
 ## 🧠 Memory System
 
 ### File-Based Learning Architecture
-- **Format**: JSON per agent (decisions and performance data)
+- **Format**: JSON per agent with comprehensive decision and token tracking
 - **Location**: `memories/{agent_name}_decisions.json`
-- **Content**: Complete action history, reasoning, and performance metrics
+- **Content**: Complete action history, AI reasoning, token metrics, and performance data
+- **Persistence**: Automatic storage with error recovery and corrupted entry handling
 
 ### Memory Entry Example
 ```json
 {
-  "timestamp": "2025-08-27T21:08:22.829954",
-  "round_number": 1,
-  "action": "get_my_status",
-  "reason": "First round mandatory status check",
+  "timestamp": "2025-08-28T15:30:45.123456",
+  "round_number": 5,
+  "action": "engage_battle",
+  "reason": "found combat opportunity with 2 ships vs WeakOpponent",
   "success": true,
-  "input_tokens": 0,
-  "output_tokens": 0,
-  "ai_reasoning": "Mandatory first round status check"
+  "input_tokens": 287,
+  "output_tokens": 15,
+  "ai_reasoning": "Analyzing game state: sufficient credits (1500), active ships available (2), opponent found with favorable matchup. Strategic decision: engage in combat for XP and credit gains."
 }
 ```
 
 ### Memory Query Functions
-- `get_recent_actions()`: Recent actions by time period and type
-- `get_action_success_rate()`: Success rate per action type
-- `get_average_credits_per_work()`: Average work earnings analysis
-- `get_opponent_profile()`: Detailed opponent analysis and threat assessment
-- `get_winnable_opponents()`: List of opponents with win probability
-- `get_memory_summary()`: Comprehensive decision-making context summary
-- `cleanup_old_memories()`: Memory management and cleanup
+- `get_recent_decisions()`: Recent decisions with filtering by round count and success status
+- `get_memory_summary()`: Formatted summary for AI prompt inclusion with token metrics
+- `store_decision()`: Enhanced decision storage with detailed AI reasoning and fallback information
+- `cleanup_old_entries()`: Intelligent memory management to prevent file bloat
+- `cleanup_empty_files()`: Automatic removal of unused memory files
 
 ---
 
@@ -213,25 +220,31 @@ config = MatchConfig(
 ## ⚡ Performance & Optimization
 
 ### GPU Acceleration
-- **CUDA Support**: Automatic GPU detection and utilization
+- **CUDA Support**: Automatic GPU detection with CPU fallback capability
 - **Memory Management**: 4-bit quantization reduces VRAM usage by ~75%
+- **Model Sharing**: Single TinyLlama instance shared across all agent types
 - **Flash Attention**: Enhanced attention mechanism for faster inference
 - **Model Caching**: Local model cache prevents repeated downloads
+- **Smart Prompt Truncation**: Preserves critical instructions when managing context limits
 
 ### Resource Usage
-- **Memory Footprint**: ~550MB VRAM per agent (with quantization)
+- **Memory Footprint**: ~550MB VRAM per model instance (with 4-bit quantization)
+- **Model Sharing**: Single TinyLlama instance shared across all agents reduces total VRAM to ~550MB
 - **CPU Usage**: Minimal when using GPU acceleration
 - **Storage**: ~2.2GB per cached model, ~1MB per agent memory file
+- **Token Efficiency**: Smart prompt truncation preserves critical instructions while managing context limits
 
 ### Configuration Options
 ```python
-# GPU optimization settings
+# GPU optimization settings with smart prompt management
 GLOBAL_CONFIG = {
-    "device": "cuda",  # Auto-detect GPU
-    "max_memory_per_gpu": "5GB",  # Optimized for RTX 4050
-    "torch_dtype": torch.float16,  # Half precision
-    "load_in_4bit": True,  # Quantization
-    "attn_implementation": "flash_attention_2"
+    "device": "cuda",  # Auto-detect GPU with fallback to CPU
+    "max_memory_per_gpu": "5GB",  # Optimized for RTX 4050 and similar cards
+    "torch_dtype": torch.float16,  # Half precision for memory efficiency
+    "load_in_4bit": True,  # 4-bit quantization reduces VRAM by ~75%
+    "attn_implementation": "flash_attention_2",  # Enhanced attention mechanism
+    "model_sharing": True,  # Single model instance shared across agents
+    "smart_truncation": True  # Preserve critical instructions when truncating prompts
 }
 ```
 
@@ -248,21 +261,39 @@ GLOBAL_CONFIG = {
 ### Log Analysis Examples
 ```bash
 # Filter decisions from specific agent
-grep "AI_Warrior" logs/ai_decisions.log
+grep "AI_Warrior_Test" logs/ai_decisions.log
 
-# Analyze action patterns
-grep "action.*work" logs/ai_decisions.log
+# Analyze action patterns and success rates
+grep "ACTION.*perform_work" logs/ai_decisions.log
 
-# Check success/failure rates
-grep -E "success.*true|success.*false" logs/ai_decisions.log
+# Monitor token usage patterns across agents
+grep "tokens.*→" logs/ai_decisions.log
 
-# Monitor token usage
-grep "tokens" logs/ai_decisions.log
+# Check AI reasoning and decision quality
+grep "ai_reasoning" memories/AI_*.json
+
+# Track fallback decision usage
+grep "fallback" logs/ai_decisions.log
 ```
 
 ---
 
 ## 🔧 Development
+
+### Decision Making System Architecture
+The AI agents use a streamlined prompt system optimized for small language models:
+
+- **System Prompts**: Core game mechanics and response format instructions
+- **Personality Prompts**: Concise behavior patterns specific to each agent type  
+- **Decision Templates**: Standardized format with mandatory ACTION and EXPLANATION fields
+- **Memory Integration**: Recent decisions included as context for learning
+
+#### Enhanced Decision Processing
+- **Token Tracking**: Comprehensive monitoring of input/output token usage
+- **Smart Truncation**: Intelligent prompt shortening that preserves critical instructions
+- **Fallback System**: Robust decision-making when LLM fails with detailed reasoning
+- **Format Parsing**: Advanced parsing of AI responses with fallback keyword detection
+- **Error Recovery**: Graceful handling of malformed responses and API failures
 
 ### Adding New AI Personality
 1. Create behavior prompts in `prompts/`
@@ -275,9 +306,11 @@ grep "tokens" logs/ai_decisions.log
 3. Document parameters and expected results
 
 ### Debugging and Troubleshooting
-- Check `logs/debug_*.log` for technical issues
-- Analyze `logs/ai_decisions_*.log` for AI behavior patterns
-- Review `memories/` for learning data and decision history
+- Check `logs/debug.log` for technical issues and system errors
+- Analyze `logs/ai_decisions.log` for AI behavior patterns and token usage
+- Review `memories/{agent_name}_decisions.json` for learning data and decision history
+- Monitor token consumption patterns to optimize prompt efficiency
+- Use fallback decision logs to identify model performance issues
 
 ---
 

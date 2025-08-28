@@ -10,53 +10,31 @@ from AI_Agents.prompts.personality_prompts import get_personality_prompt
 
 logger = logging.getLogger(__name__)
 
-# Base decision template for all agent types
+# Simplified decision template for small models
 DECISION_TEMPLATE = """
-=== MEMORY & CONTEXT ===
-{memory_summary}
-
 === CURRENT SITUATION ===
 {context_prompt}
 
-=== INSTRUCTIONS ===
-1. Analyze the situation and your memories
-2. Choose ONE action from the options below
-3. Provide your response in the exact format specified
+=== RECENT MEMORIES ===
+{memory_summary}
 
-AVAILABLE ACTIONS:
-- status (check your current situation and resources)
-- fleet (check your fleet status and ship details)
-- opponents (list available opponents for battle)
-- work (earn credits through work)
-- buy (purchase a new ship)
-- activate (activate an inactive ship)
-- deactivate (deactivate an active ship) 
-- repair (repair a damaged ship)
-- battle (engage in combat with an opponent)
+ACTIONS: status, fleet, opponents, work, buy, activate, deactivate, repair, battle
 
-=== MANDATORY RESPONSE FORMAT ===
-You MUST respond using this EXACT format:
-
+MANDATORY FORMAT:
 ACTION: [action_name]
-EXPLANATION: [brief explanation in English]
+EXPLANATION: [brief reasoning]
 
 EXAMPLES:
 ACTION: status
-EXPLANATION: Need to check current resources and ship status before making decisions.
+EXPLANATION: Check current resources and status.
 
-ACTION: fleet
-EXPLANATION: Want to review my ships' health and active status before planning.
+ACTION: work  
+EXPLANATION: Need credits for ships and repairs.
 
 ACTION: battle
-EXPLANATION: Have strong active ships and found suitable opponent for combat.
+EXPLANATION: Have strong ships, engaging opponent.
 
-ACTION: work
-EXPLANATION: Low credits, need to earn money for ship repairs and purchases.
-
-ACTION: repair
-EXPLANATION: My ships are damaged and need fixing before combat.
-
-IMPORTANT: Use only English in your response. Be concise but clear. The explanation will be saved for future reference.
+Choose wisely and respond in the exact format above!
 """
 
 def get_decision_prompt(memory_summary: str, context_prompt: str, agent_type: str = "AI_Warrior") -> str:

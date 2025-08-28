@@ -207,7 +207,6 @@ class AIMemoryManager:
                     memory.ships_gained
                 ))
                 conn.commit()
-                logger.debug(f"Stored action memory: {memory.action_type.value}")
         except Exception as e:
             logger.error(f"Failed to store action memory: {str(e)}")
     
@@ -248,7 +247,6 @@ class AIMemoryManager:
                 # Update opponent profile
                 self._update_opponent_profile(memory)
                 
-                logger.info(f"Stored battle memory vs {memory.opponent_nickname}: {'Victory' if memory.victory else 'Defeat'}")
         except Exception as e:
             logger.error(f"Failed to store battle memory: {str(e)}")
     

@@ -15,7 +15,7 @@ from AI_Agents.core.llm_manager import get_llm_manager, preload_shared_models
 from AI_Agents.core.ai_user_manager import AIUserManager
 from AI_Agents.config.env_config import get_config
 from AI_Agents.core.tool_caller import AICredentials
-from AI_Agents.config.logging_config import setup_logging, log_match_event, log_ai_tool_usage
+from AI_Agents.config.logging_config import setup_logging
 
 # Ensure required directories exist
 logs_dir = Path(__file__).parent / "logs"
@@ -36,7 +36,6 @@ class AIMatchRunner:
     async def setup_test_agents(self):
         """Setup AI agents using automatic user management"""
         logger.info("Setting up AI agents with automatic user management...")
-        log_match_event(ai_logger, "AGENT_SETUP_STARTED")
         
         try:
             # Preload shared models to avoid multiple loading
@@ -53,7 +52,6 @@ class AIMatchRunner:
             
             if not ready_users:
                 logger.error("No AI users are ready!")
-                log_match_event(ai_logger, "AGENT_SETUP_FAILED", {"reason": "No AI users ready"})
                 return []
             
             # Convert to AgentConfig format
@@ -67,27 +65,18 @@ class AIMatchRunner:
                 )
                 
                 test_agents.append(agent_config)
-                logger.info(f"Configured agent: {user_creds.nickname} (agent_type: {user_creds.agent_type})")
             
-            log_match_event(ai_logger, "AGENT_SETUP_COMPLETED", {
-                "total_agents": len(test_agents), 
-                "agent_types": [agent.agent_type for agent in test_agents]
-            })
+            logger.info(f"Configured {len(test_agents)} agents for match")
             
             return test_agents
             
         except Exception as e:
             logger.error(f"Failed to setup AI agents: {e}")
-            log_match_event(ai_logger, "AGENT_SETUP_FAILED", {"reason": str(e)})
             return []
     
     async def run_training_match(self, rounds: int = 30):
         """Run a training match between AI agents"""
         logger.info("=== STARTING AI TRAINING MATCH ===")
-        log_match_event(ai_logger, "TRAINING_MATCH_STARTED", {
-            "max_rounds": rounds,
-            "match_type": "TRAINING"
-        })
         
         # Configure match for lightweight LLMs
         config = MatchConfig(
