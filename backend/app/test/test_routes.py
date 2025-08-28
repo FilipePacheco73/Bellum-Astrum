@@ -17,6 +17,66 @@ def test_health_check():
     assert data["status"] == "healthy"
     assert data["database"]["status"] == "healthy"
 
+# Test root endpoint
+def test_root_endpoint():
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert "message" in data
+    assert "version" in data
+    assert "author" in data
+    assert data["author"] == "FilipePacheco73"
+    assert "Welcome to the Bellum Astrum API!" in data["message"]
+
+# Test version endpoint
+def test_version_endpoint():
+    response = client.get("/version")
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Check all required fields are present
+    assert "name" in data
+    assert "version" in data
+    assert "api_title" in data
+    assert "description" in data
+    assert "author" in data
+    
+    # Check specific values
+    assert data["name"] == "Bellum Astrum"
+    assert data["author"] == "FilipePacheco73"
+    assert data["api_title"] == "Space Battle Game API"
+    assert "API for managing game resources" in data["description"]
+    
+    # Check version format (should be semantic versioning like x.y.z)
+    import re
+    version_pattern = r'^\d+\.\d+\.\d+$'
+    assert re.match(version_pattern, data["version"]), f"Version '{data['version']}' doesn't match semantic versioning pattern"
+    
+    print(f"DEBUG: Version endpoint returned version: {data['version']}")
+
+# Test version consistency between endpoints
+def test_version_consistency():
+    # Get version from /version endpoint
+    version_response = client.get("/version")
+    assert version_response.status_code == 200
+    version_data = version_response.json()
+    
+    # Get version from /health endpoint
+    health_response = client.get("/health")
+    assert health_response.status_code == 200
+    health_data = health_response.json()
+    
+    # Get version from root endpoint
+    root_response = client.get("/")
+    assert root_response.status_code == 200
+    root_data = root_response.json()
+    
+    # All endpoints should return the same version
+    assert version_data["version"] == health_data["version"], "Version mismatch between /version and /health endpoints"
+    assert version_data["version"] == root_data["version"], "Version mismatch between /version and root endpoints"
+    
+    print(f"DEBUG: All endpoints consistently return version: {version_data['version']}")
+
 # Utility function to generate random strings
 def random_string(length=8):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
@@ -69,11 +129,65 @@ def ship_numbers(user_ids):
     assert ship_number2 is not None
     return (user1_id, token1, ship_number1), (user2_id, token2, ship_number2)
 
-# Test root endpoint
-def test_root():
-    response = client.get("/")
+# Test version endpoint
+def test_version_endpoint():
+    """Test that the version endpoint returns correct project information"""
+    response = client.get("/version")
     assert response.status_code == 200
-    assert "message" in response.json()
+    data = response.json()
+    
+    # Check all required fields are present
+    required_fields = ["name", "version", "api_title", "description", "author"]
+    for field in required_fields:
+        assert field in data, f"Missing field: {field}"
+    
+    # Check field types and basic content validation
+    assert isinstance(data["name"], str), "Name should be a string"
+    assert isinstance(data["version"], str), "Version should be a string"
+    assert isinstance(data["api_title"], str), "API title should be a string"
+    assert isinstance(data["description"], str), "Description should be a string"
+    assert isinstance(data["author"], str), "Author should be a string"
+    
+    # Check specific expected values
+    assert data["name"] == "Bellum Astrum", f"Expected 'Bellum Astrum', got '{data['name']}'"
+    assert data["author"] == "FilipePacheco73", f"Expected 'FilipePacheco73', got '{data['author']}'"
+    
+    # Version should be in semantic versioning format (X.Y.Z)
+    import re
+    version_pattern = r'^\d+\.\d+\.\d+$'
+    assert re.match(version_pattern, data["version"]), f"Version '{data['version']}' is not in X.Y.Z format"
+    
+    print(f"✅ Version endpoint test passed. Current version: {data['version']}")
+
+def test_version_endpoint_matches_changelog():
+    """Test that the version endpoint returns the same version as extracted from CHANGELOG.md"""
+    from backend.app.version import get_version_from_changelog
+    
+    # Get version from the API endpoint
+    response = client.get("/version")
+    assert response.status_code == 200
+    api_version = response.json()["version"]
+    
+    # Get version directly from the changelog function
+    changelog_version = get_version_from_changelog()
+    
+    # They should match
+    assert api_version == changelog_version, f"API version '{api_version}' doesn't match changelog version '{changelog_version}'"
+    
+    print(f"✅ Version consistency test passed. Both API and changelog report version: {api_version}")
+
+def test_version_endpoint_public_access():
+    """Test that the version endpoint doesn't require authentication"""
+    # This test ensures the endpoint works without any authentication headers
+    # (it should be publicly accessible)
+    response = client.get("/version")
+    assert response.status_code == 200
+    
+    # Should not return authentication errors
+    data = response.json()
+    assert "detail" not in data or "authentication" not in str(data.get("detail", "")).lower()
+    
+    print("✅ Version endpoint public access test passed")
 
 # Test user creation
 def test_create_users(user_ids):

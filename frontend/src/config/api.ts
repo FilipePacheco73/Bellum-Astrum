@@ -447,4 +447,30 @@ export const getAvailableWorkTypes = async (): Promise<AvailableWorkTypesRespons
   return response.data;
 };
 
+// Version interface
+export interface ProjectVersionResponse {
+  name: string;
+  version: string;
+  api_title: string;
+  description: string;
+  author: string;
+}
+
+// Get project version information (unprotected route)
+export const getProjectVersion = async (): Promise<ProjectVersionResponse> => {
+  // Create a base URL without the /api/v1 prefix for public endpoints
+  const baseUrl = getApiBaseUrl().replace('/api/v1', '');
+  
+  // Use axios.create to bypass authentication for this public endpoint
+  const publicApi = axios.create({
+    baseURL: baseUrl,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  const response = await publicApi.get('/version');
+  return response.data;
+};
+
 export default api;
