@@ -126,21 +126,23 @@ The API will be available at:
 
 ## 🔗 API Endpoints
 
-### Authentication
-- `POST /api/v1/auth/register` - Register a new user with validation
-- `POST /api/v1/auth/login` - User login with JWT token
+### System Endpoints
+- `GET /` - Root endpoint with welcome message and version info
+- `GET /version` - Detailed version and project information
+- `GET /health` - System health check with database status
 
-### System
-- `GET /api/v1/health` - System health check with database status
-
-### Users
+### Authentication & Users
+- `POST /api/v1/users/register` - Register a new user with validation
+- `POST /api/v1/users/login` - User login with JWT token
 - `GET /api/v1/users/` - List all users (filtered for PvP/NPC modes)
 - `GET /api/v1/users/{user_id}` - Get specific user details with stats
-- `GET /api/v1/users/{user_id}/ships` - Get user's owned ships with current/base stats
+- `PUT /api/v1/users/{user_id}/formation` - Update user battle formation
 
-### Ships
+### Ships Management
 - `GET /api/v1/ships/` - List all ship templates with complete stats
 - `GET /api/v1/ships/{ship_id}` - Get specific ship template details
+- `GET /api/v1/ships/user/{user_id}/ships` - Get user's owned ships with current/base stats
+- `GET /api/v1/ships/owned/{ship_number}` - Get specific owned ship details
 
 ### Battle System
 - `POST /api/v1/battle/activate-ship/` - Activate ship for battle formation

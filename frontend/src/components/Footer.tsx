@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import translations from '../locales/translations';
 import { getCurrentVersion } from '../utils/version';
@@ -7,7 +7,22 @@ const Footer: React.FC = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const currentYear = new Date().getFullYear();
-  const version = getCurrentVersion();
+  const [version, setVersion] = useState<string>('0.0.0'); // fallback version
+
+  useEffect(() => {
+    // Load version from backend API
+    const loadVersion = async () => {
+      try {
+        const currentVersion = await getCurrentVersion();
+        setVersion(currentVersion);
+      } catch (error) {
+        console.warn('Failed to load version in Footer:', error);
+        // Keep fallback version
+      }
+    };
+
+    loadVersion();
+  }, []);
 
   return (
     <footer className="w-full bg-slate-900 border-t border-slate-700 text-white px-6 py-4 z-50 transition-all duration-300">

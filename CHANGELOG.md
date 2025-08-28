@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.13] - 2025-08-28
+
+### Improved
+- **Backend API Documentation**: Complete overhaul of API endpoints documentation in README.md
+  - Updated authentication endpoints to reflect actual implementation (routes in `/api/v1/users/` instead of `/api/v1/auth/`)
+  - Added missing system endpoints (`/`, `/version`, `/health`)
+  - Corrected ships management endpoints with proper paths and descriptions
+  - Added user formation management endpoint (`PUT /api/v1/users/{user_id}/formation`)
+  - Enhanced ships endpoints documentation with owned ships management
+  - All API endpoints now accurately reflect the current codebase implementation
+  - Improved endpoint descriptions with clearer functionality explanations
+
 ## [0.5.12] - 2025-08-27
 
 ### Added
