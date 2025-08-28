@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from AI_Agents.core.match_orchestrator import MatchOrchestrator, MatchConfig, AgentConfig, MatchType
-from AI_Agents.core.llm_manager import get_llm_manager
+from AI_Agents.core.llm_manager import get_llm_manager, preload_shared_models
 from AI_Agents.core.ai_user_manager import AIUserManager
 from AI_Agents.config.env_config import get_config
 from AI_Agents.core.tool_caller import AICredentials
@@ -39,6 +39,12 @@ class AIMatchRunner:
         log_match_event(ai_logger, "AGENT_SETUP_STARTED")
         
         try:
+            # Preload shared models to avoid multiple loading
+            logger.info("Preloading shared LLM models...")
+            if not preload_shared_models():
+                logger.error("Failed to preload shared models")
+                return []
+            
             # Initialize AI user manager
             user_manager = AIUserManager()
             
@@ -190,7 +196,7 @@ class AIMatchRunner:
                 return
                 
             # Remove empty files
-            for file_path in memories_dir.glob("*.jsonl"):
+            for file_path in memories_dir.glob("*.json"):
                 if file_path.stat().st_size == 0:
                     file_path.unlink()
                     logger.info(f"Removed empty memory file: {file_path.name}")

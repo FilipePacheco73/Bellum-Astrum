@@ -15,10 +15,7 @@ from pathlib import Path
 from AI_Agents.core.llm_manager import get_llm_manager
 from AI_Agents.core.tool_caller import GameToolCaller, GameTool, ToolResult, AICredentials
 from AI_Agents.core.file_memory import FileBasedMemory
-from AI_Agents.prompts.aggressive_prompts import AGGRESSIVE_PROMPT
-from AI_Agents.prompts.defensive_prompts import DEFENSIVE_PROMPT
-from AI_Agents.prompts.tactical_prompts import TACTICAL_PROMPT
-from AI_Agents.prompts.system_prompts import get_system_prompt
+from AI_Agents.prompts.decision_prompts import get_decision_prompt, parse_ai_decision
 
 logger = logging.getLogger(__name__)
 
@@ -67,14 +64,17 @@ class AIAgent:
         self._load_model()
     
     def _load_model(self):
-        """Load the LLM model"""
+        """Load the LLM model (or reuse shared model)"""
         # Use the personality type as the model type
         model_type = self.agent_type
         if not self.llm_manager.is_model_loaded(model_type):
+            logger.info(f"Loading/sharing model for {self.agent_type}...")
             success = self.llm_manager.load_model(model_type)
             if not success:
                 logger.error(f"Failed to load model for {self.agent_type}")
                 raise RuntimeError(f"Could not load LLM model for {model_type}")
+        else:
+            logger.info(f"Model for {self.agent_type} already loaded/shared")
     
     async def update_game_state(self) -> bool:
         """Update the current game state by calling various APIs"""
@@ -185,106 +185,35 @@ Active Ships: {len(self.game_state.active_ships)}
         
         return context
     
-    def _get_personality_prompt(self) -> str:
-        """Get agent-specific prompt"""
-        if self.agent_type == "aggressive":
-            return AGGRESSIVE_PROMPT
-        elif self.agent_type == "defensive":
-            return DEFENSIVE_PROMPT
-        elif self.agent_type == "tactical":
-            return TACTICAL_PROMPT
-        else:
-            return AGGRESSIVE_PROMPT  # Default fallback
-    
     async def make_decision(self) -> Optional[Dict[str, Any]]:
-        """Make a decision using the LLM"""
+        """
+        Make a decision using the LLM
+        
+        IMPORTANT: The first round (round_count == 1) ALWAYS forces a get_my_status() call
+        to ensure the AI understands its current situation before making any other decisions.
+        """
         try:
             # Increment round count
             self.round_count += 1
             
-            # Get personality-specific instructions
-            personality_prompt = self._get_personality_prompt()
-            
-            # Build current game state context
-            context_prompt = self._build_simplified_context()
-            
-            # Get recent memories
-            memory_summary = self.memory.get_memory_summary(max_rounds=3)
-            
-            # Complete prompt with personality + memories + game state + actions
-            decision_prompt = f"""
-{personality_prompt}
-
-{memory_summary}
-
-=== SITUAÇÃO ATUAL ===
-{context_prompt}
-
-=== AÇÕES DISPONÍVEIS ===
-- get_my_status: Ver seu status atual
-- perform_work: Trabalhar para ganhar créditos  
-- buy_ship: Comprar uma nave
-- activate_ship: Ativar uma nave
-- repair_ship: Reparar uma nave danificada
-- engage_battle: Batalhar contra um oponente
-
-=== INSTRUÇÃO IMPORTANTE ===
-Responda com UMA PALAVRA APENAS que identifique a ação escolhida.
-Exemplos de respostas válidas:
-- "status" (para verificar situação)
-- "trabalhar" (para ganhar créditos)
-- "ativar" (para ativar nave)
-- "reparar" (para consertar nave)
-- "batalhar" (para lutar)
-- "comprar" (para comprar nave)
-
-Escolha UMA ação baseada na sua personalidade e situação:
-"""
-            
-            # Generate response
-            response = self.llm_manager.generate_response(
-                self.agent_type, 
-                decision_prompt,
-                temperature=0.7
-            )
-            
-            if not response:
-                logger.error(f"No response from LLM for {self.credentials.nickname}")
-                # Save failed decision to memory
-                self.memory.store_decision(
-                    self.round_count, 
-                    "NO_ACTION", 
-                    "LLM failed to generate response",
-                    success=False
-                )
+            # FORCE STATUS CHECK ON FIRST ROUND
+            if self.round_count == 1:
+                logger.info(f"{self.credentials.nickname} - First round: forcing status check")
+                decision = {
+                    'action': 'get_my_status',
+                    'reason': 'First round mandatory status check',
+                    'parameters': {}
+                }
                 
-                # Use fallback decision making
-                fallback_decision = self._make_fallback_decision()
-                if fallback_decision:
-                    logger.info(f"Using fallback decision for {self.credentials.nickname}")
-                    # Save fallback decision to memory
-                    self.memory.store_decision(
-                        self.round_count,
-                        fallback_decision['action'],
-                        f"Fallback: {fallback_decision['reason']}",
-                        success=True
-                    )
-                    return fallback_decision
-                return None
-            
-            # Parse the response
-            decision = self._parse_decision(response)
-            
-            if decision:
-                # Store the decision for tracking
-                self.last_decision = decision
-                
-                # Save decision to memory
+                # Save mandatory first decision to memory
                 self.memory.store_decision(
                     self.round_count,
                     decision['action'],
                     decision['reason'],
-                    success=True
+                    success=True,
+                    input_tokens=0,  # No LLM used for mandatory decision
+                    output_tokens=0,
+                    ai_reasoning="Mandatory first round status check"
                 )
                 
                 # Add to history
@@ -292,18 +221,112 @@ Escolha UMA ação baseada na sua personalidade e situação:
                     "round": self.round_count,
                     "timestamp": datetime.now().isoformat(),
                     "decision": decision,
-                    "llm_response": response[:200] + "..." if len(response) > 200 else response
+                    "llm_response": "FORCED_FIRST_STATUS_CHECK"
                 })
                 
-                # Log only the final decision, not the full prompt
-                logger.debug(f"{self.credentials.nickname} -> {decision['action']}: {decision['reason']}")
+                return decision
+            
+            # Build current game state context
+            context_prompt = self._build_simplified_context()
+            
+            # Get recent memories
+            memory_summary = self.memory.get_memory_summary(max_rounds=3)
+            
+            # Generate decision prompt using centralized template (now includes personality automatically)
+            decision_prompt = get_decision_prompt(
+                memory_summary=memory_summary,
+                context_prompt=context_prompt,
+                agent_type=self.agent_type
+            )
+            
+            logger.debug(f"Sending prompt to LLM for {self.credentials.nickname}")
+            
+            # Generate response with detailed reasoning
+            llm_response = self.llm_manager.generate_response(
+                self.agent_type, 
+                decision_prompt,
+                temperature=0.5  # Lower temperature for more consistent responses
+            )
+            
+            # LLM manager now always returns an LLMResponse, even on failure
+            response_text = llm_response.text if llm_response and llm_response.text else None
+            input_tokens = llm_response.input_tokens if llm_response else 0
+            output_tokens = llm_response.output_tokens if llm_response else 0
+            ai_reasoning = llm_response.reasoning if llm_response else ""
+            
+            logger.debug(f"Received response from LLM for {self.credentials.nickname}: {response_text or 'EMPTY'} (tokens: {input_tokens}→{output_tokens})")
+            
+            if not response_text:
+                logger.error(f"No response from LLM for {self.credentials.nickname}")
+                # Save failed decision to memory
+                self.memory.store_decision(
+                    self.round_count, 
+                    "NO_ACTION", 
+                    "LLM failed to generate response",
+                    success=False,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    ai_reasoning="LLM generation failed"
+                )
+                
+                # Use fallback decision making
+                fallback_decision = self._make_fallback_decision()
+                if fallback_decision:
+                    logger.info(f"Using fallback decision for {self.credentials.nickname}: {fallback_decision['action']}")
+                    # Save fallback decision to memory
+                    self.memory.store_decision(
+                        self.round_count,
+                        fallback_decision['action'],
+                        f"Fallback: {fallback_decision['reason']}",
+                        success=True,
+                        input_tokens=0,
+                        output_tokens=0,
+                        ai_reasoning=f"Fallback reasoning: {fallback_decision['reason']}"
+                    )
+                    return fallback_decision
+                return None
+            
+            # Parse the response
+            decision = self._parse_decision(response_text)
+            
+            if decision:
+                # Store the decision for tracking
+                self.last_decision = decision
+                
+                # Save decision to memory with token information and AI reasoning
+                self.memory.store_decision(
+                    self.round_count,
+                    decision['action'],
+                    decision['reason'],
+                    success=True,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    ai_reasoning=ai_reasoning
+                )
+                
+                # Add to history
+                self.decision_history.append({
+                    "round": self.round_count,
+                    "timestamp": datetime.now().isoformat(),
+                    "decision": decision,
+                    "llm_response": response_text[:200] + "..." if len(response_text) > 200 else response_text,
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "ai_reasoning": ai_reasoning
+                })
+                
+                # Log only the final decision with token info
+                logger.debug(f"{self.credentials.nickname} -> {decision['action']}: {ai_reasoning[:100]} (tokens: {input_tokens}→{output_tokens})")
             else:
                 # Save failed parsing to memory
                 self.memory.store_decision(
                     self.round_count,
                     "PARSE_FAILED",
-                    f"Could not understand LLM response: {response[:50]}...",
-                    success=False
+                    f"Could not understand LLM response: {response_text[:50]}...",
+                    success=False,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    ai_reasoning=f"Parse failed for response: {response_text}"
                 )
             
             return decision
@@ -313,94 +336,18 @@ Escolha UMA ação baseada na sua personalidade e situação:
             return None
     
     def _parse_decision(self, llm_response: str) -> Optional[Dict[str, Any]]:
-        """Parse LLM response to extract decision"""
+        """Parse LLM response to extract decision and reasoning"""
         try:
-            # Simple parsing - look for action keywords in multiple languages
-            response = llm_response.strip().lower()
+            # Use the centralized parsing function
+            decision = parse_ai_decision(llm_response)
             
-            # Map common responses to actions (Portuguese and English)
-            action_map = {
-                # Status checking
-                'get_my_status': 'get_my_status',
-                'status': 'get_my_status',
-                'check': 'get_my_status',
-                'verificar': 'get_my_status',
-                'checar': 'get_my_status',
-                
-                # Work
-                'perform_work': 'perform_work', 
-                'work': 'perform_work',
-                'trabalhar': 'perform_work',
-                'trabalho': 'perform_work',
-                
-                # Ship purchase
-                'buy_ship': 'buy_ship',
-                'buy': 'buy_ship',
-                'ship': 'buy_ship',
-                'comprar': 'buy_ship',
-                'nave': 'buy_ship',
-                
-                # Ship activation
-                'activate_ship': 'activate_ship',
-                'activate': 'activate_ship',
-                'ativar': 'activate_ship',
-                'ativação': 'activate_ship',
-                
-                # Ship repair
-                'repair_ship': 'repair_ship',
-                'repair': 'repair_ship',
-                'reparar': 'repair_ship',
-                'reparo': 'repair_ship',
-                'consertar': 'repair_ship',
-                
-                # Battle
-                'engage_battle': 'engage_battle',
-                'battle': 'engage_battle',
-                'fight': 'engage_battle',
-                'batalha': 'engage_battle',
-                'batalhar': 'engage_battle',
-                'lutar': 'engage_battle',
-                'combate': 'engage_battle'
-            }
-            
-            # Find matching action - try multiple patterns
-            action = None
-            
-            # First, try exact keyword matching
-            for keyword, mapped_action in action_map.items():
-                if keyword in response:
-                    action = mapped_action
-                    break
-            
-            # If no exact match, try broader pattern matching
-            if not action:
-                if any(word in response for word in ['status', 'verificar', 'checar', 'situação']):
-                    action = 'get_my_status'
-                elif any(word in response for word in ['trabalh', 'work', 'crédito', 'credit']):
-                    action = 'perform_work'
-                elif any(word in response for word in ['ativ', 'activ', 'ligar']):
-                    action = 'activate_ship'
-                elif any(word in response for word in ['repar', 'repair', 'consertar', 'fix']):
-                    action = 'repair_ship'
-                elif any(word in response for word in ['batalh', 'battle', 'lut', 'fight', 'combat']):
-                    action = 'engage_battle'
-                elif any(word in response for word in ['compr', 'buy', 'nave', 'ship']):
-                    action = 'buy_ship'
-            
-            if not action:
-                logger.debug(f"No action found in LLM response from {self.credentials.nickname}")
+            if decision:
+                # Auto-add parameters for specific actions
+                decision = self._add_default_parameters(decision)
+                return decision
+            else:
+                logger.debug(f"No valid decision found in LLM response from {self.credentials.nickname}")
                 return None
-            
-            decision = {
-                'action': action,
-                'parameters': {},
-                'reason': 'AI decision'
-            }
-            
-            # Auto-add parameters for specific actions
-            decision = self._add_default_parameters(decision)
-            
-            return decision
             
         except Exception as e:
             logger.error(f"Failed to parse decision from response '{llm_response}': {str(e)}")
@@ -520,15 +467,14 @@ Escolha UMA ação baseada na sua personalidade e situação:
     async def play_round(self) -> bool:
         """Play one round of the game"""
         try:
-            self.round_count += 1
-            logger.info(f"{self.credentials.nickname} starting round {self.round_count}")
+            logger.info(f"{self.credentials.nickname} starting round {self.round_count + 1}")
             
             # Update game state
             if not await self.update_game_state():
                 logger.error(f"Failed to update game state for {self.credentials.nickname}")
                 return False
             
-            # Make decision
+            # Make decision (this will increment round_count)
             decision = await self.make_decision()
             if not decision:
                 logger.error(f"Failed to make decision for {self.credentials.nickname}")

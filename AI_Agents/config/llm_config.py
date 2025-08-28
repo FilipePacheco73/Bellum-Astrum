@@ -25,10 +25,12 @@ LLM_CONFIGS: Dict[str, LLMConfig] = {
     # Aggressive Agent - Using TinyLlama (lightweight and free)
     "aggressive": LLMConfig(
         model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-        max_tokens=200,  # Increased to allow more complete responses
+        max_tokens=300,  # Increased for more complete responses
         temperature=0.8,
         do_sample=True,
         load_in_4bit=True,  # Use quantization to save VRAM
+        device_map="cuda:0",  # Specify GPU explicitly
+        torch_dtype="float16",  # Half precision for memory economy
         pad_token_id=2,
         eos_token_id=2
     ),
@@ -36,10 +38,12 @@ LLM_CONFIGS: Dict[str, LLMConfig] = {
     # Defensive Agent - Using TinyLlama
     "defensive": LLMConfig(
         model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-        max_tokens=200,
+        max_tokens=300,
         temperature=0.4,
         do_sample=True,
         load_in_4bit=True,
+        device_map="cuda:0",
+        torch_dtype="float16",
         pad_token_id=2,
         eos_token_id=2
     ),
@@ -47,10 +51,12 @@ LLM_CONFIGS: Dict[str, LLMConfig] = {
     # Tactical Agent - Using TinyLlama
     "tactical": LLMConfig(
         model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-        max_tokens=200,
+        max_tokens=300,
         temperature=0.6,
         do_sample=True,
         load_in_4bit=True,
+        device_map="cuda:0",
+        torch_dtype="float16",
         pad_token_id=2,
         eos_token_id=2
     )
@@ -60,8 +66,10 @@ LLM_CONFIGS: Dict[str, LLMConfig] = {
 GLOBAL_CONFIG = {
     "device": "cuda" if torch.cuda.is_available() else "cpu",  # Auto-detect GPU
     "cache_dir": "./AI_Agents/models_cache",  # Local model cache
-    "max_memory_per_gpu": "4GB",
-    "offload_folder": "./AI_Agents/offload_cache"
+    "max_memory_per_gpu": "5GB",  # Optimized for RTX 4050 (6GB total)
+    "offload_folder": "./AI_Agents/offload_cache",
+    "torch_dtype": torch.float16,  # Use half precision for memory economy
+    "attn_implementation": "flash_attention_2"  # Use flash attention if available
 }
 
 def get_llm_config(agent_type: str) -> LLMConfig:

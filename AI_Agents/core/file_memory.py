@@ -31,8 +31,11 @@ class SimpleDecision:
     timestamp: str
     round_number: int
     action: str
-    reason: str
+    reason: str  # Will be replaced by AI reasoning/thinking
     success: bool = True
+    input_tokens: int = 0
+    output_tokens: int = 0
+    ai_reasoning: str = ""
 
 class FileBasedMemory:
     """File-based memory system for AI agents"""
@@ -43,34 +46,46 @@ class FileBasedMemory:
         self.memories_dir.mkdir(parents=True, exist_ok=True)
         
         # Create memory file for this agent
-        self.memory_file = self.memories_dir / f"{agent_name}_memory.jsonl"
+        self.memory_file = self.memories_dir / f"{agent_name}_memory.json"
         
         # Simple decisions file (for new system)
-        self.decisions_file = self.memories_dir / f"{agent_name}_decisions.jsonl"
+        self.decisions_file = self.memories_dir / f"{agent_name}_decisions.json"
         
         # Only create files when there's actual content to write
         # Don't create empty files unnecessarily
     
-    def store_decision(self, round_number: int, action: str, reason: str, success: bool = True):
-        """Store a simple decision in memory"""
+    def store_decision(self, round_number: int, action: str, reason: str, success: bool = True, 
+                      input_tokens: int = 0, output_tokens: int = 0, ai_reasoning: str = ""):
+        """Store a simple decision in memory with token information and AI reasoning"""
         try:
             decision = SimpleDecision(
                 timestamp=datetime.now().isoformat(),
                 round_number=round_number,
                 action=action,
                 reason=reason,
-                success=success
+                success=success,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                ai_reasoning=ai_reasoning or reason  # Use AI reasoning if provided, otherwise fallback to reason
             )
             
-            # Create decisions file only when needed
-            if not self.decisions_file.exists():
-                self.decisions_file.touch()
+            # Load existing decisions or create empty list
+            decisions = []
+            if self.decisions_file.exists():
+                try:
+                    with open(self.decisions_file, 'r', encoding='utf-8') as f:
+                        decisions = json.load(f)
+                except (json.JSONDecodeError, FileNotFoundError):
+                    decisions = []
             
-            with open(self.decisions_file, 'a', encoding='utf-8') as f:
-                json_line = json.dumps(asdict(decision), ensure_ascii=False)
-                f.write(json_line + '\n')
+            # Add new decision
+            decisions.append(asdict(decision))
+            
+            # Write back to file with proper JSON formatting
+            with open(self.decisions_file, 'w', encoding='utf-8') as f:
+                json.dump(decisions, f, indent=2, ensure_ascii=False)
                 
-            logger.debug(f"Stored decision for {self.agent_name}: {action}")
+            logger.debug(f"Stored decision for {self.agent_name}: {action} (tokens: {input_tokens}→{output_tokens})")
             
         except Exception as e:
             logger.error(f"Failed to store decision for {self.agent_name}: {str(e)}")
@@ -83,16 +98,22 @@ class FileBasedMemory:
             if not self.decisions_file.exists():
                 return decisions
             
-            with open(self.decisions_file, 'r', encoding='utf-8') as f:
-                for line in f:
-                    if line.strip():
-                        try:
-                            decision_data = json.loads(line.strip())
-                            decision = SimpleDecision(**decision_data)
-                            decisions.append(decision)
-                        except (json.JSONDecodeError, KeyError, ValueError) as e:
-                            logger.warning(f"Corrupted decision line for {self.agent_name}: {str(e)}")
-                            continue
+            # Load decisions from JSON file
+            try:
+                with open(self.decisions_file, 'r', encoding='utf-8') as f:
+                    decisions_data = json.load(f)
+                    
+                for decision_data in decisions_data:
+                    try:
+                        decision = SimpleDecision(**decision_data)
+                        decisions.append(decision)
+                    except (KeyError, ValueError) as e:
+                        logger.warning(f"Corrupted decision entry for {self.agent_name}: {str(e)}")
+                        continue
+                        
+            except (json.JSONDecodeError, FileNotFoundError) as e:
+                logger.error(f"Failed to read decisions file for {self.agent_name}: {str(e)}")
+                return []
             
             # Sort by round number and get the last max_rounds
             decisions.sort(key=lambda x: x.round_number)
@@ -110,35 +131,47 @@ class FileBasedMemory:
         recent_decisions = self.get_recent_decisions(max_rounds)
         
         if not recent_decisions:
-            return "Não há memórias de decisões anteriores."
+            return "No previous decision memories available."
         
-        summary_lines = ["=== MEMÓRIAS DAS ÚLTIMAS RODADAS ==="]
+        summary_lines = ["=== RECENT ROUNDS MEMORIES ==="]
         
         for decision in recent_decisions:
             round_num = decision.round_number
             action = decision.action
-            reason = decision.reason
+            reasoning = decision.ai_reasoning or decision.reason
             
-            # Simplify the reason if it's too long
-            if len(reason) > 80:
-                reason = reason[:77] + "..."
+            # Simplify the reasoning if it's too long
+            if len(reasoning) > 100:
+                reasoning = reasoning[:97] + "..."
             
             success_indicator = "✓" if decision.success else "✗"
-            summary_lines.append(f"Rodada {round_num}: {action} {success_indicator} - {reason}")
+            tokens_info = f"({decision.input_tokens}→{decision.output_tokens}t)" if decision.input_tokens > 0 else ""
+            
+            summary_lines.append(f"Round {round_num}: {action} {success_indicator} {tokens_info}")
+            if reasoning and reasoning != action:
+                summary_lines.append(f"  Thinking: {reasoning}")
         
-        summary_lines.append("=== FIM DAS MEMÓRIAS ===")
+        summary_lines.append("=== END OF MEMORIES ===")
         return "\n".join(summary_lines)
     
     def store_action(self, action: AgentAction):
         """Store an action in the agent's memory file"""
         try:
-            # Create memory file only when needed
-            if not self.memory_file.exists():
-                self.memory_file.touch()
-                
-            with open(self.memory_file, 'a', encoding='utf-8') as f:
-                json_line = json.dumps(asdict(action))
-                f.write(json_line + '\n')
+            # Load existing actions or create empty list
+            actions = []
+            if self.memory_file.exists():
+                try:
+                    with open(self.memory_file, 'r', encoding='utf-8') as f:
+                        actions = json.load(f)
+                except (json.JSONDecodeError, FileNotFoundError):
+                    actions = []
+            
+            # Add new action
+            actions.append(asdict(action))
+            
+            # Write back to file with proper JSON formatting
+            with open(self.memory_file, 'w', encoding='utf-8') as f:
+                json.dump(actions, f, indent=2, ensure_ascii=False)
                 
             logger.debug(f"Stored action for {self.agent_name}: {action.tool_name}")
             
@@ -154,27 +187,28 @@ class FileBasedMemory:
             if not self.memory_file.exists():
                 return actions
             
-            with open(self.memory_file, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-                
-                # Get last N lines for efficiency
-                recent_lines = lines[-limit*2:] if len(lines) > limit*2 else lines
-                
-                for line in recent_lines:
-                    if line.strip():
-                        try:
-                            action_data = json.loads(line.strip())
-                            action_time = datetime.fromisoformat(action_data['timestamp'])
+            # Load actions from JSON file
+            try:
+                with open(self.memory_file, 'r', encoding='utf-8') as f:
+                    actions_data = json.load(f)
+                    
+                for action_data in actions_data:
+                    try:
+                        action_time = datetime.fromisoformat(action_data['timestamp'])
+                        
+                        if action_time >= cutoff_time:
+                            action = AgentAction(**action_data)
+                            actions.append(action)
                             
-                            if action_time >= cutoff_time:
-                                action = AgentAction(**action_data)
-                                actions.append(action)
-                                
-                        except (json.JSONDecodeError, KeyError, ValueError) as e:
-                            logger.warning(f"Corrupted memory line for {self.agent_name}: {str(e)}")
-                            continue
+                    except (KeyError, ValueError) as e:
+                        logger.warning(f"Corrupted memory entry for {self.agent_name}: {str(e)}")
+                        continue
+                        
+            except (json.JSONDecodeError, FileNotFoundError) as e:
+                logger.error(f"Failed to read memory file for {self.agent_name}: {str(e)}")
+                return []
             
-            # Sort by timestamp (most recent first)
+            # Sort by timestamp (most recent first) and limit results
             actions.sort(key=lambda x: x.timestamp, reverse=True)
             return actions[:limit]
             
@@ -270,35 +304,37 @@ class FileBasedMemory:
                 return
             
             cutoff_time = datetime.now() - timedelta(days=days_to_keep)
-            temp_file = self.memory_file.with_suffix('.tmp')
             
-            kept_count = 0
+            # Load existing actions
+            actions_data = []
+            try:
+                with open(self.memory_file, 'r', encoding='utf-8') as f:
+                    actions_data = json.load(f)
+            except (json.JSONDecodeError, FileNotFoundError):
+                return
+            
+            # Filter actions to keep only recent ones
+            kept_actions = []
             removed_count = 0
             
-            with open(self.memory_file, 'r', encoding='utf-8') as infile, \
-                 open(temp_file, 'w', encoding='utf-8') as outfile:
-                
-                for line in infile:
-                    if line.strip():
-                        try:
-                            action_data = json.loads(line.strip())
-                            action_time = datetime.fromisoformat(action_data['timestamp'])
-                            
-                            if action_time >= cutoff_time:
-                                outfile.write(line)
-                                kept_count += 1
-                            else:
-                                removed_count += 1
-                                
-                        except (json.JSONDecodeError, KeyError, ValueError):
-                            # Keep corrupted lines for manual inspection
-                            outfile.write(line)
-                            kept_count += 1
+            for action_data in actions_data:
+                try:
+                    action_time = datetime.fromisoformat(action_data['timestamp'])
+                    
+                    if action_time >= cutoff_time:
+                        kept_actions.append(action_data)
+                    else:
+                        removed_count += 1
+                        
+                except (KeyError, ValueError):
+                    # Keep corrupted entries for manual inspection
+                    kept_actions.append(action_data)
             
-            # Replace original file with cleaned version
-            temp_file.replace(self.memory_file)
+            # Write back the cleaned data
+            with open(self.memory_file, 'w', encoding='utf-8') as f:
+                json.dump(kept_actions, f, indent=2, ensure_ascii=False)
             
-            logger.info(f"Cleaned memory for {self.agent_name}: kept {kept_count}, removed {removed_count} entries")
+            logger.info(f"Cleaned memory for {self.agent_name}: kept {len(kept_actions)}, removed {removed_count} entries")
             
         except Exception as e:
             logger.error(f"Failed to cleanup memory for {self.agent_name}: {str(e)}")

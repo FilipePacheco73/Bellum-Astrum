@@ -6,12 +6,13 @@ The AI Agents system provides intelligent autonomous players that compete in Bel
 
 ## 🛠️ Technology Stack
 
-- **AI Framework**: Local LLMs via HuggingFace Transformers
-- **Decision Engine**: Strategic prompts with personality-based behavior
-- **Memory System**: File-based learning with JSON Lines format
-- **Logging**: Dual logging system (debug + AI decisions)
+- **AI Framework**: Local LLMs via HuggingFace Transformers with CUDA optimization
+- **Decision Engine**: Strategic prompts with personality-based behavior patterns
+- **Memory System**: SQLite-based learning with JSON fallback for persistence
+- **Logging**: Dual logging system (debug + AI decisions tracking)
 - **Match System**: Automated tournament and training orchestration
-- **Models**: TinyLlama for different personalities (efficiency focused)
+- **Models**: TinyLlama-1.1B-Chat-v1.0 with 4-bit quantization for efficiency
+- **GPU Support**: CUDA acceleration with memory optimization for RTX cards
 
 ---
 
@@ -32,19 +33,19 @@ AI_Agents/
 │   ├── llm_manager.py         # LLM models management
 │   ├── tool_caller.py         # Game API interface
 │   ├── match_orchestrator.py  # Match management and orchestration
+│   ├── memory_manager.py      # Memory management system
 │   └── file_memory.py         # File-based memory system
 ├── prompts/                   # AI behavior prompts
 │   ├── system_prompts.py      # Base game explanation prompts
-│   ├── aggressive_prompts.py  # AI Warrior prompts
-│   ├── defensive_prompts.py   # AI Guardian prompts
-│   └── tactical_prompts.py    # AI Tactician prompts
+│   ├── decision_prompts.py    # Decision-making prompts
+│   └── personality_prompts.py # Personality-based behavior prompts
 ├── logs/                      # Dual logging system output
 │   ├── debug.log              # Technical debug logs
 │   └── ai_decisions.log       # AI decision tracking logs
 ├── memories/                  # AI learning data (auto-generated)
-│   ├── AI_Warrior_Test_memory.jsonl
-│   ├── AI_Guardian_Test_memory.jsonl
-│   └── AI_Tactician_Test_memory.jsonl
+│   ├── AI_Warrior_Test_decisions.json
+│   ├── AI_Guardian_Test_decisions.json
+│   └── AI_Tactician_Test_decisions.json
 └── models_cache/              # Downloaded LLM models cache
     └── models--TinyLlama--TinyLlama-1.1B-Chat-v1.0/
 ```
@@ -60,7 +61,7 @@ Strategy: Constant attacks with high-risk, high-reward approach
 Focus: Frequent battles, rapid growth through combat
 Formation: AGGRESSIVE
 Behavior: Minimal work, maximum battle engagement
-LLM Model: DialoGPT-medium (fast responses for quick decisions)
+LLM Model: TinyLlama-1.1B-Chat-v1.0 (temperature: 0.8, high creativity)
 ```
 
 ### AI_Guardian (Defensive) 
@@ -70,7 +71,7 @@ Strategy: Survival-first with sustainable resource accumulation
 Focus: Resource building, selective battle engagement
 Formation: DEFENSIVE  
 Behavior: Heavy work focus, safe battle choices
-LLM Model: TinyLlama (conservative decision making)
+LLM Model: TinyLlama-1.1B-Chat-v1.0 (temperature: 0.4, conservative decisions)
 ```
 
 ### AI_Tactician (Strategic)
@@ -80,7 +81,7 @@ Strategy: Data-driven analysis with calculated risk management
 Focus: Resource optimization and strategic timing
 Formation: Adaptive based on game context
 Behavior: Balanced work-battle ratio with strategic planning
-LLM Model: Mistral 7B (complex analysis capabilities)
+LLM Model: TinyLlama-1.1B-Chat-v1.0 (temperature: 0.6, balanced approach)
 ```
 
 ---
@@ -158,31 +159,32 @@ Detailed AI behavior tracking and analysis:
 ## 🧠 Memory System
 
 ### File-Based Learning Architecture
-- **Format**: JSON Lines (.jsonl) per agent
-- **Location**: `memories/{agent_name}_memory.jsonl`
-- **Content**: Complete action history and learning data
+- **Format**: JSON per agent (decisions and performance data)
+- **Location**: `memories/{agent_name}_decisions.json`
+- **Content**: Complete action history, reasoning, and performance metrics
 
 ### Memory Entry Example
 ```json
 {
-  "timestamp": "2025-08-12T21:09:48",
-  "round_number": 2,
-  "tool_name": "work",
-  "tool_params": {"sector": "residential"},
-  "game_state_before": {"credits": 1500, "energy": 80},
-  "game_state_after": {"credits": 1700, "energy": 60},
+  "timestamp": "2025-08-27T21:08:22.829954",
+  "round_number": 1,
+  "action": "get_my_status",
+  "reason": "First round mandatory status check",
   "success": true,
-  "result_data": {"credits_earned": 200, "energy_consumed": 20},
-  "reasoning": "Need more credits for ship purchase"
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "ai_reasoning": "Mandatory first round status check"
 }
 ```
 
 ### Memory Query Functions
-- `get_recent_actions()`: Recent actions by time period
-- `get_tool_success_rate()`: Success rate per tool type
-- `get_average_credits_per_work()`: Average work earnings
-- `get_battle_performance()`: Battle statistics and performance
-- `get_memory_summary()`: Decision-making context summary
+- `get_recent_actions()`: Recent actions by time period and type
+- `get_action_success_rate()`: Success rate per action type
+- `get_average_credits_per_work()`: Average work earnings analysis
+- `get_opponent_profile()`: Detailed opponent analysis and threat assessment
+- `get_winnable_opponents()`: List of opponents with win probability
+- `get_memory_summary()`: Comprehensive decision-making context summary
+- `cleanup_old_memories()`: Memory management and cleanup
 
 ---
 
@@ -208,7 +210,34 @@ config = MatchConfig(
 
 ---
 
-## 📈 Analysis and Monitoring
+## ⚡ Performance & Optimization
+
+### GPU Acceleration
+- **CUDA Support**: Automatic GPU detection and utilization
+- **Memory Management**: 4-bit quantization reduces VRAM usage by ~75%
+- **Flash Attention**: Enhanced attention mechanism for faster inference
+- **Model Caching**: Local model cache prevents repeated downloads
+
+### Resource Usage
+- **Memory Footprint**: ~550MB VRAM per agent (with quantization)
+- **CPU Usage**: Minimal when using GPU acceleration
+- **Storage**: ~2.2GB per cached model, ~1MB per agent memory file
+
+### Configuration Options
+```python
+# GPU optimization settings
+GLOBAL_CONFIG = {
+    "device": "cuda",  # Auto-detect GPU
+    "max_memory_per_gpu": "5GB",  # Optimized for RTX 4050
+    "torch_dtype": torch.float16,  # Half precision
+    "load_in_4bit": True,  # Quantization
+    "attn_implementation": "flash_attention_2"
+}
+```
+
+---
+
+## � Analysis and Monitoring
 
 ### Real-time Statistics
 - Performance metrics per agent
@@ -221,11 +250,14 @@ config = MatchConfig(
 # Filter decisions from specific agent
 grep "AI_Warrior" logs/ai_decisions.log
 
-# Analyze tool usage patterns
-grep "TOOL_USED" logs/ai_decisions_*.log | grep "work"
+# Analyze action patterns
+grep "action.*work" logs/ai_decisions.log
 
 # Check success/failure rates
-grep "SUCCESS\|FAILED" logs/ai_decisions_*.log
+grep -E "success.*true|success.*false" logs/ai_decisions.log
+
+# Monitor token usage
+grep "tokens" logs/ai_decisions.log
 ```
 
 ---
