@@ -1,6 +1,6 @@
 # 🚀 Bellum Astrum
 
-**Current Version: 0.5.12** | **[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
+**[🌐 Live Demo](https://bellum-astrum-prod.onrender.com/)**
 
 ## 🎮 About the Game
 
@@ -12,7 +12,7 @@ Bellum Astrum is a strategic spaceship battle game where players command fleets,
 - **Economy**: Participate in a dynamic economy with ship trading and work-based income recovery
 - **Work System**: Earn credits through various work types based on your military rank
 - **Multiplayer**: Challenge other players in PvP battles with ELO ranking system
-- **AI Competition**: Watch autonomous AI agents compete 24/7 with learning capabilities
+- **AI Competition**: Watch autonomous AI agents compete 24/7 with advanced learning capabilities and token-efficient decision making
 
 ## 🎯 Project Goals
 
@@ -25,8 +25,8 @@ Bellum Astrum serves as a comprehensive learning project with multiple education
 - 🎨 **Frontend Integration**: Create modern React-based user interfaces with TypeScript
 - 🌍 **Internationalization**: Implement complete multi-language support (PT-BR/EN-US)
 - 🧪 **Testing**: Develop comprehensive test suites and automation
-- 🤖 **AI Agents**: Build autonomous players with LLM-based decision making and strategic learning
-- 🧠 **Machine Learning**: Explore AI behavior patterns, file-based memory systems, and adaptive strategies
+- 🤖 **AI Agents**: Build autonomous players with optimized LLM-based decision making, smart prompt truncation, and comprehensive learning systems
+- 🧠 **Machine Learning**: Explore AI behavior patterns, token-efficient decision systems, and adaptive learning strategies
 - 📊 **Data Analytics**: Track performance metrics and user progression statistics
 
 ## 🛠️ Tech Stack
@@ -44,10 +44,10 @@ Bellum Astrum serves as a comprehensive learning project with multiple education
 - **UI/UX:** Responsive design with real-time updates and loading states
 
 ### AI & Intelligence
-- **AI Framework:** Local LLMs via HuggingFace Transformers (DialoGPT, Mistral 7B, TinyLlama)
-- **Decision Engine:** Strategic prompts with personality-based behavior patterns
-- **Memory System:** File-based learning with JSON Lines format for agent persistence
-- **Logging:** Dual logging system (debug + AI decisions) for comprehensive monitoring
+- **AI Framework:** Local LLMs via HuggingFace Transformers (TinyLlama-1.1B optimized for all agents)
+- **Decision Engine:** Streamlined strategic prompts with personality-based behavior patterns
+- **Memory System:** File-based JSON learning system with comprehensive decision and token tracking
+- **Logging:** Advanced dual logging system (debug + AI decisions with token metrics) for comprehensive monitoring
 
 ### DevOps & Deployment
 - **Deployment:** Automated GitHub release workflow with version management
@@ -81,9 +81,9 @@ graph TB
     end
     
     subgraph "Intelligence Layer (AI Agents)"
-        AI["🤖 AI Agents<br/>LLM + Strategic AI<br/>Autonomous Players"]
-        MODELS["🧠 AI Models<br/>TinyLlama-1.1B<br/>Local GPU/CPU"]
-        MEMORY["💾 AI Memory<br/>JSON Storage<br/>Learning System"]
+        AI["🤖 AI Agents<br/>LLM + Strategic AI<br/>Autonomous Players<br/>Token-Efficient Decisions"]
+        MODELS["🧠 AI Models<br/>TinyLlama-1.1B<br/>Shared Instance<br/>Local GPU/CPU"]
+        MEMORY["💾 AI Memory<br/>JSON Decision Storage<br/>Token Usage Tracking<br/>Learning System"]
     end
     
     %% User interactions
@@ -152,7 +152,7 @@ For detailed setup instructions, please refer to the component-specific document
 - 👥 **Multiplayer**: Challenge other players with ELO rating system
 - 🌍 **Multi-language**: Full support for Portuguese and English
 - 📊 **Statistics**: Track your progress with detailed battle and progression stats
-- 🤖 **AI Agents**: Autonomous AI players that compete 24/7 with learning capabilities
+- 🤖 **AI Agents**: Autonomous AI players that compete 24/7 with token-efficient learning and smart decision-making capabilities
 
 ---
 
@@ -206,6 +206,8 @@ Advanced translation system & Battle UI :done,   des24, 2025-07-30, 1d
 Schema organization & BattleLog fixes  :done,    des25, 2025-07-31, 1d
 Work system implementation & UI polish :done,    des26, 2025-08-09, 1d
 AI Agents system & autonomous gameplay :done,    des27, 2025-08-12, 1d
+System architecture & documentation overhaul :done, des28, 2025-08-27, 1d
+AI system optimization & prompt modernization :done, des29, 2025-08-28, 1d
 ```
 
 ## 🤝 Contributing

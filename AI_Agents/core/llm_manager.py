@@ -139,7 +139,32 @@ class LLMManager:
             max_prompt_length = 1800  # TinyLlama supports 2048, leave room for response
             if len(prompt) > max_prompt_length:
                 logger.warning(f"Truncating long prompt for {agent_type}: {len(prompt)} -> {max_prompt_length}")
-                prompt = prompt[-max_prompt_length:]  # Keep the end of the prompt (most recent context)
+                
+                # Smart truncation: preserve critical parts and reduce context
+                # Try to find the sections to preserve critical instructions
+                lines = prompt.split('\n')
+                
+                # Always preserve the response format section (usually at the end)
+                format_section_start = -1
+                for i, line in enumerate(lines):
+                    if "MANDATORY RESPONSE FORMAT" in line or "EXACT format" in line or "ACTION:" in line:
+                        format_section_start = max(0, i - 2)  # Include a bit before
+                        break
+                
+                if format_section_start >= 0:
+                    # Keep the format section
+                    format_section = '\n'.join(lines[format_section_start:])
+                    
+                    # Keep the beginning (system prompt) and the format section
+                    remaining_length = max_prompt_length - len(format_section) - 100  # Buffer
+                    beginning_section = prompt[:remaining_length]
+                    
+                    # Add separator and format section
+                    prompt = beginning_section + "\n\n[...truncated...]\n\n" + format_section
+                else:
+                    # Fallback: keep the end as before
+                    prompt = prompt[-max_prompt_length:]
+                
                 # Recalculate input tokens after truncation
                 input_tokens = tokenizer.encode(prompt)
                 input_token_count = len(input_tokens)

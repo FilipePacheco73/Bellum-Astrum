@@ -11,7 +11,7 @@ from enum import Enum
 from typing import List, Dict, Any, Optional
 from AI_Agents.core.ai_agent import AIAgent
 from AI_Agents.core.tool_caller import AICredentials, try_login
-from AI_Agents.config.logging_config import log_ai_decision, log_match_event
+from AI_Agents.config.logging_config import log_ai_decision
 
 logger = logging.getLogger(__name__)
 

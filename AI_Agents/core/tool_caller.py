@@ -93,7 +93,6 @@ class GameAPIClient:
                 
         except Exception as e:
             error_msg = f"Request failed: {str(e)}"
-            logger.error(error_msg)
             return ToolResult(success=False, error=error_msg)
     
     async def post(self, endpoint: str, credentials: AICredentials, data: Dict = None, json_data: Dict = None) -> ToolResult:
@@ -118,7 +117,6 @@ class GameAPIClient:
                 
         except Exception as e:
             error_msg = f"Request failed: {str(e)}"
-            logger.error(error_msg)
             return ToolResult(success=False, error=error_msg)
 
 class GameToolCaller:
@@ -165,13 +163,13 @@ class GameToolCaller:
                     
             except Exception as e:
                 error_msg = f"Tool execution failed for {tool}: {str(e)}"
-                logger.error(error_msg)
                 return ToolResult(success=False, error=error_msg)
     
     # Information tools
     async def _get_my_status(self, credentials: AICredentials) -> ToolResult:
         """Get user's current status"""
-        return await self.client.get(f"/api/v1/users/{credentials.user_id}", credentials)
+        result = await self.client.get(f"/api/v1/users/{credentials.user_id}", credentials)
+        return result
     
     async def _get_fleet_status(self, credentials: AICredentials) -> ToolResult:
         """Get user's ship fleet status"""
@@ -272,23 +270,54 @@ async def try_login(client: httpx.AsyncClient, email: str, password: str) -> Opt
             auth_data = response.json()
             access_token = auth_data.get('access_token')
             
-            # Get user info to extract user_id and nickname
-            headers = {"Authorization": f"Bearer {access_token}"}
-            user_response = await client.get(f"{config.api_base_url}/api/v1/users/", headers=headers)
+            if not access_token:
+                logger.error("No access token received from login response")
+                return None
             
-            if user_response.status_code == 200:
-                users = user_response.json()
-                # Find the user by email
-                for user in users:
-                    if user.get('email') == email:
-                        logger.info(f"Successfully authenticated existing user: {user['nickname']}")
-                        return AICredentials(
-                            user_id=user['user_id'],
-                            access_token=access_token,
-                            nickname=user['nickname']
-                        )
+            # Decode JWT token to extract user_id and other info
+            try:
+                from jose import jwt
+                # We don't verify signature here since we just got the token from our own API
+                # This is just to extract the payload for user_id
+                decoded = jwt.decode(access_token, key="", options={"verify_signature": False})
+                user_id = decoded.get('user_id')
+                user_email = decoded.get('sub')  # 'sub' contains the email
+                
+                if not user_id:
+                    logger.error("No user_id found in JWT token payload")
+                    return None
+                
+                # Now get the user details using the user_id from the token
+                headers = {"Authorization": f"Bearer {access_token}"}
+                user_response = await client.get(
+                    f"{config.api_base_url}/api/v1/users/{user_id}", 
+                    headers=headers
+                )
+                
+                if user_response.status_code == 200:
+                    user_data = user_response.json()
+                    nickname = user_data.get('nickname')
+                    
+                    if not nickname:
+                        logger.error(f"No nickname found for user_id {user_id}")
+                        return None
+                    
+                    logger.info(f"Successfully authenticated user: {nickname} (ID: {user_id})")
+                    return AICredentials(
+                        user_id=user_id,
+                        access_token=access_token,
+                        nickname=nickname
+                    )
+                else:
+                    logger.error(f"Failed to get user details for user_id {user_id}: {user_response.status_code}")
+                    
+            except Exception as jwt_error:
+                logger.error(f"Failed to decode JWT token: {str(jwt_error)}")
+                return None
             
-            logger.error("Could not find user info after successful login")
+        else:
+            logger.debug(f"Login failed with status {response.status_code}: {response.text}")
+        
         return None
     except Exception as e:
         logger.debug(f"Login attempt failed: {str(e)}")
